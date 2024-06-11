@@ -1,3 +1,4 @@
+#include "defs.hpp"
 #include "bitboard.hpp"
 #include <iomanip>
 #include <random>
@@ -41,7 +42,12 @@ Bitboard::Bitboard()
     {
         pieces[i] = 0ULL;
     }
+    // init defs
+    initialize();
+
     initMasks();
+    init_attackMasks();
+
     generateBlockersFor(rookAttacks, rookBlockers);
     generateBlockersFor(bishopAttacks, bishopBlockers);
 }
@@ -239,7 +245,6 @@ void Bitboard::init_passedPawnMask()
             int file = fileOf(sq64To120[sq]);
             int rank = rankOf(sq64To120[sq]);
 
-            passedPawnMask[i][sq] |= fileMasks[file];
             if (file > fileA)
             {
                 passedPawnMask[i][sq] |= fileMasks[file - 1];
@@ -248,7 +253,6 @@ void Bitboard::init_passedPawnMask()
             {
                 passedPawnMask[i][sq] |= fileMasks[file + 1];
             }
-
             if (i == white)
             {
                 while (rank >= rank1)
@@ -312,14 +316,21 @@ void Bitboard::initBoard(Board *board)
 {
     this->board = board;
     init_pieces();
-    init_attackMasks();
 
     init_rookLookupTable();
     init_bishopLookupTable();
 }
 
 void Bitboard::init_attackMasks()
-{
+{   
+    for(int sq = 0; sq<120; ++sq){
+        Board::pieces[sq] = offBoard;
+    }
+    for (auto sq : sq64To120)
+    {
+        Board::pieces[sq] = empty;
+    }
+
     init_pawnAttacks();
     init_kingAttacks();
     init_knighAttack();
@@ -396,34 +407,34 @@ U64 Bitboard::legalMoveBitboardFromBlockers(int sq, U64 blockerBitboard, bool or
 
 void Bitboard::init_pawnAttacks()
 {
-    for (int rank = rank2; rank <= rank7; ++rank)
+    for (int rank = rank1; rank <= rank8; ++rank)
     {
         for (int file = fileA; file <= fileH; ++file)
         {
             U64 bitBoard = 0ULL;
             int sq = fileRank2Sq(file, rank);
-            if (board->pieces[sq + 11] != offBoard)
+            if (Board::pieces[sq + 11] != offBoard)
             {
                 setBit(bitBoard, sq120To64[sq + 11]);
             }
-            if (board->pieces[sq + 9] != offBoard)
+            if (Board::pieces[sq + 9] != offBoard)
             {
                 setBit(bitBoard, sq120To64[sq + 9]);
             }
             pawnAttacks[white][sq120To64[sq]] = bitBoard;
         }
     }
-    for (int rank = rank7; rank >= rank2; --rank)
+    for (int rank = rank8; rank >= rank1; --rank)
     {
         for (int file = fileA; file <= fileH; ++file)
         {
             U64 bitBoard = 0ULL;
             int sq = fileRank2Sq(file, rank);
-            if (board->pieces[sq - 11] != offBoard)
+            if (Board::pieces[sq - 11] != offBoard)
             {
                 setBit(bitBoard, sq120To64[sq - 11]);
             }
-            if (board->pieces[sq - 9] != offBoard)
+            if (Board::pieces[sq - 9] != offBoard)
             {
                 setBit(bitBoard, sq120To64[sq - 9]);
             }
@@ -443,7 +454,7 @@ void Bitboard::init_kingAttacks()
             for (int i = 0; i < 8; ++i)
             {
                 int direction = kingDirections[i];
-                if (board->pieces[sq + direction] != offBoard)
+                if (Board::pieces[sq + direction] != offBoard)
                 {
                     setBit(bitBoard, sq120To64[sq + direction]);
                 }
@@ -465,7 +476,7 @@ void Bitboard::init_knighAttack()
             for (int i = 0; i < 8; ++i)
             {
                 int direction = knightDirections[i];
-                if (board->pieces[sq + direction] != offBoard)
+                if (Board::pieces[sq + direction] != offBoard)
                 {
                     setBit(bitBoard, sq120To64[sq + direction]);
                 }
@@ -488,7 +499,7 @@ void Bitboard::init_rookAttacks()
             {
                 int direction = rookDirections[i];
                 int targetSq = sq + direction;
-                while (board->pieces[targetSq] != offBoard)
+                while (Board::pieces[targetSq] != offBoard)
                 {
                     setBit(bitBoard, sq120To64[targetSq]);
                     // erase the edge bits
@@ -521,7 +532,7 @@ void Bitboard::init_bishopAttacks()
             {
                 int direction = bishopDirections[i];
                 int targetSq = sq + direction;
-                while (board->pieces[targetSq] != offBoard)
+                while (Board::pieces[targetSq] != offBoard)
                 {
                     setBit(bitBoard, sq120To64[targetSq]);
                     if (rank != rank8)

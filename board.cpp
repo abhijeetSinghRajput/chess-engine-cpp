@@ -1,15 +1,15 @@
+#include "utils.hpp"
 #include "board.hpp"
 #include "bitboard.hpp"
 #include "zobristKeys.hpp"
-#include "utils.hpp"
 #include <iostream>
 #include <iomanip>
 
 Board *board = new Board;
+int Board::pieces[120];
 
 Board::Board()
 {
-    initialize();
     reset();
 }
 
@@ -140,8 +140,6 @@ void Board::print()
     std::cout << "Key: 0x" << std::hex << positionKey << std::dec << std::endl;
     std::cout << "Fen: " << getFen() << std::endl;
     std::cout << "Castle: " << castlePermission << std::endl;
-    std::cout << std::endl
-              << std::endl;
     if (board->checkSq != noSq) {
         printf("\033[31mcheck : %s\033[0m", squareChar[board->checkSq]);
     }
@@ -215,13 +213,13 @@ void Board::parseFen(std::string &fen)
         enPassantSq = fileRank2Sq(file, rank);
     }
     updateMaterial();
-    // bitboard->initBoard(this);
+    bitboard->initBoard(this);
 
-    // //is in check
-    // int kingOnSq = __builtin_ctzll(bitboard->pieces[Kings[side]]);
-    // if (isUnderAttack(sq120To64[kingOnSq], board->side ^ 1)) {
-    //     board->checkSq = kingOnSq;
-    // }
+    //is in check
+    int kingOnSq = __builtin_ctzll(bitboard->pieces[Kings[side]]);
+    if(isUnderAttack(kingOnSq, board->side ^ 1)){
+        board->checkSq = sq64To120[kingOnSq];
+    }
 
     //generate a uniqe position key
     positionKey = generatePositionKey();
