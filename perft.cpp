@@ -48,7 +48,7 @@ void perftTest(int depth)
         takeMove();
 
         totalNodeSeared += count;
-        printf("%2d %s%s %d\n", ++moveCount, squareChar[moveFrom(move)], squareChar[moveTo(move)], count);
+        printf("%2d %s %d\n", ++moveCount, moveStr(moveFrom(move), moveTo(move)), count);
     }
     std::cout << "Total Node Seared " << totalNodeSeared << std::endl;
 }

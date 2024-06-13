@@ -141,7 +141,7 @@ void Board::print()
     std::cout << "Fen: " << getFen() << std::endl;
     std::cout << "Castle: " << castlePermission << std::endl;
     if (board->checkSq != noSq) {
-        printf("\033[31mcheck : %s\033[0m", squareChar[board->checkSq]);
+        printf("\033[31mcheck : %s\033[0m\n", squareChar[board->checkSq]);
     }
 }
 

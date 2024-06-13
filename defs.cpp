@@ -1,7 +1,8 @@
 #include "defs.hpp"
+#include <chrono>
 
 // Initialize global variables
-std::string startFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR b KQkq - 0 1";
+std::string startFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 int sq120To64[120];
 int sq64To120[64];
 
@@ -40,6 +41,10 @@ const int pieceValue[] = {
 
 const int Kings[] = {wk, bk};
 
+const int maxDepth = 64;
+const int Infinite = 30000;
+const int Mate = Infinite - maxDepth;
+
 const int CastlePermission[] = {
     15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
     15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
@@ -73,20 +78,13 @@ const int bishopDirections[] = {-9, -11, 9, 11};
 const int kingDirections[] = {-10, 1, 10, -1, -9, -11, 9, 11};
 const int queenDirections[] = {-10, 1, 10, -1, -9, -11, 9, 11};
 
-std::vector<const int*> pieceDirections = {
-    nullptr,                // empty
-    nullptr,                // wp (white pawn, direction handled differently)
-    rookDirections,         // wr (white rook)
-    knightDirections,       // wn (white knight)
-    bishopDirections,       // wb (white bishop)
-    queenDirections,        // wq (white queen)
-    kingDirections,         // wk (white king)
-    nullptr,                // bp (black pawn, direction handled differently)
-    rookDirections,         // br (black rook)
-    knightDirections,       // bn (black knight)
-    bishopDirections,       // bb (black bishop)
-    queenDirections,        // bq (black queen)
-    kingDirections          // bk (black king)
+const int slidingPieces[2][3] = {
+    wr, wb, wq,
+    br, bb, bq,
+};
+const int nonSlidingPieces[2][2] = {
+    wn, wk,
+    bn, bk,
 };
 
 void initSquareMappings() {
@@ -116,4 +114,23 @@ int rankOf(int sq) {
     return (sq - 21) / 10;
 }
 
+const char* moveStr(int from, int to){
+    static char move[5];
 
+    move[0] =  'a' + fileOf(from);
+    move[1] = '1' + rankOf(from);
+    move[2] = 'a' + fileOf(to);
+    move[3] = '1' + rankOf(to);
+    move[4] = '\0';
+
+    return move;
+}
+
+long long getCurrTime() {
+    // Get current time with milliseconds since epoch
+    auto now = std::chrono::system_clock::now();
+    auto duration = now.time_since_epoch();
+    auto milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
+
+    return milliseconds;
+}

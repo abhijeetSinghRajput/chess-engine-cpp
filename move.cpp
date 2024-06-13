@@ -165,16 +165,6 @@ bool makeMove(int move)
     const int side = board->side;
     const int piece = board->pieces[from];
 
-    struct MoveInfo
-    {
-        int fiftyMove;
-        U64 positionKey;
-        int enPassantSq;
-        int castlePermission;
-        int checkSq;
-        int move;
-    };
-
     board->pushMoveToHistory(move);
 
     if (move & enPassantFlag)

@@ -8,225 +8,162 @@
 
 std::vector<int> moves;
 
-void addCaptureMove(int move){
+void addCaptureMove(int move)
+{
     moves.push_back(move);
 }
 
-void addQuiteMove(int move) {
+void addQuiteMove(int move)
+{
     moves.push_back(move);
 }
 
-void addEnPassantMove(int move) {
+void addEnPassantMove(int move)
+{
     moves.push_back(move);
 }
 
-void addWhitePawnQuietMove(int from,int to) {
-    //handling promotion move
-    if (rankOf(to) == rank8) {
+void addWhitePawnQuietMove(int from, int to)
+{
+    // handling promotion move
+    if (rankOf(to) == rank8)
+    {
         addQuiteMove(buildMove(from, to, 0, wq, 0));
         addQuiteMove(buildMove(from, to, 0, wr, 0));
         addQuiteMove(buildMove(from, to, 0, wb, 0));
         addQuiteMove(buildMove(from, to, 0, wn, 0));
     }
-    else {
+    else
+    {
         addQuiteMove(buildMove(from, to, 0, 0, 0));
     }
 }
-void addBlackPawnQuietMove(int from, int to) {
-    //handling promotion move
-    if (rankOf(to) == rank1) {
+void addBlackPawnQuietMove(int from, int to)
+{
+    // handling promotion move
+    if (rankOf(to) == rank1)
+    {
         addQuiteMove(buildMove(from, to, 0, bq, 0));
         addQuiteMove(buildMove(from, to, 0, br, 0));
         addQuiteMove(buildMove(from, to, 0, bb, 0));
         addQuiteMove(buildMove(from, to, 0, bn, 0));
     }
-    else {
+    else
+    {
         addQuiteMove(buildMove(from, to, 0, 0, 0));
     }
 }
 
-
-
-void addWhiteCaptureMove(int from,int to,int capture) {
-    //handling promotion move
-    if (rankOf(to) == rank8) {
+void addWhiteCaptureMove(int from, int to, int capture)
+{
+    // handling promotion move
+    if (rankOf(to) == rank8)
+    {
         addCaptureMove(buildMove(from, to, capture, wq, 0));
         addCaptureMove(buildMove(from, to, capture, wr, 0));
         addCaptureMove(buildMove(from, to, capture, wb, 0));
         addCaptureMove(buildMove(from, to, capture, wn, 0));
     }
-    else {
+    else
+    {
         addCaptureMove(buildMove(from, to, capture, 0, 0));
     }
 }
-void addBlackCaptureMove(int from,int to,int capture) {
-    //handling promotion move
-    if (rankOf(to) == rank1) {
+void addBlackCaptureMove(int from, int to, int capture)
+{
+    // handling promotion move
+    if (rankOf(to) == rank1)
+    {
         addCaptureMove(buildMove(from, to, capture, bq, 0));
         addCaptureMove(buildMove(from, to, capture, br, 0));
         addCaptureMove(buildMove(from, to, capture, bb, 0));
         addCaptureMove(buildMove(from, to, capture, bn, 0));
     }
-    else {
+    else
+    {
         addCaptureMove(buildMove(from, to, capture, 0, 0));
     }
 }
 
-
-void genKnightMoves()
+void genNonSlidingMoves(bool capturesOnly)
 {
-    U64 knightBitboard = (board->side == white) ? bitboard->pieces[wn] : bitboard->pieces[bn];
     U64 friendlyPiecesBitboard = bitboard->getPieces(board->side);
     U64 enemyPiecesBitboard = bitboard->getPieces(board->side ^ 1);
 
-    while (knightBitboard)
+    for (int piece : nonSlidingPieces[board->side])
     {
-        int sq = __builtin_ctzll(knightBitboard);
-        knightBitboard &= knightBitboard - 1;
+        U64 pieceBitboard = bitboard->pieces[piece];
 
-        U64 attacksPattern = bitboard->knightAttacks[sq];
-        attacksPattern &= ~friendlyPiecesBitboard;
-        while (attacksPattern)
+        // traverse each square where these pieces are
+        while (pieceBitboard)
         {
-            int targetSq = sq64To120[__builtin_ctzll(attacksPattern)];
-            if (enemyPiecesBitboard & (1ULL << sq120To64[targetSq]))
-            {
-                addCaptureMove(buildMove(sq64To120[sq], targetSq, board->pieces[targetSq], 0, 0));
-            }
-            else
-            {
-                addQuiteMove(buildMove(sq64To120[sq], targetSq, 0, 0, 0));
-            }
+            int sq = __builtin_ctzll(pieceBitboard);
+            pieceBitboard &= pieceBitboard - 1;
 
-            attacksPattern &= attacksPattern - 1;
+            U64 attacksPattern = (pieceType[piece] == 'n') ? bitboard->knightAttacks[sq] : bitboard->kingAttacks[sq];
+            attacksPattern &= ~friendlyPiecesBitboard;
+
+            while (attacksPattern)
+            {
+                int targetSq = sq64To120[__builtin_ctzll(attacksPattern)];
+                if (enemyPiecesBitboard & (1ULL << sq120To64[targetSq]))
+                {
+                    addCaptureMove(buildMove(sq64To120[sq], targetSq, board->pieces[targetSq], 0, 0));
+                }
+                else if(!capturesOnly)
+                {
+                    addQuiteMove(buildMove(sq64To120[sq], targetSq, 0, 0, 0));
+                }
+
+                attacksPattern &= attacksPattern - 1;
+            }
         }
     }
 }
 
-void genKingMoves()
+void genSlidingMoves(bool capturesOnly)
 {
-    U64 kingBitboard = (board->side == white) ? bitboard->pieces[wk] : bitboard->pieces[bk];
     U64 friendlyPiecesBitboard = bitboard->getPieces(board->side);
     U64 enemyPiecesBitboard = bitboard->getPieces(board->side ^ 1);
 
-    while (kingBitboard)
+    for (int piece : slidingPieces[board->side])
     {
-        int sq = __builtin_ctzll(kingBitboard);
-        kingBitboard &= kingBitboard - 1;
-
-        U64 attacksPattern = bitboard->kingAttacks[sq];
-        attacksPattern &= ~friendlyPiecesBitboard;
-        while (attacksPattern)
+        U64 pieceBitboard = bitboard->pieces[piece];
+        // traverse each square
+        while (pieceBitboard)
         {
-            int targetSq = sq64To120[__builtin_ctzll(attacksPattern)];
-            if (enemyPiecesBitboard & (1ULL << sq120To64[targetSq]))
-            {
-                addCaptureMove(buildMove(sq64To120[sq], targetSq, board->pieces[targetSq], 0, 0));
-            }
-            else
-            {
-                addQuiteMove(buildMove(sq64To120[sq], targetSq, 0, 0, 0));
-            }
+            int sq = __builtin_ctzll(pieceBitboard);
+            pieceBitboard &= pieceBitboard - 1;
+            U64 attacksPattern = 0ULL;
 
-            attacksPattern &= attacksPattern - 1;
+            switch (pieceType[piece])
+            {
+                case 'r': attacksPattern = getRookAttacks(sq); break;
+                case 'b': attacksPattern = getBishopAttacks(sq); break;
+                case 'q': attacksPattern = getBishopAttacks(sq) | getRookAttacks(sq); break;
+                default:break;
+            }
+            // remove friendly blockers
+            attacksPattern &= ~friendlyPiecesBitboard;
+
+            // traverse the squares where these pieces can move
+            while (attacksPattern)
+            {
+                int targetSq = sq64To120[__builtin_ctzll(attacksPattern)];
+                if (enemyPiecesBitboard & (1ULL << sq120To64[targetSq]))
+                {
+                    addCaptureMove(buildMove(sq64To120[sq], targetSq, board->pieces[targetSq], 0, 0));
+                }
+                else if(!capturesOnly)
+                {
+                    addQuiteMove(buildMove(sq64To120[sq], targetSq, 0, 0, 0));
+                }
+
+                attacksPattern &= attacksPattern - 1;
+            }
         }
     }
 }
-
-void genRookMoves()
-{
-    U64 rookBitboard = (board->side == white) ? bitboard->pieces[wr] : bitboard->pieces[br];
-    U64 friendlyPiecesBitboard = bitboard->getPieces(board->side);
-    U64 enemyPiecesBitboard = bitboard->getPieces(board->side ^ 1);
-
-    while (rookBitboard)
-    {
-        int sq = __builtin_ctzll(rookBitboard);
-        rookBitboard &= rookBitboard - 1;
-        U64 attacksPattern = getRookAttacks(sq);
-
-        // remove friendly blockers
-        attacksPattern &= ~friendlyPiecesBitboard;
-
-        while (attacksPattern)
-        {
-            int targetSq = sq64To120[__builtin_ctzll(attacksPattern)];
-            if (enemyPiecesBitboard & (1ULL << sq120To64[targetSq]))
-            {
-                addCaptureMove(buildMove(sq64To120[sq], targetSq, board->pieces[targetSq], 0, 0));
-            }
-            else
-            {
-                addQuiteMove(buildMove(sq64To120[sq], targetSq, 0, 0, 0));
-            }
-
-            attacksPattern &= attacksPattern - 1;
-        }
-    }
-}
-
-void genBishopMoves()
-{
-    U64 bishopBitboard = (board->side == white) ? bitboard->pieces[wb] : bitboard->pieces[bb];
-    U64 friendlyPiecesBitboard = bitboard->getPieces(board->side);
-    U64 enemyPiecesBitboard = bitboard->getPieces(board->side ^ 1);
-
-    while (bishopBitboard)
-    {
-        int sq = __builtin_ctzll(bishopBitboard);
-        bishopBitboard &= bishopBitboard - 1;
-        U64 attacksPattern = getBishopAttacks(sq);
-        // remove friendly blockers
-        attacksPattern &= ~friendlyPiecesBitboard;
-        while (attacksPattern)
-        {
-            int targetSq = sq64To120[__builtin_ctzll(attacksPattern)];
-            if (enemyPiecesBitboard & (1ULL << sq120To64[targetSq]))
-            {
-                addCaptureMove(buildMove(sq64To120[sq], targetSq, board->pieces[targetSq], 0, 0));
-            }
-            else
-            {
-                addQuiteMove(buildMove(sq64To120[sq], targetSq, 0, 0, 0));
-            }
-
-            attacksPattern &= attacksPattern - 1;
-        }
-    }
-}
-
-void genQueenMoves()
-{
-    U64 queenBitboard = (board->side == white) ? bitboard->pieces[wq] : bitboard->pieces[bq];
-    U64 friendlyPiecesBitboard = bitboard->getPieces(board->side);
-    U64 enemyPiecesBitboard = bitboard->getPieces(board->side ^ 1);
-
-    while (queenBitboard)
-    {
-        int sq = __builtin_ctzll(queenBitboard);
-        queenBitboard &= queenBitboard - 1;
-        U64 attacksPattern = getBishopAttacks(sq) | getRookAttacks(sq);
-
-        // remove friendly blockers
-        attacksPattern &= ~friendlyPiecesBitboard;
-
-        while (attacksPattern)
-        {
-            int targetSq = sq64To120[__builtin_ctzll(attacksPattern)];
-            if (enemyPiecesBitboard & (1ULL << sq120To64[targetSq]))
-            {
-                addCaptureMove(buildMove(sq64To120[sq], targetSq, board->pieces[targetSq], 0, 0));
-            }
-            else
-            {
-                addQuiteMove(buildMove(sq64To120[sq], targetSq, 0, 0, 0));
-            }
-
-            attacksPattern &= attacksPattern - 1;
-        }
-    }
-}
-
 
 std::vector<int> &generateMoves()
 {
@@ -355,10 +292,56 @@ std::vector<int> &generateMoves()
             }
         }
     }
-    genRookMoves();
-    genBishopMoves();
-    genQueenMoves();
-    genKingMoves();
-    genKnightMoves();
+    genSlidingMoves();
+    genNonSlidingMoves();
+    return moves;
+}
+
+std::vector<int> &generateCaptureMoves()
+{
+    moves.clear();
+    if (board->side == white)
+    {
+        U64 wpBitboard = bitboard->pieces[wp];
+        // loop white pawn
+        while (wpBitboard)
+        {
+            int sq = sq64To120[__builtin_ctzll(wpBitboard)];
+            wpBitboard &= wpBitboard - 1;
+
+            // add capture move
+            if (board->pieces[sq + 9] != offBoard && pieceColor[board->pieces[sq + 9]] == black)
+            {
+                addWhiteCaptureMove(sq, sq + 9, board->pieces[sq + 9]);
+            }
+            if (board->pieces[sq + 11] != offBoard && pieceColor[board->pieces[sq + 11]] == black)
+            {
+                addWhiteCaptureMove(sq, sq + 11, board->pieces[sq + 11]);
+            }
+
+        } // end loop
+    }
+    else
+    {
+        U64 bpBitboard = bitboard->pieces[bp];
+        // loop black pawn
+        while (bpBitboard)
+        {
+            int sq = sq64To120[__builtin_ctzll(bpBitboard)];
+            bpBitboard &= bpBitboard - 1;
+
+            // add capture move
+            if (board->pieces[sq - 9] != offBoard && pieceColor[board->pieces[sq - 9]] == white)
+            {
+                addBlackCaptureMove(sq, sq - 9, board->pieces[sq - 9]);
+            }
+            if (board->pieces[sq - 11] != offBoard && pieceColor[board->pieces[sq - 11]] == white)
+            {
+                addBlackCaptureMove(sq, sq - 11, board->pieces[sq - 11]);
+            }
+        }
+    }
+    genSlidingMoves(true);
+    genNonSlidingMoves(true);
     return moves;
 }
