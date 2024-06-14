@@ -1,4 +1,5 @@
 #include "defs.hpp"
+#include "move.hpp"
 #include <chrono>
 
 // Initialize global variables
@@ -102,15 +103,15 @@ void initialize() {
     initSquareMappings();
 }
 
-int fileRank2Sq(int file, int rank) {
+inline int fileRank2Sq(int file, int rank) {
     return (rank * 10 + file) + 21;
 }
 
-int fileOf(int sq) {
+inline int fileOf(int sq) {
     return (sq % 10) - 1;
 }
 
-int rankOf(int sq) {
+inline int rankOf(int sq) {
     return (sq - 21) / 10;
 }
 
@@ -124,6 +125,23 @@ const char* moveStr(int from, int to){
     move[4] = '\0';
 
     return move;
+}
+
+
+std::string moveStr(int move) {
+    if (!move) return "";
+
+    char moveStr[5];
+    int from = moveFrom(move);
+    int to = moveTo(move);
+
+    moveStr[0] = 'a' + fileOf(from);
+    moveStr[1] = '1' + rankOf(from);
+    moveStr[2] = 'a' + fileOf(to);
+    moveStr[3] = '1' + rankOf(to);
+    moveStr[4] = '\0';
+
+    return std::string(moveStr);
 }
 
 long long getCurrTime() {

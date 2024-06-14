@@ -6,6 +6,8 @@
 #include "evaluation.hpp"
 #include "transpositionTable.hpp"
 #include "utils.hpp"
+#include <iostream>
+#include <iomanip>
 
 SearchController *searchController = new SearchController;
 
@@ -34,16 +36,28 @@ void SearchController::clear()
     stop = false;
 }
 
-int searchPosition(int thinkingTime)
+void searchPosition(long long thinkingTime)
 {
     int bestMove = 0;
     int bestScore = -Infinite;
     int depth = 1;
     float ordering = 0;
 
+    searchController->clear();
     searchController->depth = maxDepth;
     searchController->start = getCurrTime();
     searchController->time = thinkingTime;
+
+    // table head
+    std::cout << std::left
+              << std::setw(8) << "Depth"
+              << std::setw(10) << "Time"
+              << std::setw(12) << "Ordering"
+              << std::setw(10) << "Nodes"
+              << std::setw(12) << "Best Move"
+              << std::setw(12) << "Best Score"
+              << std::setw(10) << "Line"
+              << std::endl;
 
     for (depth = 1; depth <= searchController->depth; ++depth)
     {
@@ -51,16 +65,32 @@ int searchPosition(int thinkingTime)
         if (searchController->stop)
             break;
 
-        int bestMove = transpositionTable->getMove();
-        if(depth != 1 && searchController->fh){
-			ordering = ((float)searchController->fhf / (float)searchController->fh) * 100;
+        bestMove = transpositionTable->getMove();
+        if (depth != 1 && searchController->fh)
+        {
+            ordering = ((float)searchController->fhf / (float)searchController->fh) * 100;
         }
+        std::vector<int> line = transpositionTable->getLine(depth);
+        std::string lineStr;
+        for (auto move : line)
+        {
+            lineStr += moveStr(move) + ' ';
+        }
+
+        // table data
+        std::cout << std::left
+                  << std::setw(8) << depth
+                  << std::setw(10) << getCurrTime() - searchController->start
+                  << std::fixed << std::setprecision(2) << std::setw(12) << ordering
+                  << std::setw(10) << searchController->nodes
+                  << std::setw(12) << moveStr(bestMove)
+                  << std::setw(12) << bestScore
+                  << std::setw(11) << lineStr
+                  << std::endl;
     }
 
     searchController->thinking = false;
 }
-
-int getCurrTime();
 
 int alphaBeta(int alpha, int beta, int depth, bool doNull)
 {
@@ -92,19 +122,26 @@ int alphaBeta(int alpha, int beta, int depth, bool doNull)
     int score = -Infinite;
     TableData *ttEntry = transpositionTable->get(board->positionKey);
     int pvMove = 0;
-    if(ttEntry){
+    if (ttEntry)
+    {
         pvMove = ttEntry->move;
-        if(ttEntry->depth >= depth){
+        if (ttEntry->depth >= depth)
+        {
             score = ttEntry->score;
-            if(score > Mate) score -= searchController->ply;
-            else if(score < -Mate) score += searchController->ply;
-			if(ttEntry->flag == AlphaFlag && score <= alpha) return alpha;
-			if(ttEntry->flag == BetaFlag && score >= beta) return beta;
-			if(ttEntry->flag == ExactFlag) return score;
+            if (score > Mate)
+                score -= searchController->ply;
+            else if (score < -Mate)
+                score += searchController->ply;
+            if (ttEntry->flag == AlphaFlag && score <= alpha)
+                return alpha;
+            if (ttEntry->flag == BetaFlag && score >= beta)
+                return beta;
+            if (ttEntry->flag == ExactFlag)
+                return score;
         }
     }
 
-    //NULL Move Pruning
+    // NULL Move Pruning
     if (doNull && !inCheck && searchController->ply && depth >= 4)
     {
         makeNullMove();
@@ -118,20 +155,27 @@ int alphaBeta(int alpha, int beta, int depth, bool doNull)
         }
     }
 
-    std::vector<int> moves = generateMoves();
+    std::vector<std::pair<int, int>> moves = generateMoves();
     int legalMoves = 0;
     int prevAlpha = alpha;
     int bestMove = 0;
 
-    // iterate all moves and give the score 2000000 to order pv move
-    if(pvMove){
-
-    }
-    
-    for (int i = 0; i < moves.size(); ++i)
+    if (pvMove)
     {
-        // swapWithBest(i, moves);
-        int move = moves[i];
+        for (auto &pair : moves)
+        {
+            if (pair.first == pvMove)
+            {
+                pair.second = 2000000;
+                break;
+            }
+        }
+    }
+
+    for (auto i = 0u; i < moves.size(); ++i)
+    {
+        swapWithBest(i, moves);
+        int move = moves[i].first;
         if (makeMove(move) == false)
             continue;
         legalMoves++;
@@ -224,12 +268,12 @@ int quiescence(int alpha, int beta)
         alpha = score;
 
     int legalMove = 0;
-    std::vector<int> moves = generateCaptureMoves();
+    std::vector<std::pair<int, int>> moves = generateCaptureMoves();
 
-    for (int i = 0; i < moves.size(); ++i)
+    for (auto i = 0u; i < moves.size(); ++i)
     {
         swapWithBest(i, moves);
-        const int move = moves[i];
+        const int move = moves[i].first;
 
         if (makeMove(move) == false)
             continue;
@@ -262,17 +306,39 @@ int quiescence(int alpha, int beta)
     return alpha;
 }
 
-void swapWithBest(int i, std::vector<int> &moves)
+void checkTimeUp()
 {
-    
+    if ((getCurrTime() - searchController->start) > searchController->time)
+    {
+        searchController->stop = true;
+    }
 }
 
-bool isRepetition() {
-	for (int i = board->ply - board->fiftyMove; i < board->ply - 1; ++i) {
-		if (board->positionKey == board->history[i]->positionKey) {
-			return true;
-		}
-	}
+void swapWithBest(int i, std::vector<std::pair<int, int>> &moves)
+{
+    int bestIndex = i;
+    for (auto j = unsigned(i + 1); j < moves.size(); ++j)
+    {
+        if (moves[j].second > moves[bestIndex].second)
+        {
+            bestIndex = j;
+        }
+    }
+    if (bestIndex != i)
+    {
+        std::swap(moves[i], moves[bestIndex]);
+    }
+}
 
-	return false;
+bool isRepetition()
+{
+    for (int i = board->ply - board->fiftyMove; i < board->ply - 1; ++i)
+    {
+        if (board->positionKey == board->history[i].positionKey)
+        {
+            return true;
+        }
+    }
+
+    return false;
 }

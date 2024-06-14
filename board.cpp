@@ -2,6 +2,7 @@
 #include "board.hpp"
 #include "bitboard.hpp"
 #include "zobristKeys.hpp"
+#include "transpositionTable.hpp"
 #include <iostream>
 #include <iomanip>
 
@@ -15,31 +16,26 @@ Board::Board()
 
 void Board::pushMoveToHistory(int move)
 {
-    history[ply++] = new MoveInfo{
-        fiftyMove,
-        positionKey,
-        enPassantSq,
-        castlePermission,
-        checkSq,
-        move
-    };
+    history[ply].fiftyMove = this->fiftyMove;
+    history[ply].fiftyMove = this->fiftyMove;
+    history[ply].positionKey = this->positionKey;
+    history[ply].enPassantSq = this->enPassantSq;
+    history[ply].castlePermission = this->castlePermission;
+    history[ply].checkSq = this->checkSq;
+    history[ply].move = move;
+    ply++;
 }
 MoveInfo *Board::popMoveFromHistory()
 {
-    if (ply > 0) {
-        MoveInfo* moveInfo = history[--ply];
-        history[ply] = nullptr; 
-        return moveInfo; 
-    } else {
+    if (ply > 0)
+    {
+        MoveInfo *moveInfo = &history[--ply];
+        return moveInfo;
+    }
+    else
+    {
         std::cerr << "No moves to pop!" << std::endl;
         return nullptr;
-    }
-}
-void Board::freeHistory()
-{
-    for (int i = 0; i < board->ply; ++i)
-    {
-        delete board->history[i];
     }
 }
 
@@ -81,6 +77,17 @@ void Board::updateMaterial()
 
 void Board::reset()
 {
+    transpositionTable->clear();
+    
+    for (int i = 0; i < 1024; ++i)
+    {
+        history[i].fiftyMove = 0;
+        history[i].positionKey = 0ULL;
+        history[i].enPassantSq = noSq;
+        history[i].castlePermission = 0;
+        history[i].checkSq = noSq;
+        history[i].move = 0;
+    }
     for (int i = 0; i < 120; ++i)
     {
         pieces[i] = offBoard;
@@ -102,10 +109,6 @@ void Board::reset()
     positionKey = 0;
     ply = 0;
 
-    for (int i = 0; i < 1024; ++i)
-    {
-        history[i] = NULL;
-    }
 }
 void Board::print()
 {
@@ -140,7 +143,8 @@ void Board::print()
     std::cout << "Key: 0x" << std::hex << positionKey << std::dec << std::endl;
     std::cout << "Fen: " << getFen() << std::endl;
     std::cout << "Castle: " << castlePermission << std::endl;
-    if (board->checkSq != noSq) {
+    if (board->checkSq != noSq)
+    {
         printf("\033[31mcheck : %s\033[0m\n", squareChar[board->checkSq]);
     }
 }
@@ -190,9 +194,11 @@ void Board::parseFen(std::string &fen)
         }
         ++i;
     }
-    while (fen[++i] == ' '); // skip white space
+    while (fen[++i] == ' ')
+        ; // skip white space
     side = (fen[i] == 'w') ? white : black;
-    while (fen[++i] == ' '); // skip white space
+    while (fen[++i] == ' ')
+        ; // skip white space
     while (fen[i] != ' ')
     {
         switch (fen[i++])
@@ -205,7 +211,8 @@ void Board::parseFen(std::string &fen)
         }
     }
 
-    while (fen[++i] == ' '); // skip white space
+    while (fen[++i] == ' ')
+        ; // skip white space
     if (fen[i] != '-')
     {
         int file = fen[i++] - 'a';
@@ -215,13 +222,14 @@ void Board::parseFen(std::string &fen)
     updateMaterial();
     bitboard->initBoard(this);
 
-    //is in check
+    // is in check
     int kingOnSq = __builtin_ctzll(bitboard->pieces[Kings[side]]);
-    if(isUnderAttack(kingOnSq, board->side ^ 1)){
+    if (isUnderAttack(kingOnSq, board->side ^ 1))
+    {
         board->checkSq = sq64To120[kingOnSq];
     }
 
-    //generate a uniqe position key
+    // generate a uniqe position key
     positionKey = generatePositionKey();
 }
 

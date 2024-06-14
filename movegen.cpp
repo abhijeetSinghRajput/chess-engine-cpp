@@ -3,24 +3,60 @@
 #include "bitboard.hpp"
 #include "utils.hpp"
 #include "move.hpp"
+#include "search.hpp"
 #include "movegen.hpp"
 #include <vector>
 
-std::vector<int> moves;
+std::vector<std::pair<int, int>> moves;
+//MvvLva = [victim][attacker]
+int MvvLva[13][13] = {
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 105, 102, 104, 103, 101, 100, 105, 102, 104, 103, 101, 100},
+    {0, 405, 402, 404, 403, 401, 400, 405, 402, 404, 403, 401, 400},
+    {0, 205, 202, 204, 203, 201, 200, 205, 202, 204, 203, 201, 200},
+    {0, 305, 302, 304, 303, 301, 300, 305, 302, 304, 303, 301, 300},
+    {0, 505, 502, 504, 503, 501, 500, 505, 502, 504, 503, 501, 500},
+    {0, 605, 602, 604, 603, 601, 600, 605, 602, 604, 603, 601, 600},
+    {0, 105, 102, 104, 103, 101, 100, 105, 102, 104, 103, 101, 100},
+    {0, 405, 402, 404, 403, 401, 400, 405, 402, 404, 403, 401, 400},
+    {0, 205, 202, 204, 203, 201, 200, 205, 202, 204, 203, 201, 200},
+    {0, 305, 302, 304, 303, 301, 300, 305, 302, 304, 303, 301, 300},
+    {0, 505, 502, 504, 503, 501, 500, 505, 502, 504, 503, 501, 500},
+    {0, 605, 602, 604, 603, 601, 600, 605, 602, 604, 603, 601, 600},
+};
 
 void addCaptureMove(int move)
 {
-    moves.push_back(move);
+    int victim = moveCapturePiece(move);
+    int attacker = board->pieces[moveFrom(move)];
+    int score = MvvLva[victim][attacker] + 1000000;
+    moves.push_back({ move, score});
 }
 
-void addQuiteMove(int move)
-{
-    moves.push_back(move);
+void addQuiteMove(int move) {
+    int score = 0;
+    if(searchController->ply < 0 && searchController->ply >= 64){
+        printf("---- %d\n",searchController->ply);
+    }
+    if (searchController->killers[searchController->ply][0] == move) {
+        score = 900000;
+    }
+    else if (searchController->killers[searchController->ply][1] == move) {
+        score = 800000;
+    }
+    else {
+        int piece = board->pieces[moveFrom(move)];
+        int toSq = moveTo(move);
+        score = searchController->history[piece][toSq];
+    }
+
+    moves.push_back({ move, score});
 }
 
-void addEnPassantMove(int move)
-{
-    moves.push_back(move);
+void addEnPassantMove(int move) {
+    //MvvLva[Pieces.wp][Pieces.bp] == MvvLva[Pieces.bp][Pieces.wp]
+    int score = MvvLva[wp][bp] + 1000000;
+    moves.push_back({ move, score});
 }
 
 void addWhitePawnQuietMove(int from, int to)
@@ -110,7 +146,7 @@ void genNonSlidingMoves(bool capturesOnly)
                 {
                     addCaptureMove(buildMove(sq64To120[sq], targetSq, board->pieces[targetSq], 0, 0));
                 }
-                else if(!capturesOnly)
+                else if (!capturesOnly)
                 {
                     addQuiteMove(buildMove(sq64To120[sq], targetSq, 0, 0, 0));
                 }
@@ -141,7 +177,7 @@ void genSlidingMoves(bool capturesOnly)
                 case 'r': attacksPattern = getRookAttacks(sq); break;
                 case 'b': attacksPattern = getBishopAttacks(sq); break;
                 case 'q': attacksPattern = getBishopAttacks(sq) | getRookAttacks(sq); break;
-                default:break;
+                default: break;
             }
             // remove friendly blockers
             attacksPattern &= ~friendlyPiecesBitboard;
@@ -154,7 +190,7 @@ void genSlidingMoves(bool capturesOnly)
                 {
                     addCaptureMove(buildMove(sq64To120[sq], targetSq, board->pieces[targetSq], 0, 0));
                 }
-                else if(!capturesOnly)
+                else if (!capturesOnly)
                 {
                     addQuiteMove(buildMove(sq64To120[sq], targetSq, 0, 0, 0));
                 }
@@ -165,7 +201,7 @@ void genSlidingMoves(bool capturesOnly)
     }
 }
 
-std::vector<int> &generateMoves()
+std::vector<std::pair<int, int>> &generateMoves()
 {
     moves.clear();
     if (board->side == white)
@@ -297,7 +333,7 @@ std::vector<int> &generateMoves()
     return moves;
 }
 
-std::vector<int> &generateCaptureMoves()
+std::vector<std::pair<int, int>> &generateCaptureMoves()
 {
     moves.clear();
     if (board->side == white)

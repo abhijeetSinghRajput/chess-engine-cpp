@@ -20,7 +20,7 @@ public:
     int pieceCount[13];
     int material[2];
     U64 positionKey = 0;
-    MoveInfo *history[1024];
+    MoveInfo history[1024];
 
     Board();
     void freeHistory();

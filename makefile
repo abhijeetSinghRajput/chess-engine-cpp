@@ -5,13 +5,13 @@ CXX = g++
 CXXFLAGS = -std=c++11 -Wall -Wextra
 
 # Executable name
-EXEC = main
+EXEC = chess
 
 # Source files
-SRCS = main.cpp board.cpp bitboard.cpp utils.cpp evaluation.cpp move.cpp movegen.cpp transpositionTable.cpp
+SRCS = defs.cpp main.cpp board.cpp bitboard.cpp utils.cpp evaluation.cpp move.cpp movegen.cpp transpositionTable.cpp search.cpp perft.cpp
 
 # Header files
-HEADERS = defs.hpp board.hpp bitboard.hpp utils.hpp evaluation.hpp move.hpp movegen.hpp transpositionTable.hpp
+HEADERS = defs.hpp board.hpp bitboard.hpp utils.hpp evaluation.hpp move.hpp movegen.hpp transpositionTable.hpp search.hpp perft.hpp
 
 # Object files
 OBJS = $(SRCS:.cpp=.o)

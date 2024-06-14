@@ -6,12 +6,12 @@ class SearchController
 private:
 public:
     int depthReached;
-    int nodes;
+    long long nodes;
     int fh;
     int fhf;
     int depth;
-    int time;
-    int start;
+    long long time;
+    long long start;
     bool stop;
     int bestMove;
     int bestScore;
@@ -23,11 +23,11 @@ public:
     void clear();
 };
 
-int searchPosition(int thinkingTime);
+void searchPosition(long long thinkingTime = 2000);
 int alphaBeta(int alpha, int beta, int depth, bool doNull);
 int quiescence(int alpha, int beta);
-int swapWithBest(int i, int move);
-bool checkTimeUp();
+void swapWithBest(int i, std::vector<std::pair<int, int>> &moves);
+void checkTimeUp();
 bool isRepetition();
 
 extern SearchController *searchController;

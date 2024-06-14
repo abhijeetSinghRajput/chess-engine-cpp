@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <vector>
 #include <string>
 #include <algorithm>
@@ -87,13 +88,15 @@ struct TableData
     int score;
     int depth;
     int flag;
+    U64 smp_data;
+    U64 smp_key;
 };
 
 // functions
 
 void initialize();
-int fileRank2Sq(int file, int rank);
-int fileOf(int sq);
-int rankOf(int sq);
-const char *moveStr(int from, int to);
+inline int fileRank2Sq(int file, int rank);
+inline int fileOf(int sq);
+inline int rankOf(int sq);
+std::string moveStr(int move);
 long long getCurrTime();
