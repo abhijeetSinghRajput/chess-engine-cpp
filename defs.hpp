@@ -83,11 +83,6 @@ struct MoveInfo
 
 struct TableData
 {
-    U64 positionKey;
-    int move;
-    int score;
-    int depth;
-    int flag;
     U64 smp_data;
     U64 smp_key;
 };
@@ -95,8 +90,9 @@ struct TableData
 // functions
 
 void initialize();
-inline int fileRank2Sq(int file, int rank);
-inline int fileOf(int sq);
-inline int rankOf(int sq);
+
+inline int fileRank2Sq(int file, int rank) { return (rank * 10 + file) + 21; }
+inline int fileOf(int sq) { return (sq % 10) - 1; }
+inline int rankOf(int sq) { return (sq - 21) / 10; }
 std::string moveStr(int move);
 long long getCurrTime();

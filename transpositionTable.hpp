@@ -22,10 +22,15 @@ public:
     int getMove();
 };
 
-inline U64 pack_tableData(int score, int depth, int flag, U64 move);
-inline int extract_score(U64 data);
-inline int extract_move(U64 data);
-inline int extract_flag(U64 data);
-inline int extract_depth(U64 data);
+
+inline U64 pack_tableData(int score, int depth, int flag, U64 move)
+{
+    return (score + 32000) | (depth << 16) | (flag << 22) | (move << 24);
+}
+
+inline int extract_score(U64 data) { return (data & 0xffff) - 32000; }
+inline int extract_move(U64 data) { return data >> 24; }
+inline int extract_flag(U64 data) { return (data >> 22) & 3; }
+inline int extract_depth(U64 data) { return (data >> 16) & 0x3f; }
 
 extern TranspositionTable* transpositionTable;

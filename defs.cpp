@@ -103,18 +103,6 @@ void initialize() {
     initSquareMappings();
 }
 
-inline int fileRank2Sq(int file, int rank) {
-    return (rank * 10 + file) + 21;
-}
-
-inline int fileOf(int sq) {
-    return (sq % 10) - 1;
-}
-
-inline int rankOf(int sq) {
-    return (sq - 21) / 10;
-}
-
 const char* moveStr(int from, int to){
     static char move[5];
 

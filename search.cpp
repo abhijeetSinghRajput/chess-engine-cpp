@@ -44,7 +44,7 @@ void searchPosition(long long thinkingTime)
     float ordering = 0;
 
     searchController->clear();
-    searchController->depth = maxDepth;
+    searchController->depth = 10;
     searchController->start = getCurrTime();
     searchController->time = thinkingTime;
 
@@ -53,7 +53,7 @@ void searchPosition(long long thinkingTime)
               << std::setw(8) << "Depth"
               << std::setw(10) << "Time"
               << std::setw(12) << "Ordering"
-              << std::setw(10) << "Nodes"
+              << std::setw(14) << "Nodes"
               << std::setw(12) << "Best Move"
               << std::setw(12) << "Best Score"
               << std::setw(10) << "Line"
@@ -82,7 +82,7 @@ void searchPosition(long long thinkingTime)
                   << std::setw(8) << depth
                   << std::setw(10) << getCurrTime() - searchController->start
                   << std::fixed << std::setprecision(2) << std::setw(12) << ordering
-                  << std::setw(10) << searchController->nodes
+                  << std::setw(14) << searchController->nodes
                   << std::setw(12) << moveStr(bestMove)
                   << std::setw(12) << bestScore
                   << std::setw(11) << lineStr
@@ -124,19 +124,19 @@ int alphaBeta(int alpha, int beta, int depth, bool doNull)
     int pvMove = 0;
     if (ttEntry)
     {
-        pvMove = ttEntry->move;
-        if (ttEntry->depth >= depth)
+        pvMove =  extract_move(ttEntry->smp_data);
+        if ( extract_depth(ttEntry->smp_data) >= depth)
         {
-            score = ttEntry->score;
+            score =  extract_score(ttEntry->smp_data);
             if (score > Mate)
                 score -= searchController->ply;
             else if (score < -Mate)
                 score += searchController->ply;
-            if (ttEntry->flag == AlphaFlag && score <= alpha)
+            if ( extract_flag(ttEntry->smp_data) == AlphaFlag && score <= alpha)
                 return alpha;
-            if (ttEntry->flag == BetaFlag && score >= beta)
+            if ( extract_flag(ttEntry->smp_data) == BetaFlag && score >= beta)
                 return beta;
-            if (ttEntry->flag == ExactFlag)
+            if ( extract_flag(ttEntry->smp_data) == ExactFlag)
                 return score;
         }
     }
@@ -308,6 +308,7 @@ int quiescence(int alpha, int beta)
 
 void checkTimeUp()
 {
+    return;
     if ((getCurrTime() - searchController->start) > searchController->time)
     {
         searchController->stop = true;
