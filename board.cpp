@@ -157,6 +157,7 @@ void Board::parseFen(std::string &fen)
     int file = fileA;
     int rank = rank8;
     int sq;
+    while (fen[i] == ' ') i++; // skip white space
 
     while (fen[i] != ' ')
     {
@@ -194,11 +195,9 @@ void Board::parseFen(std::string &fen)
         }
         ++i;
     }
-    while (fen[++i] == ' ')
-        ; // skip white space
+    while (fen[++i] == ' '); // skip white space
     side = (fen[i] == 'w') ? white : black;
-    while (fen[++i] == ' ')
-        ; // skip white space
+    while (fen[++i] == ' '); // skip white space
     while (fen[i] != ' ')
     {
         switch (fen[i++])
@@ -211,8 +210,7 @@ void Board::parseFen(std::string &fen)
         }
     }
 
-    while (fen[++i] == ' ')
-        ; // skip white space
+    while (fen[++i] == ' '); // skip white space
     if (fen[i] != '-')
     {
         int file = fen[i++] - 'a';

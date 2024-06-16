@@ -1,40 +1,13 @@
 #include <iostream>
-#include "defs.hpp"
-#include "board.hpp"
-#include "search.hpp"
-#include "movegen.hpp"
-#include "perft.hpp"
+#include "uci.hpp"
 
 #include <conio.h>
 using namespace std;
-#include "evaluation.hpp"
 
 int main()
 {
-    // string maxMoves1 = "R6R/3Q4/1Q4Q1/4Q3/2Q4Q/Q4Q2/pp1Q4/kBNN1KB1 w - - 0 1";
-    // string maxMoves2 = "3Q4/1Q4Q1/4Q3/2Q4R/Q4Q2/3Q4/1Q4Rp/1K1BBNNk w - - 0 1";
-    // string perft1 = "8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - ";
-    // string perft2 = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - ";
-    string perft3 = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq -";
-    // string perft4 = "5rk1/1p6/q2P3p/2p2rp1/p1nbQ3/P1N3BP/1PR1B1P1/4K3 b - - 0 1";
-    // string perft5 = "rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8 ";
-    // startFen = "8/8/3p1p2/4p3/3P4/2P1P3/8/8 w - - 0 1";
-    board->parseFen(startFen);
-    board->print();
-    cout << "eval: " << evalPosition() << endl;
-    // searchPosition(10000);
-    // cout << moveStr(searchController->bestMove) << endl;
-
-    // cout<<"press any key to search again.";
-    // while (true)
-    // {
-    //     char ch = getch();
-    //     if (ch == 'q')
-    //         break;
-    //     system("cls");
-    //     searchPosition(10000);
-    //     cout << moveStr(searchController->bestMove) << endl;
-    // }
-
+    // position startpos moves e2e4 d7d5 e4d5 c7c5 d5c6 b7b5 c6c7 b5b4 c7b8n b4b3 c2c3 b3a2 d1a4 d8d7 f1b5 a2b1q
+    // position key: 4d2e1d7
+    UCI();
     return 0;
 }
