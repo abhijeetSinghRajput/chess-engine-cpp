@@ -23,7 +23,6 @@ public:
     MoveInfo history[1024];
 
     Board();
-    void freeHistory();
     void pushMoveToHistory(int move);
     MoveInfo *popMoveFromHistory();
 

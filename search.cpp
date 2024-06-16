@@ -44,7 +44,7 @@ void searchPosition(long long thinkingTime)
     float ordering = 0;
 
     searchController->clear();
-    searchController->depth = 10;
+    searchController->depth = maxDepth;
     searchController->start = getCurrTime();
     searchController->time = thinkingTime;
 
@@ -308,7 +308,6 @@ int quiescence(int alpha, int beta)
 
 void checkTimeUp()
 {
-    return;
     if ((getCurrTime() - searchController->start) > searchController->time)
     {
         searchController->stop = true;

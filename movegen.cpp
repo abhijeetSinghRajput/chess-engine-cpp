@@ -8,7 +8,8 @@
 #include <vector>
 
 std::vector<std::pair<int, int>> moves;
-//MvvLva = [victim][attacker]
+
+// MvvLva = [victim][attacker]
 int MvvLva[13][13] = {
     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
     {0, 105, 102, 104, 103, 101, 100, 105, 102, 104, 103, 101, 100},
@@ -30,33 +31,39 @@ void addCaptureMove(int move)
     int victim = moveCapturePiece(move);
     int attacker = board->pieces[moveFrom(move)];
     int score = MvvLva[victim][attacker] + 1000000;
-    moves.push_back({ move, score});
+    moves.push_back({move, score});
 }
 
-void addQuiteMove(int move) {
+void addQuiteMove(int move)
+{
     int score = 0;
-    if(searchController->ply < 0 && searchController->ply >= 64){
-        printf("---- %d\n",searchController->ply);
+    if (searchController->ply < 0 && searchController->ply >= 64)
+    {
+        printf("---- %d\n", searchController->ply);
     }
-    if (searchController->killers[searchController->ply][0] == move) {
+    if (searchController->killers[searchController->ply][0] == move)
+    {
         score = 900000;
     }
-    else if (searchController->killers[searchController->ply][1] == move) {
+    else if (searchController->killers[searchController->ply][1] == move)
+    {
         score = 800000;
     }
-    else {
+    else
+    {
         int piece = board->pieces[moveFrom(move)];
         int toSq = moveTo(move);
         score = searchController->history[piece][toSq];
     }
 
-    moves.push_back({ move, score});
+    moves.push_back({move, score});
 }
 
-void addEnPassantMove(int move) {
-    //MvvLva[Pieces.wp][Pieces.bp] == MvvLva[Pieces.bp][Pieces.wp]
+void addEnPassantMove(int move)
+{
+    // MvvLva[Pieces.wp][Pieces.bp] == MvvLva[Pieces.bp][Pieces.wp]
     int score = MvvLva[wp][bp] + 1000000;
-    moves.push_back({ move, score});
+    moves.push_back({move, score});
 }
 
 void addWhitePawnQuietMove(int from, int to)
@@ -174,10 +181,17 @@ void genSlidingMoves(bool capturesOnly)
 
             switch (pieceType[piece])
             {
-                case 'r': attacksPattern = getRookAttacks(sq); break;
-                case 'b': attacksPattern = getBishopAttacks(sq); break;
-                case 'q': attacksPattern = getBishopAttacks(sq) | getRookAttacks(sq); break;
-                default: break;
+            case 'r':
+                attacksPattern = getRookAttacks(sq);
+                break;
+            case 'b':
+                attacksPattern = getBishopAttacks(sq);
+                break;
+            case 'q':
+                attacksPattern = getBishopAttacks(sq) | getRookAttacks(sq);
+                break;
+            default:
+                break;
             }
             // remove friendly blockers
             attacksPattern &= ~friendlyPiecesBitboard;
@@ -203,7 +217,12 @@ void genSlidingMoves(bool capturesOnly)
 
 std::vector<std::pair<int, int>> &generateMoves()
 {
-    moves.clear();
+    if (moves.capacity() < 218)
+    {
+        moves.reserve(218);
+    }
+    moves.resize(0);
+
     if (board->side == white)
     {
         U64 wpBitboard = bitboard->pieces[wp];
@@ -335,7 +354,12 @@ std::vector<std::pair<int, int>> &generateMoves()
 
 std::vector<std::pair<int, int>> &generateCaptureMoves()
 {
-    moves.clear();
+    if (moves.capacity() < 218)
+    {
+        moves.reserve(218);
+    }
+    moves.resize(0);
+
     if (board->side == white)
     {
         U64 wpBitboard = bitboard->pieces[wp];
