@@ -28,15 +28,13 @@ void SearchController::clear()
         }
     }
     ply = 0;
-    depthReached = 0;
     nodes = 0;
     fh = 0;
     fhf = 0;
-    start = 0; // current date;
-    stop = false;
+    stopped = false;
 }
 
-void searchPosition(long long thinkingTime)
+void searchPosition()
 {
     int bestMove = 0;
     int bestScore = -Infinite;
@@ -44,31 +42,17 @@ void searchPosition(long long thinkingTime)
     float ordering = 0;
 
     searchController->clear();
-    searchController->depth = maxDepth;
-    searchController->start = getCurrTime();
-    searchController->time = thinkingTime;
-
-    // table head
-    std::cout << std::left
-              << std::setw(8) << "Depth"
-              << std::setw(10) << "Time"
-              << std::setw(12) << "Ordering"
-              << std::setw(14) << "Nodes"
-              << std::setw(12) << "Best Move"
-              << std::setw(12) << "Best Score"
-              << std::setw(10) << "Line"
-              << std::endl;
 
     for (depth = 1; depth <= searchController->depth; ++depth)
     {
         bestScore = alphaBeta(-Infinite, Infinite, depth, true);
-        if (searchController->stop)
+        if (searchController->stopped)
             break;
 
         bestMove = transpositionTable->getMove();
         if (depth != 1 && searchController->fh)
         {
-            ordering = ((float)searchController->fhf / (float)searchController->fh) * 100;
+            ordering = (searchController->fhf / searchController->fh) * 100;
         }
         std::vector<int> line = transpositionTable->getLine(depth);
         std::string lineStr;
@@ -77,19 +61,12 @@ void searchPosition(long long thinkingTime)
             lineStr += moveStr(move) + ' ';
         }
 
-        // table data
-        std::cout << std::left
-                  << std::setw(8) << depth
-                  << std::setw(10) << getCurrTime() - searchController->start
-                  << std::fixed << std::setprecision(2) << std::setw(12) << ordering
-                  << std::setw(14) << searchController->nodes
-                  << std::setw(12) << moveStr(bestMove)
-                  << std::setw(12) << bestScore
-                  << std::setw(11) << lineStr
-                  << std::endl;
+        printf("info score cp %d depth %d nodes %lld time %lld ",
+               bestScore, depth, searchController->nodes, getCurrTime() - searchController->startTime);
+        std::cout << "pv " << lineStr << std::endl;
+        // printf("\nordering: %d\n", ordering);
     }
-
-    searchController->thinking = false;
+    std::cout << "bestmove " << moveStr(bestMove) << std::endl;
 }
 
 int alphaBeta(int alpha, int beta, int depth, bool doNull)
@@ -124,19 +101,19 @@ int alphaBeta(int alpha, int beta, int depth, bool doNull)
     int pvMove = 0;
     if (ttEntry)
     {
-        pvMove =  extract_move(ttEntry->smp_data);
-        if ( extract_depth(ttEntry->smp_data) >= depth)
+        pvMove = extract_move(ttEntry->smp_data);
+        if (extract_depth(ttEntry->smp_data) >= depth)
         {
-            score =  extract_score(ttEntry->smp_data);
+            score = extract_score(ttEntry->smp_data);
             if (score > Mate)
                 score -= searchController->ply;
             else if (score < -Mate)
                 score += searchController->ply;
-            if ( extract_flag(ttEntry->smp_data) == AlphaFlag && score <= alpha)
+            if (extract_flag(ttEntry->smp_data) == AlphaFlag && score <= alpha)
                 return alpha;
-            if ( extract_flag(ttEntry->smp_data) == BetaFlag && score >= beta)
+            if (extract_flag(ttEntry->smp_data) == BetaFlag && score >= beta)
                 return beta;
-            if ( extract_flag(ttEntry->smp_data) == ExactFlag)
+            if (extract_flag(ttEntry->smp_data) == ExactFlag)
                 return score;
         }
     }
@@ -147,7 +124,7 @@ int alphaBeta(int alpha, int beta, int depth, bool doNull)
         makeNullMove();
         score = -alphaBeta(-beta, -beta + 1, depth - 4, false);
         takeNullMove();
-        if (searchController->stop)
+        if (searchController->stopped)
             return 0;
         if (score >= beta)
         {
@@ -185,7 +162,7 @@ int alphaBeta(int alpha, int beta, int depth, bool doNull)
         takeMove();
         searchController->ply--;
 
-        if (searchController->stop)
+        if (searchController->stopped)
             return 0;
 
         if (score > alpha)
@@ -285,7 +262,7 @@ int quiescence(int alpha, int beta)
         takeMove();
         searchController->ply--;
 
-        if (searchController->stop)
+        if (searchController->stopped)
             return 0;
 
         if (score > alpha)
@@ -308,9 +285,9 @@ int quiescence(int alpha, int beta)
 
 void checkTimeUp()
 {
-    if ((getCurrTime() - searchController->start) > searchController->time)
+    if (searchController->timeSet && getCurrTime() > searchController->stopTime)
     {
-        searchController->stop = true;
+        searchController->stopped = true;
     }
 }
 

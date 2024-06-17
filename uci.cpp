@@ -40,21 +40,45 @@ void handlePosition(std::istringstream &iss)
     board->print();
 }
 
-void handleSearch(std::istringstream &iss)
-{
-    std::string searchOption;
-    iss >> searchOption;
+void handleSearch(std::istringstream &iss) {
+    int depth = maxDepth, time = 0, inc = 0, movetime = 0, movestogo = 30;
+    std::string token;
 
-    if (searchOption == "depth")
-    {
+    while (iss >> token) {
+        if (token == "depth") iss >> depth;
+        else if (token == "movetime") iss >> movetime;
+        else if (token == "movestogo") iss >> movestogo;
+        else if (board->side == white && token == "wtime") iss >> time;
+        else if (board->side == black && token == "btime") iss >> time;
+        else if (board->side == white && token == "winc") iss >> inc;
+        else if (board->side == black && token == "binc") iss >> inc;
     }
-    else if (searchOption == "movetime")
-    {
+
+    searchController->depth = depth;
+    searchController->startTime = getCurrTime();
+
+    if (movetime > 0) {
+        searchController->timeSet = true;
+        time = movetime;
+    } else {
+        time += inc;
+        searchController->timeSet = static_cast<bool>(time);
+
+        if (movestogo <= 0) {
+            movestogo = 1;  // Avoid division by zero
+        }
+        time /= movestogo;
     }
-    else if (searchOption == "infinite")
-    {
-    }
+    
+    // std::cout<<"time: " <<time <<std::endl;
+    // std::cout<<"startTime: " <<searchController->startTime <<std::endl;
+    // std::cout<<"stopTime: " <<searchController->stopTime <<std::endl;
+    // std::cout<<"timeSet: " <<searchController->timeSet <<std::endl;
+
+    searchController->stopTime = searchController->startTime + time;
+    searchPosition();
 }
+
 
 void UCI()
 {
@@ -93,11 +117,15 @@ void UCI()
         }
         else if (command == "stop")
         {
-            searchController->stop = true;
+            searchController->stopped = true;
         }
         else if (command == "quit")
         {
+            searchController->stopped = true;
             break;
+        }
+        else if(command == "d"){
+            board->print();
         }
     }
 }
