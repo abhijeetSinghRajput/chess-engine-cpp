@@ -391,6 +391,11 @@ int evalPosition()
     {
         int sq = __builtin_ctzll(pieceBitboard);
         pieceBitboard &= pieceBitboard - 1;
+        //an orthogonal support from queen
+        if (getRookAttacks(sq) & bitboard->fileMasks[sq % 8] & pieceBitboard)
+        {
+            score += rookSupportSameFile;
+        }
 
         // mobility bonus
         mobility = __builtin_popcountll((getRookAttacks(sq) | getBishopAttacks(sq)) & ~allWhitePieces);
@@ -412,6 +417,11 @@ int evalPosition()
     {
         int sq = __builtin_ctzll(pieceBitboard);
         pieceBitboard &= pieceBitboard - 1;
+        //an orthogonal support from queen
+        if (getRookAttacks(sq) & bitboard->fileMasks[sq % 8] & pieceBitboard)
+        {
+            score -= rookSupportSameFile;
+        }
 
         // mobility bonus
         mobility = __builtin_popcountll((getRookAttacks(sq) | getBishopAttacks(sq)) & ~allBlackPieces);

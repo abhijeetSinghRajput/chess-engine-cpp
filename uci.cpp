@@ -39,8 +39,6 @@ void handlePosition(std::istringstream &iss)
             }
         }
     }
-
-    board->print();
 }
 
 void handleSearch(std::istringstream &iss)
@@ -93,7 +91,9 @@ void handleSearch(std::istringstream &iss)
 
     if (searchThread.joinable())
     {
+        searchController->stopped = true;
         searchThread.join();
+        searchController->stopped = false;
     }
 
     searchController->stopTime = searchController->startTime + time;

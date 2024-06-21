@@ -39,7 +39,7 @@ int searchPosition()
     int bestMove = 0;
     int bestScore = -Infinite;
     int depth = 1;
-    float ordering = 0;
+    // float ordering = 0;
 
     searchController->clear();
 
@@ -50,10 +50,10 @@ int searchPosition()
             break;
 
         bestMove = transpositionTable->getMove();
-        if (depth != 1 && searchController->fh)
-        {
-            ordering = (searchController->fhf / searchController->fh) * 100;
-        }
+        // if (depth != 1 && searchController->fh)
+        // {
+        //     ordering = (searchController->fhf / searchController->fh) * 100;
+        // }
         std::vector<int> line = transpositionTable->getLine(depth);
         std::string lineStr;
         for (auto move : line)
@@ -61,8 +61,8 @@ int searchPosition()
             lineStr += moveStr(move) + ' ';
         }
 
-        printf("info ord %f score cp %d depth %d nodes %lld time %lld ",
-               ordering, bestScore, depth, searchController->nodes, getCurrTime() - searchController->startTime);
+        printf("info score cp %d depth %d nodes %lld time %lld ",
+               bestScore, depth, searchController->nodes, getCurrTime() - searchController->startTime);
         std::cout << "pv " << lineStr << std::endl;
         // printf("\nordering: %d\n", ordering);
     }
