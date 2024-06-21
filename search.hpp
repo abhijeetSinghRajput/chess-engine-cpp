@@ -1,5 +1,6 @@
 #pragma once
 #include "defs.hpp"
+#include <atomic>
 
 class SearchController
 {
@@ -13,7 +14,7 @@ public:
 	long long nodes;
 
 	bool quit;
-	bool stopped;
+	std::atomic<bool> stopped;
 
 	float fh;
 	float fhf;

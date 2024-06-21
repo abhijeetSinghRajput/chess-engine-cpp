@@ -6,6 +6,9 @@
 #include <iostream>
 #include <sstream>
 #include <vector>
+#include <thread>
+
+std::thread searchThread;
 
 void handlePosition(std::istringstream &iss)
 {
@@ -88,8 +91,13 @@ void handleSearch(std::istringstream &iss)
     // std::cout<<"stopTime: " <<searchController->stopTime <<std::endl;
     // std::cout<<"timeSet: " <<searchController->timeSet <<std::endl;
 
+    if (searchThread.joinable())
+    {
+        searchThread.join();
+    }
+
     searchController->stopTime = searchController->startTime + time;
-    searchPosition();
+    searchThread = std::thread(searchPosition);
 }
 
 void UCI()
@@ -129,11 +137,19 @@ void UCI()
         }
         else if (command == "stop")
         {
-            searchController->stopped = true;
+            if (searchThread.joinable())
+            {
+                searchController->stopped = true;
+                searchThread.join();
+            }
         }
         else if (command == "quit")
         {
-            searchController->stopped = true;
+            if (searchThread.joinable())
+            {
+                searchController->stopped = true;
+                searchThread.join();
+            }
             break;
         }
         else if (command == "d")
@@ -166,7 +182,8 @@ void UCI()
                 makeMove(engineMove);
                 board->print();
             }
-            else{
+            else
+            {
                 printf("engine is unable think\n");
             }
         }
