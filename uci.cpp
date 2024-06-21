@@ -30,9 +30,9 @@ void handlePosition(std::istringstream &iss)
             while (iss >> token)
             {
                 int move = parseMove(token);
-                if(!move) break;
+                if (!move)
+                    break;
                 makeMove(move);
-                std::cout<<token<<std::endl;
             }
         }
     }
@@ -40,36 +40,49 @@ void handlePosition(std::istringstream &iss)
     board->print();
 }
 
-void handleSearch(std::istringstream &iss) {
+void handleSearch(std::istringstream &iss)
+{
     int depth = maxDepth, time = 0, inc = 0, movetime = 0, movestogo = 30;
     std::string token;
 
-    while (iss >> token) {
-        if (token == "depth") iss >> depth;
-        else if (token == "movetime") iss >> movetime;
-        else if (token == "movestogo") iss >> movestogo;
-        else if (board->side == white && token == "wtime") iss >> time;
-        else if (board->side == black && token == "btime") iss >> time;
-        else if (board->side == white && token == "winc") iss >> inc;
-        else if (board->side == black && token == "binc") iss >> inc;
+    while (iss >> token)
+    {
+        if (token == "depth")
+            iss >> depth;
+        else if (token == "movetime")
+            iss >> movetime;
+        else if (token == "movestogo")
+            iss >> movestogo;
+        else if (board->side == white && token == "wtime")
+            iss >> time;
+        else if (board->side == black && token == "btime")
+            iss >> time;
+        else if (board->side == white && token == "winc")
+            iss >> inc;
+        else if (board->side == black && token == "binc")
+            iss >> inc;
     }
 
     searchController->depth = depth;
     searchController->startTime = getCurrTime();
 
-    if (movetime > 0) {
+    if (movetime > 0)
+    {
         searchController->timeSet = true;
         time = movetime;
-    } else {
+    }
+    else
+    {
         time += inc;
         searchController->timeSet = static_cast<bool>(time);
 
-        if (movestogo <= 0) {
-            movestogo = 1;  // Avoid division by zero
+        if (movestogo <= 0)
+        {
+            movestogo = 1; // Avoid division by zero
         }
         time /= movestogo;
     }
-    
+
     // std::cout<<"time: " <<time <<std::endl;
     // std::cout<<"startTime: " <<searchController->startTime <<std::endl;
     // std::cout<<"stopTime: " <<searchController->stopTime <<std::endl;
@@ -78,7 +91,6 @@ void handleSearch(std::istringstream &iss) {
     searchController->stopTime = searchController->startTime + time;
     searchPosition();
 }
-
 
 void UCI()
 {
@@ -124,8 +136,43 @@ void UCI()
             searchController->stopped = true;
             break;
         }
-        else if(command == "d"){
+        else if (command == "d")
+        {
             board->print();
+        }
+        else if (command == "move")
+        {
+            std::string token;
+            iss >> token;
+            int move = parseMove(token);
+            if (!move)
+            {
+                printf("enter a valid move\n");
+                continue;
+                ;
+            }
+            makeMove(move);
+            board->print();
+
+            // engine move
+            searchController->depth = maxDepth;
+            searchController->startTime = getCurrTime();
+            searchController->stopTime = searchController->startTime + 2000;
+            searchController->timeSet = true;
+
+            int engineMove = searchPosition();
+            if (engineMove)
+            {
+                makeMove(engineMove);
+                board->print();
+            }
+            else{
+                printf("engine is unable think\n");
+            }
+        }
+        else if (command == "undo")
+        {
+            takeMove();
         }
     }
 }

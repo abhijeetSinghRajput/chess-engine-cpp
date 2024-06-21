@@ -34,7 +34,7 @@ void SearchController::clear()
     stopped = false;
 }
 
-void searchPosition()
+int searchPosition()
 {
     int bestMove = 0;
     int bestScore = -Infinite;
@@ -61,12 +61,13 @@ void searchPosition()
             lineStr += moveStr(move) + ' ';
         }
 
-        printf("info score cp %d depth %d nodes %lld time %lld ",
-               bestScore, depth, searchController->nodes, getCurrTime() - searchController->startTime);
+        printf("info ord %f score cp %d depth %d nodes %lld time %lld ",
+               ordering, bestScore, depth, searchController->nodes, getCurrTime() - searchController->startTime);
         std::cout << "pv " << lineStr << std::endl;
         // printf("\nordering: %d\n", ordering);
     }
     std::cout << "bestmove " << moveStr(bestMove) << std::endl;
+    return bestMove;
 }
 
 int alphaBeta(int alpha, int beta, int depth, bool doNull)

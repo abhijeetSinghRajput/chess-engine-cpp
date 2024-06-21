@@ -25,7 +25,7 @@ public:
     void clear();
 };
 
-void searchPosition();
+int searchPosition();
 int alphaBeta(int alpha, int beta, int depth, bool doNull);
 int quiescence(int alpha, int beta);
 void swapWithBest(int i, std::vector<std::pair<int, int>> &moves);

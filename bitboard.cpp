@@ -91,26 +91,38 @@ void Bitboard::print(int piece)
         for (int file = fileA; file <= fileH; ++file)
         {
             int sq = rank * 8 + file;
-            std::cout << ((bitBoard & (1ULL << sq)) ? "\033[32m1\033[0m" : "\033[30m.\033[0m") << " ";
+            std::cout << ((bitBoard & (1ULL << sq)) ? "\033[32m1\033[0m" : "\033[90m.\033[0m") << " ";
         }
         std::cout << std::endl;
     }
-    std::cout << std::endl;
+    std::cout<<"    ";
+    for (char file = 'a'; file <= 'h'; ++file)
+    {
+        std::cout << file << " ";
+    }
+    std::cout << std::endl
+              << std::endl;
 }
 void Bitboard::print(U64 bitBoard)
 {
-    std::cout << "0x" << std::hex << bitboard << std::dec << std::endl;
+    std::cout << "0x" << std::hex << bitBoard << std::dec << std::endl;
     for (int rank = rank8; rank >= rank1; --rank)
     {
         std::cout << rank + 1 << "   ";
         for (int file = fileA; file <= fileH; ++file)
         {
             int sq = rank * 8 + file;
-            std::cout << ((bitBoard & (1ULL << sq)) ? "\033[32m1\033[0m" : "\033[30m.\033[0m") << " ";
+            std::cout << ((bitBoard & (1ULL << sq)) ? "\033[32m1\033[0m" : "\033[90m.\033[0m") << " ";
         }
         std::cout << std::endl;
     }
-    std::cout << std::endl;
+    std::cout<<"    ";
+    for (char file = 'a'; file <= 'h'; ++file)
+    {
+        std::cout << file << " ";
+    }
+    std::cout << std::endl
+              << std::endl;
 }
 
 // ex key = (blokerBitboard * rookmagic[sq]) >> rookShifts[sq];
@@ -322,8 +334,9 @@ void Bitboard::initBoard(Board *board)
 }
 
 void Bitboard::init_attackMasks()
-{   
-    for(int sq = 0; sq<120; ++sq){
+{
+    for (int sq = 0; sq < 120; ++sq)
+    {
         Board::pieces[sq] = offBoard;
     }
     for (auto sq : sq64To120)
