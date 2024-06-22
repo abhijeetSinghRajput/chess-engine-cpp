@@ -69,6 +69,7 @@ const int BishopPair = 40;
 const int PawnIsolated = -10;
 const int PawnPassed[] = {0, 5, 10, 20, 35, 60, 100, 200};
 const int rookSupportSameFile = 10;
+const int rookSupportSameRank = 5;
 const int RookOpenFile = 20;
 const int RookSemiOpenFile = 10;
 const int QueenOpenFile = 10;
@@ -116,33 +117,14 @@ int kingSafety(int kingSq, int color)
 
     switch (kingSq)
     {
-    case b1:
-        pawnShieldMask = (7ULL << 8);
-        pawnStorm = enemyPawnBitboard & 0x70707070700ULL;
-        break;
-    case c1:
-        pawnShieldMask = (7ULL << 9);
-        pawnStorm = enemyPawnBitboard & 0xe0e0e0e0e00ULL;
-        break;
-    case g1:
-        pawnShieldMask = (7ULL << 13);
-        pawnStorm = enemyPawnBitboard & 0xe0e0e0e0e000ULL;
-        break;
-    case b8:
-        pawnShieldMask = (7ULL << 48);
-        pawnStorm = enemyPawnBitboard & 0x7070707070000ULL;
-        break;
-    case c8:
-        pawnShieldMask = (7ULL << 49);
-        pawnStorm = enemyPawnBitboard & 0xe0e0e0e0e0000ULL;
-        break;
-    case g8:
-        pawnShieldMask = (7ULL << 53);
-        pawnStorm = enemyPawnBitboard & 0xe0e0e0e0e00000ULL;
-        break;
+        case b1: pawnShieldMask = (7ULL << 8);  pawnStorm = enemyPawnBitboard & 0x70707070700ULL;    break;
+        case c1: pawnShieldMask = (7ULL << 9);  pawnStorm = enemyPawnBitboard & 0xe0e0e0e0e00ULL;    break;
+        case g1: pawnShieldMask = (7ULL << 13); pawnStorm = enemyPawnBitboard & 0xe0e0e0e0e000ULL;   break;
+        case b8: pawnShieldMask = (7ULL << 48); pawnStorm = enemyPawnBitboard & 0x7070707070000ULL;  break;
+        case c8: pawnShieldMask = (7ULL << 49); pawnStorm = enemyPawnBitboard & 0xe0e0e0e0e0000ULL;  break;
+        case g8: pawnShieldMask = (7ULL << 53); pawnStorm = enemyPawnBitboard & 0xe0e0e0e0e00000ULL; break;
 
-    default:
-        break;
+        default: break;
     }
 
     // non zero pawnShildMask indicating king is on reasonalbe sq
@@ -202,8 +184,7 @@ int evalPosition()
 {
 
     int score = board->material[white] - board->material[black];
-    int doublePawnCount = 0;
-    int mobility = 0;
+    int doublePawnCount = 0, mobility = 0, sq;
     U64 allWhitePieces = bitboard->getPieces(white);
     U64 allBlackPieces = bitboard->getPieces(black);
 
@@ -218,7 +199,7 @@ int evalPosition()
     U64 pieceBitboard = bitboard->pieces[wp];
     while (pieceBitboard)
     {
-        int sq = __builtin_ctzll(pieceBitboard);
+        sq = __builtin_ctzll(pieceBitboard);
         pieceBitboard &= pieceBitboard - 1;
         score += PawnTable[sq];
 
@@ -247,7 +228,7 @@ int evalPosition()
     pieceBitboard = bitboard->pieces[bp];
     while (pieceBitboard)
     {
-        int sq = __builtin_ctzll(pieceBitboard);
+        sq = __builtin_ctzll(pieceBitboard);
         pieceBitboard &= pieceBitboard - 1;
         score -= PawnTable[Mirror64[sq]];
 
@@ -281,7 +262,7 @@ int evalPosition()
     pieceBitboard = bitboard->pieces[wn];
     while (pieceBitboard)
     {
-        int sq = __builtin_ctzll(pieceBitboard);
+        sq = __builtin_ctzll(pieceBitboard);
         pieceBitboard &= pieceBitboard - 1;
         score += KnightTable[sq];
 
@@ -293,7 +274,7 @@ int evalPosition()
     pieceBitboard = bitboard->pieces[bn];
     while (pieceBitboard)
     {
-        int sq = __builtin_ctzll(pieceBitboard);
+        sq = __builtin_ctzll(pieceBitboard);
         pieceBitboard &= pieceBitboard - 1;
         score -= KnightTable[Mirror64[sq]];
 
@@ -308,7 +289,7 @@ int evalPosition()
     pieceBitboard = bitboard->pieces[wb];
     while (pieceBitboard)
     {
-        int sq = __builtin_ctzll(pieceBitboard);
+        sq = __builtin_ctzll(pieceBitboard);
         pieceBitboard &= pieceBitboard - 1;
         score += BishopTable[sq];
 
@@ -320,7 +301,7 @@ int evalPosition()
     pieceBitboard = bitboard->pieces[bb];
     while (pieceBitboard)
     {
-        int sq = __builtin_ctzll(pieceBitboard);
+        sq = __builtin_ctzll(pieceBitboard);
         pieceBitboard &= pieceBitboard - 1;
         score -= BishopTable[Mirror64[sq]];
 
@@ -334,18 +315,26 @@ int evalPosition()
     // =================================================================
 
     pieceBitboard = bitboard->pieces[wr];
+    U64 rookAttack = 0ULL;
     while (pieceBitboard)
     {
-        int sq = __builtin_ctzll(pieceBitboard);
+        sq = __builtin_ctzll(pieceBitboard);
         pieceBitboard &= pieceBitboard - 1;
-        if (getRookAttacks(sq) & bitboard->fileMasks[sq % 8] & pieceBitboard)
+        rookAttack = getRookAttacks(sq);
+        score += RookTable[sq];
+
+        // Brothers
+        if (rookAttack & bitboard->fileMasks[sq % 8] & pieceBitboard)
         {
             score += rookSupportSameFile;
         }
-        score += RookTable[sq];
+        if (rookAttack & bitboard->fileMasks[sq / 8] & pieceBitboard)
+        {
+            score += rookSupportSameFile;
+        }
 
         // mobility bonus
-        mobility = __builtin_popcountll(getRookAttacks(sq) & ~allWhitePieces);
+        mobility = __builtin_popcountll(rookAttack & ~allWhitePieces);
         score += MobilityBonus[isEndgame][wr][mobility];
 
         if (((bitboard->pieces[wp] | bitboard->pieces[bp]) & bitboard->fileMasks[sq % 8]) == 0)
@@ -361,18 +350,26 @@ int evalPosition()
     pieceBitboard = bitboard->pieces[br];
     while (pieceBitboard)
     {
-        int sq = __builtin_ctzll(pieceBitboard);
+        sq = __builtin_ctzll(pieceBitboard);
         pieceBitboard &= pieceBitboard - 1;
-        if (getRookAttacks(sq) & bitboard->fileMasks[sq % 8] & pieceBitboard)
+        score -= RookTable[Mirror64[sq]];
+        rookAttack = getRookAttacks(sq);
+
+        // Brothers 
+        if (rookAttack & bitboard->fileMasks[sq % 8] & pieceBitboard)
         {
             score -= rookSupportSameFile;
         }
-        score -= RookTable[Mirror64[sq]];
+        if (rookAttack & bitboard->fileMasks[sq / 8] & pieceBitboard)
+        {
+            score -= rookSupportSameRank;
+        }
 
-        // mobility bonus
-        mobility = __builtin_popcountll(getRookAttacks(sq) & ~allBlackPieces);
+        // Mobility bonus
+        mobility = __builtin_popcountll(rookAttack & ~allBlackPieces);
         score -= MobilityBonus[isEndgame][wr][mobility];
 
+        // Open file bonus
         if (((bitboard->pieces[wp] | bitboard->pieces[bp]) & bitboard->fileMasks[sq % 8]) == 0)
         {
             score -= RookOpenFile;
@@ -390,10 +387,10 @@ int evalPosition()
     pieceBitboard = bitboard->pieces[wq];
     while (pieceBitboard)
     {
-        int sq = __builtin_ctzll(pieceBitboard);
+        sq = __builtin_ctzll(pieceBitboard);
         pieceBitboard &= pieceBitboard - 1;
-        //an orthogonal support from queen
-        if (getRookAttacks(sq) & bitboard->fileMasks[sq % 8] & pieceBitboard)
+        //an orthogonal support to rook
+        if (getRookAttacks(sq) & bitboard->pieces[wr])
         {
             score += rookSupportSameFile;
         }
@@ -416,10 +413,10 @@ int evalPosition()
     pieceBitboard = bitboard->pieces[bq];
     while (pieceBitboard)
     {
-        int sq = __builtin_ctzll(pieceBitboard);
+        sq = __builtin_ctzll(pieceBitboard);
         pieceBitboard &= pieceBitboard - 1;
         //an orthogonal support from queen
-        if (getRookAttacks(sq) & bitboard->fileMasks[sq % 8] & pieceBitboard)
+        if (getRookAttacks(sq) & bitboard->pieces[br])
         {
             score -= rookSupportSameFile;
         }
