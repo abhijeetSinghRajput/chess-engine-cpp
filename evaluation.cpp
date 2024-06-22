@@ -73,9 +73,9 @@ const int RookOpenFile = 20;
 const int RookSemiOpenFile = 10;
 const int QueenOpenFile = 10;
 const int QueenSemiOpenFile = 5;
-const int DoublePawnPenality = -10;
+const int DoublePawnPenality = -5;
 const int PawnSupport = 5;
-const int brokenPawnShieldPenalty = -30;
+const int brokenPawnShieldPenalty = -20;
 const int exposedKingPenalty = -30;
 const int kingZoneAttackPenalty = -10;
 const int pawnStormPenalty[2][8] = {
@@ -221,6 +221,7 @@ int evalPosition()
         int sq = __builtin_ctzll(pieceBitboard);
         pieceBitboard &= pieceBitboard - 1;
         score += PawnTable[sq];
+
         // double pawn penality
         doublePawnCount = __builtin_popcountll(bitboard->pieces[wp] & bitboard->fileMasks[sq % 8]);
         if (doublePawnCount > 1)
@@ -341,7 +342,7 @@ int evalPosition()
         {
             score += rookSupportSameFile;
         }
-        score += RookTable[Mirror64[sq]];
+        score += RookTable[sq];
 
         // mobility bonus
         mobility = __builtin_popcountll(getRookAttacks(sq) & ~allWhitePieces);
