@@ -142,10 +142,19 @@ void Board::print()
     std::cout << "side : " << side << std::endl;
     std::cout << "Key: 0x" << std::hex << positionKey << std::dec << std::endl;
     std::cout << "Fen: " << getFen() << std::endl;
-    std::cout << "Castle: " << castlePermission << std::endl;
+    std::cout << "Castle: " 
+          << ((castlePermission & castle_K) ? "K" : "_")
+          << ((castlePermission & castle_Q) ? "Q" : "_")
+          << ((castlePermission & castle_k) ? "k" : "_")
+          << ((castlePermission & castle_q) ? "q" : "_")
+          << std::endl;
+
     if (board->checkSq != noSq)
     {
-        printf("\033[31mcheck : %s\033[0m\n", squareChar[board->checkSq]);
+        printf("\033[31mcheck: %s\033[0m\n", squareChar[board->checkSq]);
+    }
+    if(board->enPassantSq != noSq){
+        printf("\033[33mEP: %s\033[0m\n", squareChar[board->enPassantSq]);
     }
 }
 
@@ -214,7 +223,7 @@ void Board::parseFen(std::string &fen)
     if (fen[i] != '-')
     {
         int file = fen[i++] - 'a';
-        int rank = fen[i] - '0';
+        int rank = fen[i] - '1';
         enPassantSq = fileRank2Sq(file, rank);
     }
     updateMaterial();
@@ -222,10 +231,8 @@ void Board::parseFen(std::string &fen)
 
     // is in check
     int kingOnSq = __builtin_ctzll(bitboard->pieces[Kings[side]]);
-    if (isUnderAttack(kingOnSq, board->side ^ 1))
-    {
-        board->checkSq = sq64To120[kingOnSq];
-    }
+    board->checkSq = isUnderAttack(kingOnSq, board->side ^ 1)? sq64To120[kingOnSq] : noSq;
+
 
     // generate a uniqe position key
     positionKey = generatePositionKey();
@@ -288,7 +295,9 @@ std::string Board::getFen()
 
     if (enPassantSq != noSq)
     {
+        fen += " ";
         fen += squareChar[enPassantSq];
+        fen += " ";
     }
     else
     {

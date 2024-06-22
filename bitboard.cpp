@@ -353,6 +353,11 @@ void Bitboard::init_attackMasks()
 
 void Bitboard::init_pieces()
 {
+    for (int i = 0; i < 13; ++i)
+    {
+        pieces[i] = 0ULL;
+    }
+    
     for (int rank = rank1; rank <= rank8; ++rank)
     {
         for (int file = fileA; file <= fileH; ++file)
