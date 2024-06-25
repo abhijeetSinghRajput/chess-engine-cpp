@@ -4,6 +4,9 @@
 #include <vector>
 #include <string>
 #include <algorithm>
+#include <cstdint>
+#include <unordered_map>
+
 
 extern std::string startFen;
 extern int sq120To64[120];
@@ -86,6 +89,13 @@ struct TableData
     U64 smp_data;
     U64 smp_key;
 };
+
+struct polyEntry{
+    uint16_t move;
+    uint16_t weight;
+    uint32_t learn;
+};
+extern std::unordered_map<U64, std::vector<polyEntry>> openingBook;
 
 // functions
 

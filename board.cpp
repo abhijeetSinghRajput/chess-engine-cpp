@@ -226,6 +226,9 @@ void Board::parseFen(std::string &fen)
         int rank = fen[i] - '1';
         enPassantSq = fileRank2Sq(file, rank);
     }
+    else{
+        enPassantSq = noSq;
+    }
     updateMaterial();
     bitboard->initBoard(this);
 
