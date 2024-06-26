@@ -7,6 +7,7 @@
 #include <sstream>
 #include <vector>
 #include <thread>
+#include "polyglot.hpp"
 
 std::thread searchThread;
 
@@ -190,6 +191,9 @@ void UCI()
         else if (command == "undo")
         {
             takeMove();
+        }
+        else if(command == "book"){
+            readBook();
         }
     }
 }

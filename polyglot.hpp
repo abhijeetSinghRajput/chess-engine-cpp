@@ -2,8 +2,9 @@
 #include "defs.hpp"
 
 U64 getPolyKey();
-void loadPolyBook(const std::string &fileName);
+void loadPolyBook(const std::string &path);
 std::string extractPolyMove(uint16_t move);
+void readBook();
 
 const U64 enPassantPolyKeys[8] = {
    0x70CC73D90BC26E24Ull, 0xE21A6B35DF0C3AD7Ull, 0x003A93D8B2806962Ull, 0x1C99DED33CB890A1Ull,

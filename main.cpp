@@ -17,9 +17,9 @@ using namespace std;
 
 int main()
 {
-    string path = "./gm2600.bin";
-    loadPolyBook(path);
+    string path = "./performance.bin";
     newGame();
+    loadPolyBook(path);
     UCI();
     return 0;
 }
@@ -37,3 +37,4 @@ int main()
 // 8        1211       83.31       2230778     e2e4           5       e2e4
 // 9        2880       84.24       5804530     e2e4           25      e2e4
 // 10       19727      85.17       42211467    e2e4           10      e2e4
+

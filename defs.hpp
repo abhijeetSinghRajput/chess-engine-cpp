@@ -91,6 +91,7 @@ struct TableData
 };
 
 struct polyEntry{
+    // U64 key;
     uint16_t move;
     uint16_t weight;
     uint32_t learn;
