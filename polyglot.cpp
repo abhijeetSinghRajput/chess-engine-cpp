@@ -1,7 +1,10 @@
 #include "polyglot.hpp"
 #include "board.hpp"
+#include "utils.hpp"
 #include <fstream>
 #include <iostream>
+#include <ctime>
+
 
 // endian_swap_u32 visual representation
 //    11111111 00000000 00000000 00000000       00000000 00000000 00000000 11111111
@@ -150,6 +153,22 @@ void readBook()
     }
     std::cout<<std::endl;
 }
+int getRandBookMove(){
+    std::vector<std::string> moves;
+    U64 currPolyKey = getPolyKey();
+    if(!openingBook.empty() || openingBook.find(currPolyKey) != openingBook.end()){
+        for(auto &entry : openingBook[currPolyKey]){
+            moves.push_back(extractPolyMove(endian_swap_u16(entry.move)));
+        }
+    }
+    if(moves.empty()) return 0;
+    // Seed the random number generator
+    std::srand(std::time(0));
+    int randIndex = std::rand() % moves.size();
+
+    int move = parseMove(moves[randIndex]);
+    return move;
+}
 
 // MOVE
 
@@ -179,20 +198,11 @@ std::string extractPolyMove(uint16_t move)
     std::string promotion;
     switch (promotionPiece)
     {
-    case 1:
-        promotion = "N";
-        break;
-    case 2:
-        promotion = "B";
-        break;
-    case 3:
-        promotion = "R";
-        break;
-    case 4:
-        promotion = "Q";
-        break;
-    default:
-        promotion = "";
+        case 1: promotion = "q"; break;
+        case 2: promotion = "r"; break;
+        case 3: promotion = "b"; break;
+        case 4: promotion = "n"; break;
+        default: promotion = "";
         break;
     }
 

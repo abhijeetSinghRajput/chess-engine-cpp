@@ -251,7 +251,7 @@ bool makeMove(int move)
 
     if (isUnderAttack(enemyKingOnSq, side))
     {
-        board->checkSq = enemyKingOnSq;
+        board->checkSq = sq64To120[enemyKingOnSq];
     }
     else
     {

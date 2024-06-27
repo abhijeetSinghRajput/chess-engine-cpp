@@ -4,6 +4,7 @@
 U64 getPolyKey();
 void loadPolyBook(const std::string &path);
 std::string extractPolyMove(uint16_t move);
+int getRandBookMove();
 void readBook();
 
 const U64 enPassantPolyKeys[8] = {

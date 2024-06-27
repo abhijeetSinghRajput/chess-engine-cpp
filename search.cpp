@@ -8,6 +8,7 @@
 #include "utils.hpp"
 #include <iostream>
 #include <iomanip>
+#include "polyglot.hpp"
 
 SearchController *searchController = new SearchController;
 
@@ -39,10 +40,14 @@ int searchPosition()
     int bestMove = 0;
     int bestScore = -Infinite;
     int depth = 1;
-    // float ordering = 0;
+    float ordering = 0;
 
+    bestMove = getRandBookMove();
+    if(bestMove){
+        std::cout << "bestmove (book)" << moveStr(bestMove) << std::endl;
+        return bestMove;
+    }
     searchController->clear();
-
     for (depth = 1; depth <= searchController->depth; ++depth)
     {
         bestScore = alphaBeta(-Infinite, Infinite, depth, true);
@@ -50,10 +55,10 @@ int searchPosition()
             break;
 
         bestMove = transpositionTable->getMove();
-        // if (depth != 1 && searchController->fh)
-        // {
-        //     ordering = (searchController->fhf / searchController->fh) * 100;
-        // }
+        if (depth != 1 && searchController->fh)
+        {
+            ordering = (searchController->fhf / searchController->fh) * 100;
+        }
         std::vector<int> line = transpositionTable->getLine(depth);
         std::string lineStr;
         for (auto move : line)
@@ -61,10 +66,9 @@ int searchPosition()
             lineStr += moveStr(move) + ' ';
         }
 
-        printf("info score cp %d depth %d nodes %lld time %lld ",
-               bestScore, depth, searchController->nodes, getCurrTime() - searchController->startTime);
+        printf("info score cp %d depth %d ordering %.2f nodes %lld time %lld ",
+               bestScore, depth, ordering, searchController->nodes, getCurrTime() - searchController->startTime);
         std::cout << "pv " << lineStr << std::endl;
-        // printf("\nordering: %d\n", ordering);
     }
     std::cout << "bestmove " << moveStr(bestMove) << std::endl;
     return bestMove;
