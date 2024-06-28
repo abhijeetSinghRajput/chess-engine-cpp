@@ -101,6 +101,33 @@ void handleSearch(std::istringstream &iss)
     searchThread = std::thread(searchPosition);
 }
 
+void handleOptions(std::istringstream &iss)
+{
+    std::string token;
+    std::string optionName;
+    std::string optionValue;
+
+    while (iss >> token)
+    {
+        if (token == "name")
+        {
+            iss >> optionName;
+        }
+        else if (token == "value")
+        {
+            iss >> optionValue;
+        }
+    }
+    if (optionName == "usebook")
+    {
+        searchController->useBook = (optionValue == "true") ? true : false;
+        if (searchController->useBook)
+        {
+            printf("book move on\n");
+        }
+    }
+}
+
 void UCI()
 {
     std::string input, command;
@@ -123,6 +150,7 @@ void UCI()
         }
         else if (command == "setoption")
         {
+            handleOptions(iss);
         }
         else if (command == "ucinewgame")
         {
@@ -192,7 +220,8 @@ void UCI()
         {
             takeMove();
         }
-        else if(command == "book"){
+        else if (command == "book")
+        {
             readBook();
         }
     }

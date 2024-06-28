@@ -12,6 +12,11 @@
 
 SearchController *searchController = new SearchController;
 
+SearchController::SearchController()
+{
+    this->clear();
+}
+
 void SearchController::clear()
 {
     for (int i = 0; i < maxDepth; ++i)
@@ -33,6 +38,7 @@ void SearchController::clear()
     fh = 0;
     fhf = 0;
     stopped = false;
+    useBook = false;
 }
 
 int searchPosition()
@@ -42,11 +48,16 @@ int searchPosition()
     int depth = 1;
     float ordering = 0;
 
-    bestMove = getRandBookMove();
-    if(bestMove){
-        std::cout << "bestmove (book)" << moveStr(bestMove) << std::endl;
-        return bestMove;
+    if (searchController->useBook)
+    {
+        bestMove = getRandBookMove();
+        if (bestMove)
+        {
+            std::cout << "bestmove (book)" << moveStr(bestMove) << std::endl;
+            return bestMove;
+        }
     }
+
     searchController->clear();
     for (depth = 1; depth <= searchController->depth; ++depth)
     {
