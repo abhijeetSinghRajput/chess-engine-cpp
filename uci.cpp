@@ -213,7 +213,7 @@ void UCI()
             }
             else
             {
-                printf("engine is unable think\n");
+                printf("engine is unable to think\n");
             }
         }
         else if (command == "undo")
