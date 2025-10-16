@@ -125,6 +125,9 @@ void handleOptions(std::istringstream &iss)
         {
             printf("book move on\n");
         }
+        else{
+            printf("book move off\n");
+        }
     }
 }
 
