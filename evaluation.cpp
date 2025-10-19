@@ -89,22 +89,23 @@ const int EndGame_Material = (1 * pieceValue[wr]) + (2 * pieceValue[wn]) + (2 * 
 const int MobilityBonus[2][6][32] = {
     // midgame
     {
-        {},                                                                                                                           // Empty
-        {},                                                                                                                           // Pawns
-        {-20, -14, -8, -2, 4, 10, 14, 19, 23, 26, 27, 28, 29, 30, 31, 32},                                                            // Rooks
-        {-38, -25, -12, 0, 12, 25, 31, 38, 38},                                                                                       // Knights
-        {-25, -11, 3, 17, 31, 45, 57, 65, 71, 74, 76, 78, 79, 80, 81, 81},                                                            // Bishops
-        {-10, -8, -6, -3, -1, 1, 3, 5, 8, 10, 12, 15, 16, 17, 18, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20} // Queens
+        /* Empty  */  {},                                                                                                                           
+        /* Pawns  */  {},                                                                                                                           
+        /* Rooks  */  {-20, -14, -8, -2, 4, 10, 14, 19, 23, 26, 27, 28, 29, 30, 31, 32},                                                            
+        /* Knights*/  {-38, -25, -12, 0, 12, 25, 31, 38, 38},                                                                                       
+        /* Bishops*/  {-25, -11, 3, 17, 31, 45, 57, 65, 71, 74, 76, 78, 79, 80, 81, 81},                                                            
+        /* Queens */  {-10, -8, -6, -3, -1, 1, 3, 5, 8, 10, 12, 15, 16, 17, 18, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20} 
     },
     // endgame
     {
-        {},                                                                                                                              // Empty
-        {},                                                                                                                              // Pawns
-        {-36, -19, -3, 13, 29, 46, 62, 79, 95, 106, 111, 114, 116, 117, 118, 118},                                                       // Rooks
-        {-33, -23, -13, -3, 7, 17, 22, 27, 27},                                                                                          // Knights
-        {-30, -16, -2, 12, 26, 40, 52, 60, 65, 69, 71, 73, 74, 75, 76, 76},                                                              // Bishops
-        {-18, -13, -7, -2, 3, 8, 13, 19, 23, 27, 32, 34, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35} // Queens
-    }};
+        /* Empty   */ {},                                                                                                                              
+        /* Pawns   */ {},                                                                                                                              
+        /* Rooks   */ {-36, -19, -3, 13, 29, 46, 62, 79, 95, 106, 111, 114, 116, 117, 118, 118},                                                       
+        /* Knights */ {-33, -23, -13, -3, 7, 17, 22, 27, 27},                                                                                          
+        /* Bishops */ {-30, -16, -2, 12, 26, 40, 52, 60, 65, 69, 71, 73, 74, 75, 76, 76},                                                              
+        /* Queens  */ {-18, -13, -7, -2, 3, 8, 13, 19, 23, 27, 32, 34, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35} 
+    }
+};
 
 int kingSafety(int kingSq, int color)
 {
@@ -115,16 +116,35 @@ int kingSafety(int kingSq, int color)
     U64 pawnShieldMask = 0ULL, pawnShield, pawnStorm;
     int missingPawn;
 
-    switch (kingSq)
+    switch (sq64To120[kingSq])
     {
-        case b1: pawnShieldMask = (7ULL << 8);  pawnStorm = enemyPawnBitboard & 0x70707070700ULL;    break;
-        case c1: pawnShieldMask = (7ULL << 9);  pawnStorm = enemyPawnBitboard & 0xe0e0e0e0e00ULL;    break;
-        case g1: pawnShieldMask = (7ULL << 13); pawnStorm = enemyPawnBitboard & 0xe0e0e0e0e000ULL;   break;
-        case b8: pawnShieldMask = (7ULL << 48); pawnStorm = enemyPawnBitboard & 0x7070707070000ULL;  break;
-        case c8: pawnShieldMask = (7ULL << 49); pawnStorm = enemyPawnBitboard & 0xe0e0e0e0e0000ULL;  break;
-        case g8: pawnShieldMask = (7ULL << 53); pawnStorm = enemyPawnBitboard & 0xe0e0e0e0e00000ULL; break;
+    case b1:
+        pawnShieldMask = (7ULL << 8);
+        pawnStorm = enemyPawnBitboard & 0x70707070700ULL;
+        break;
+    case c1:
+        pawnShieldMask = (7ULL << 9);
+        pawnStorm = enemyPawnBitboard & 0xe0e0e0e0e00ULL;
+        break;
+    case g1:
+        pawnShieldMask = (7ULL << 13);
+        pawnStorm = enemyPawnBitboard & 0xe0e0e0e0e000ULL;
+        break;
+    case b8:
+        pawnShieldMask = (7ULL << 48);
+        pawnStorm = enemyPawnBitboard & 0x7070707070000ULL;
+        break;
+    case c8:
+        pawnShieldMask = (7ULL << 49);
+        pawnStorm = enemyPawnBitboard & 0xe0e0e0e0e0000ULL;
+        break;
+    case g8:
+        pawnShieldMask = (7ULL << 53);
+        pawnStorm = enemyPawnBitboard & 0xe0e0e0e0e00000ULL;
+        break;
 
-        default: break;
+    default:
+        break;
     }
 
     // non zero pawnShildMask indicating king is on reasonalbe sq
@@ -267,7 +287,7 @@ int evalPosition()
         score += KnightTable[sq];
 
         // mobility bonus
-        mobility = __builtin_popcountll(bitboard->knightAttacks[wn] & ~allWhitePieces);
+        mobility = __builtin_popcountll(bitboard->knightAttacks[sq] & ~allWhitePieces);
         score += MobilityBonus[isEndgame][wn][mobility];
     }
 
@@ -279,7 +299,7 @@ int evalPosition()
         score -= KnightTable[Mirror64[sq]];
 
         // mobility bonus
-        mobility = __builtin_popcountll(bitboard->knightAttacks[wn] & ~allBlackPieces);
+        mobility = __builtin_popcountll(bitboard->knightAttacks[sq] & ~allBlackPieces);
         score += MobilityBonus[isEndgame][wn][mobility];
     }
 
@@ -330,7 +350,7 @@ int evalPosition()
         }
         if (rookAttack & bitboard->fileMasks[sq / 8] & pieceBitboard)
         {
-            score += rookSupportSameFile;
+            score += rookSupportSameRank;
         }
 
         // mobility bonus
@@ -355,7 +375,7 @@ int evalPosition()
         score -= RookTable[Mirror64[sq]];
         rookAttack = getRookAttacks(sq);
 
-        // Brothers 
+        // Brothers
         if (rookAttack & bitboard->fileMasks[sq % 8] & pieceBitboard)
         {
             score -= rookSupportSameFile;
@@ -389,7 +409,7 @@ int evalPosition()
     {
         sq = __builtin_ctzll(pieceBitboard);
         pieceBitboard &= pieceBitboard - 1;
-        //an orthogonal support to rook
+        // an orthogonal support to rook
         if (getRookAttacks(sq) & bitboard->pieces[wr])
         {
             score += rookSupportSameFile;
@@ -415,7 +435,7 @@ int evalPosition()
     {
         sq = __builtin_ctzll(pieceBitboard);
         pieceBitboard &= pieceBitboard - 1;
-        //an orthogonal support from queen
+        // an orthogonal support from queen
         if (getRookAttacks(sq) & bitboard->pieces[br])
         {
             score -= rookSupportSameFile;
@@ -456,7 +476,7 @@ int evalPosition()
     // ======================= BLACK KING ==============================
     // =================================================================
 
-    kingSq = (bitboard->pieces[wk]) ? __builtin_ctzll(bitboard->pieces[bk]) : 64;
+    kingSq = (bitboard->pieces[bk]) ? __builtin_ctzll(bitboard->pieces[bk]) : 64;
 
     if (kingSq < 64 && board->material[white] <= EndGame_Material)
     {
