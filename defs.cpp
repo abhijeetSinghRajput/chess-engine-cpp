@@ -38,16 +38,16 @@ const char *pieceName[] = {
 const int pieceValue[13] = {
     0,      // empty
     100,    // wp
+    500,    // wr  (5 pawns)
     320,    // wn  (approx 3.2 pawns)
     330,    // wb  (approx 3.3 pawns)
-    500,    // wr  (5 pawns)
     900,    // wq  (9 pawns)
     50000,  // wk  (king has no material value)
     
     100,    // bp
+    500,    // br
     320,    // bn
     330,    // bb
-    500,    // br
     900,    // bq
     50000   // bk
 };

@@ -8,6 +8,7 @@
 #include <vector>
 #include <thread>
 #include "polyglot.hpp"
+#include "evaluation.hpp"
 
 std::thread searchThread;
 
@@ -226,6 +227,9 @@ void UCI()
         else if (command == "book")
         {
             readBook();
+        }
+        else if(command == "eval"){
+            printf("Eval: %d\n", evalPosition());
         }
     }
 }

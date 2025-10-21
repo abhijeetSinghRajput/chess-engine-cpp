@@ -113,8 +113,7 @@ int kingSafety(int kingSq, int color)
     U64 pawnBitboard = (color == white) ? bitboard->pieces[wp] : bitboard->pieces[bp];
     U64 enemyPawnBitboard = (color == white) ? bitboard->pieces[bp] : bitboard->pieces[wp];
 
-    U64 pawnShieldMask = 0ULL, pawnShield, pawnStorm;
-    int missingPawn;
+    U64 pawnShieldMask = 0ULL, missingPawn, pawnStorm;
 
     switch (sq64To120[kingSq])
     {
@@ -150,8 +149,7 @@ int kingSafety(int kingSq, int color)
     // non zero pawnShildMask indicating king is on reasonalbe sq
     if (pawnShieldMask)
     {
-        pawnShield = pawnBitboard & pawnShieldMask;
-        missingPawn = ~pawnShield & pawnShieldMask;
+        missingPawn = (~pawnBitboard) & pawnShieldMask;
 
         // ============== pawn shield evaluation
         score += __builtin_popcountll(missingPawn) * brokenPawnShieldPenalty;
@@ -212,10 +210,10 @@ int evalPosition()
                      (board->material[black] + board->material[white] <= EndGame_Material * 2) ||
                      (board->pieceCount[wp] <= 4 && board->pieceCount[bp] <= 4);
 
+    printf("material: %d\n", score);
     // =================================================================
     // ============================= PAWN ==============================
     // =================================================================
-
     U64 pieceBitboard = bitboard->pieces[wp];
     while (pieceBitboard)
     {
@@ -274,7 +272,7 @@ int evalPosition()
             score -= PawnPassed[7 - sq / 8];
         }
     }
-
+    printf("Pawn: %d\n", score);
     // =================================================================
     // ============================ KNIGHT =============================
     // =================================================================
@@ -300,9 +298,9 @@ int evalPosition()
 
         // mobility bonus
         mobility = __builtin_popcountll(bitboard->knightAttacks[sq] & ~allBlackPieces);
-        score += MobilityBonus[isEndgame][wn][mobility];
+        score -= MobilityBonus[isEndgame][wn][mobility];
     }
-
+    printf("Knight: %d\n", score);
     // =================================================================
     // ============================ BISHOP =============================
     // =================================================================
@@ -329,6 +327,7 @@ int evalPosition()
         mobility = __builtin_popcountll(getBishopAttacks(sq) & ~allBlackPieces);
         score -= MobilityBonus[isEndgame][wb][mobility];
     }
+    printf("Bishop: %d\n", score);
 
     // =================================================================
     // ============================= ROOK ==============================
@@ -400,6 +399,7 @@ int evalPosition()
         }
     }
 
+    printf("Rook: %d\n", score);
     // =================================================================
     // ============================= QUEEN =============================
     // =================================================================
@@ -455,7 +455,7 @@ int evalPosition()
             score -= QueenSemiOpenFile;
         }
     }
-
+    printf("Queen: %d\n", score);
     // =================================================================
     // ======================= WHITE KING ==============================
     // =================================================================
@@ -488,6 +488,7 @@ int evalPosition()
     }
     score -= kingSafety(kingSq, black);
 
+    printf("king: %d\n", score);
     // =================================================================
     // ============================ ADD ON =============================
     // =================================================================
@@ -501,6 +502,6 @@ int evalPosition()
     {
         score -= BishopPair;
     }
-
+    printf("bonus: %d\n", score);
     return (board->side == white) ? score : -score;
 }
