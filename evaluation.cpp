@@ -89,8 +89,8 @@ const int EndGame_Material = (1 * pieceValue[wr]) + (2 * pieceValue[wn]) + (2 * 
 const int MobilityBonus[2][6][32] = {
     // midgame
     {
-        /* Empty  */  {},                                                                                                                           
-        /* Pawns  */  {},                                                                                                                           
+        /* Empty  */  {0},                                                                                                                           
+        /* Pawns  */  {0},                                                                                                                           
         /* Rooks  */  {-20, -14, -8, -2, 4, 10, 14, 19, 23, 26, 27, 28, 29, 30, 31, 32},                                                            
         /* Knights*/  {-38, -25, -12, 0, 12, 25, 31, 38, 38},                                                                                       
         /* Bishops*/  {-25, -11, 3, 17, 31, 45, 57, 65, 71, 74, 76, 78, 79, 80, 81, 81},                                                            
@@ -98,8 +98,8 @@ const int MobilityBonus[2][6][32] = {
     },
     // endgame
     {
-        /* Empty   */ {},                                                                                                                              
-        /* Pawns   */ {},                                                                                                                              
+        /* Empty   */ {0},                                                                                                                              
+        /* Pawns   */ {0},                                                                                                                              
         /* Rooks   */ {-36, -19, -3, 13, 29, 46, 62, 79, 95, 106, 111, 114, 116, 117, 118, 118},                                                       
         /* Knights */ {-33, -23, -13, -3, 7, 17, 22, 27, 27},                                                                                          
         /* Bishops */ {-30, -16, -2, 12, 26, 40, 52, 60, 65, 69, 71, 73, 74, 75, 76, 76},                                                              
@@ -189,7 +189,7 @@ int kingSafety(int kingSq, int color)
     while (bishopBitboard)
     {
         sq = __builtin_ctzll(bishopBitboard);
-        U64 bishopAttack = bitboard->bishopAttacks[sq];
+        U64 bishopAttack = getBishopAttacks(sq);
         if (kingAttack & bishopAttack)
             score += kingZoneAttackPenalty;
         bishopBitboard &= bishopBitboard - 1;
@@ -210,7 +210,7 @@ int evalPosition()
                      (board->material[black] + board->material[white] <= EndGame_Material * 2) ||
                      (board->pieceCount[wp] <= 4 && board->pieceCount[bp] <= 4);
 
-    printf("material: %d\n", score);
+    // printf("material: %d\n", score);
     // =================================================================
     // ============================= PAWN ==============================
     // =================================================================
@@ -272,7 +272,7 @@ int evalPosition()
             score -= PawnPassed[7 - sq / 8];
         }
     }
-    printf("Pawn: %d\n", score);
+    // printf("Pawn: %d\n", score);
     // =================================================================
     // ============================ KNIGHT =============================
     // =================================================================
@@ -300,7 +300,7 @@ int evalPosition()
         mobility = __builtin_popcountll(bitboard->knightAttacks[sq] & ~allBlackPieces);
         score -= MobilityBonus[isEndgame][wn][mobility];
     }
-    printf("Knight: %d\n", score);
+    // printf("Knight: %d\n", score);
     // =================================================================
     // ============================ BISHOP =============================
     // =================================================================
@@ -327,7 +327,7 @@ int evalPosition()
         mobility = __builtin_popcountll(getBishopAttacks(sq) & ~allBlackPieces);
         score -= MobilityBonus[isEndgame][wb][mobility];
     }
-    printf("Bishop: %d\n", score);
+    // printf("Bishop: %d\n", score);
 
     // =================================================================
     // ============================= ROOK ==============================
@@ -347,7 +347,7 @@ int evalPosition()
         {
             score += rookSupportSameFile;
         }
-        if (rookAttack & bitboard->fileMasks[sq / 8] & pieceBitboard)
+        if (rookAttack & bitboard->rankMasks[sq / 8] & pieceBitboard)
         {
             score += rookSupportSameRank;
         }
@@ -373,13 +373,12 @@ int evalPosition()
         pieceBitboard &= pieceBitboard - 1;
         score -= RookTable[Mirror64[sq]];
         rookAttack = getRookAttacks(sq);
-
         // Brothers
         if (rookAttack & bitboard->fileMasks[sq % 8] & pieceBitboard)
         {
             score -= rookSupportSameFile;
         }
-        if (rookAttack & bitboard->fileMasks[sq / 8] & pieceBitboard)
+        if (rookAttack & bitboard->rankMasks[sq / 8] & pieceBitboard)
         {
             score -= rookSupportSameRank;
         }
@@ -399,7 +398,7 @@ int evalPosition()
         }
     }
 
-    printf("Rook: %d\n", score);
+    // printf("Rook: %d\n", score);
     // =================================================================
     // ============================= QUEEN =============================
     // =================================================================
@@ -455,7 +454,7 @@ int evalPosition()
             score -= QueenSemiOpenFile;
         }
     }
-    printf("Queen: %d\n", score);
+    // printf("Queen: %d\n", score);
     // =================================================================
     // ======================= WHITE KING ==============================
     // =================================================================
@@ -488,7 +487,7 @@ int evalPosition()
     }
     score -= kingSafety(kingSq, black);
 
-    printf("king: %d\n", score);
+    // printf("king: %d\n", score);
     // =================================================================
     // ============================ ADD ON =============================
     // =================================================================
@@ -502,6 +501,6 @@ int evalPosition()
     {
         score -= BishopPair;
     }
-    printf("bonus: %d\n", score);
+    // printf("bonus: %d\n", score);
     return (board->side == white) ? score : -score;
 }

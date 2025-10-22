@@ -35,28 +35,35 @@ const char *pieceName[] = {
     "bp", "br", "bn", "bb", "bq", "bk"
 };
 
+constexpr int VALUE_ZERO  = 0;
+constexpr int PawnValue   = 208;
+constexpr int KnightValue = 781;
+constexpr int BishopValue = 825;
+constexpr int RookValue   = 1276;
+constexpr int QueenValue  = 2538;
+
 const int pieceValue[13] = {
-    0,      // empty
-    100,    // wp
-    500,    // wr  (5 pawns)
-    320,    // wn  (approx 3.2 pawns)
-    330,    // wb  (approx 3.3 pawns)
-    900,    // wq  (9 pawns)
-    50000,  // wk  (king has no material value)
+    VALUE_ZERO,              // empty
+    PawnValue,      // wp
+    RookValue,      // wr  (5 pawns)
+    KnightValue,    // wn  (approx 3.2 pawns)
+    BishopValue,    // wb  (approx 3.3 pawns)
+    QueenValue,     // wq  (9 pawns)
+    50000,          // wk  (king has no material value)
     
-    100,    // bp
-    500,    // br
-    320,    // bn
-    330,    // bb
-    900,    // bq
-    50000   // bk
+    PawnValue,      // bp
+    RookValue,      // br
+    KnightValue,    // bn
+    BishopValue,    // bb
+    QueenValue,     // bq
+    50000           // bk
 };
 
 
 const int Kings[] = {wk, bk};
 
 const int maxDepth = 64;
-const int Infinite = 30000;
+const int Infinite = 32001;
 const int Mate = Infinite - maxDepth;
 
 const int CastlePermission[] = {

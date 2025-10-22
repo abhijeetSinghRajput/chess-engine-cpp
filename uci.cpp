@@ -231,5 +231,9 @@ void UCI()
         else if(command == "eval"){
             printf("Eval: %d\n", evalPosition());
         }
+        else if(command == "cls" || command == "clear"){
+            system("cls");
+            printf("> ");
+        }
     }
 }
