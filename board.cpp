@@ -77,7 +77,7 @@ void Board::updateMaterial()
 
 void Board::reset()
 {
-    transpositionTable->clear();
+    if (transpositionTable) transpositionTable->clear();
     
     for (int i = 0; i < 1024; ++i)
     {

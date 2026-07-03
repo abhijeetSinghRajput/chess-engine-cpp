@@ -51,6 +51,9 @@ enum
 enum {fileA, fileB, fileC, fileD, fileE, fileF, fileG, fileH};
 enum {rank1, rank2, rank3, rank4, rank5, rank6, rank7, rank8};
 
+enum MobilityPiece { MOB_ROOK = 2, MOB_KNIGHT = 3, MOB_BISHOP = 4, MOB_QUEEN = 5 };
+
+
 typedef unsigned long long U64;
 
 enum
@@ -92,10 +95,10 @@ struct TableData
 
 struct polyEntry{
     // U64 key;
-    uint16_t move;
-    uint16_t weight;
-    uint32_t learn;
-};
+    uint16_t move;   // 2 bytes
+    uint16_t weight; // 2 bytes    
+    uint32_t learn;  // 4 bytes
+};                   // 8 bytes
 extern std::unordered_map<U64, std::vector<polyEntry>> openingBook;
 
 // functions

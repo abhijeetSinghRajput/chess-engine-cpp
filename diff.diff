@@ -1,0 +1,423 @@
+diff --git a/board.cpp b/board.cpp
+index 41d387d..fbde7be 100644
+--- a/board.cpp
++++ b/board.cpp
+@@ -77,7 +77,7 @@ void Board::updateMaterial()
+ 
+ void Board::reset()
+ {
+-    transpositionTable->clear();
++    if (transpositionTable) transpositionTable->clear();
+     
+     for (int i = 0; i < 1024; ++i)
+     {
+diff --git a/chess.exe b/chess.exe
+index e253909..089c865 100644
+Binary files a/chess.exe and b/chess.exe differ
+diff --git a/defs.hpp b/defs.hpp
+index 776c0e0..d647747 100644
+--- a/defs.hpp
++++ b/defs.hpp
+@@ -51,6 +51,9 @@ enum
+ enum {fileA, fileB, fileC, fileD, fileE, fileF, fileG, fileH};
+ enum {rank1, rank2, rank3, rank4, rank5, rank6, rank7, rank8};
+ 
++enum MobilityPiece { MOB_ROOK = 2, MOB_KNIGHT = 3, MOB_BISHOP = 4, MOB_QUEEN = 5 };
++
++
+ typedef unsigned long long U64;
+ 
+ enum
+@@ -92,10 +95,10 @@ struct TableData
+ 
+ struct polyEntry{
+     // U64 key;
+-    uint16_t move;
+-    uint16_t weight;
+-    uint32_t learn;
+-};
++    uint16_t move;   // 2 bytes
++    uint16_t weight; // 2 bytes    
++    uint32_t learn;  // 4 bytes
++};                   // 8 bytes
+ extern std::unordered_map<U64, std::vector<polyEntry>> openingBook;
+ 
+ // functions
+diff --git a/evaluation.cpp b/evaluation.cpp
+index aa46461..75368b6 100644
+--- a/evaluation.cpp
++++ b/evaluation.cpp
+@@ -80,8 +80,8 @@ const int brokenPawnShieldPenalty = -20;
+ const int exposedKingPenalty = -30;
+ const int kingZoneAttackPenalty = -10;
+ const int pawnStormPenalty[2][8] = {
+-    {0, 65, 35, 20, 10, 5, 0, 0},
+-    {0, 0, 5, 10, 20, 35, 65, 0},
++    {0, 65, 35, 20, 10, 5, 0, 0}, // [0] = white
++    {0, 0, 5, 10, 20, 35, 65, 0}, // [1] = black
+ };
+ const int EndGame_Material = (1 * pieceValue[wr]) + (2 * pieceValue[wn]) + (2 * pieceValue[wp]) + (pieceValue[wk]);
+ 
+@@ -98,17 +98,19 @@ const int MobilityBonus[2][6][32] = {
+     },
+     // endgame
+     {
+-        /* Empty   */ {0},                                                                                                                              
+-        /* Pawns   */ {0},                                                                                                                              
+-        /* Rooks   */ {-36, -19, -3, 13, 29, 46, 62, 79, 95, 106, 111, 114, 116, 117, 118, 118},                                                       
+-        /* Knights */ {-33, -23, -13, -3, 7, 17, 22, 27, 27},                                                                                          
+-        /* Bishops */ {-30, -16, -2, 12, 26, 40, 52, 60, 65, 69, 71, 73, 74, 75, 76, 76},                                                              
++        /* Empty   */ {0},
++        /* Pawns   */ {0},
++        /* Rooks   */ {-36, -19, -3, 13, 29, 46, 62, 79, 95, 106, 111, 114, 116, 117, 118, 118},
++        /* Knights */ {-33, -23, -13, -3, 7, 17, 22, 27, 27},
++        /* Bishops */ {-30, -16, -2, 12, 26, 40, 52, 60, 65, 69, 71, 73, 74, 75, 76, 76},
+         /* Queens  */ {-18, -13, -7, -2, 3, 8, 13, 19, 23, 27, 32, 34, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35} 
+     }
+ };
+ 
+ int kingSafety(int kingSq, int color)
+ {
++    if (kingSq >= 64) return 0;
++
+     int score = 0, sq;
+     U64 pawnBitboard = (color == white) ? bitboard->pieces[wp] : bitboard->pieces[bp];
+     U64 enemyPawnBitboard = (color == white) ? bitboard->pieces[bp] : bitboard->pieces[wp];
+@@ -202,7 +204,7 @@ int evalPosition()
+ {
+ 
+     int score = board->material[white] - board->material[black];
+-    int doublePawnCount = 0, mobility = 0, sq;
++    int mobility = 0, sq;
+     U64 allWhitePieces = bitboard->getPieces(white);
+     U64 allBlackPieces = bitboard->getPieces(black);
+ 
+@@ -221,12 +223,6 @@ int evalPosition()
+         pieceBitboard &= pieceBitboard - 1;
+         score += PawnTable[sq];
+ 
+-        // double pawn penality
+-        doublePawnCount = __builtin_popcountll(bitboard->pieces[wp] & bitboard->fileMasks[sq % 8]);
+-        if (doublePawnCount > 1)
+-        {
+-            score += DoublePawnPenality;
+-        }
+         // supporter pawn
+         if (bitboard->pawnAttacks[white][sq] & bitboard->pieces[wp])
+         {
+@@ -250,12 +246,6 @@ int evalPosition()
+         pieceBitboard &= pieceBitboard - 1;
+         score -= PawnTable[Mirror64[sq]];
+ 
+-        // double pawn penality
+-        doublePawnCount = __builtin_popcountll(bitboard->pieces[bp] & bitboard->fileMasks[sq % 8]);
+-        if (doublePawnCount > 1)
+-        {
+-            score -= DoublePawnPenality;
+-        }
+         // supporter pawn
+         if (bitboard->pawnAttacks[black][sq] & bitboard->pieces[bp])
+         {
+@@ -272,7 +262,22 @@ int evalPosition()
+             score -= PawnPassed[7 - sq / 8];
+         }
+     }
+-    // printf("Pawn: %d\n", score);
++
++    U64 whitePawns = bitboard->pieces[wp];
++    U64 blackPawns = bitboard->pieces[bp];
++
++    for (int file = 0; file < 8; file++)
++    {
++        int whiteCount = __builtin_popcountll(whitePawns & bitboard->fileMasks[file]);
++        int blackCount = __builtin_popcountll(blackPawns & bitboard->fileMasks[file]);
++
++        if (whiteCount > 1)
++            score += whiteCount * DoublePawnPenality;
++
++        if (blackCount > 1)
++            score -= blackCount * DoublePawnPenality;
++    }
++
+     // =================================================================
+     // ============================ KNIGHT =============================
+     // =================================================================
+@@ -286,7 +291,7 @@ int evalPosition()
+ 
+         // mobility bonus
+         mobility = __builtin_popcountll(bitboard->knightAttacks[sq] & ~allWhitePieces);
+-        score += MobilityBonus[isEndgame][wn][mobility];
++        score += MobilityBonus[isEndgame][MOB_KNIGHT][mobility];
+     }
+ 
+     pieceBitboard = bitboard->pieces[bn];
+@@ -298,7 +303,7 @@ int evalPosition()
+ 
+         // mobility bonus
+         mobility = __builtin_popcountll(bitboard->knightAttacks[sq] & ~allBlackPieces);
+-        score -= MobilityBonus[isEndgame][wn][mobility];
++        score -= MobilityBonus[isEndgame][MOB_KNIGHT][mobility];
+     }
+     // printf("Knight: %d\n", score);
+     // =================================================================
+@@ -313,7 +318,7 @@ int evalPosition()
+ 
+         // mobility bonus
+         mobility = __builtin_popcountll(getBishopAttacks(sq) & ~allWhitePieces);
+-        score += MobilityBonus[isEndgame][wb][mobility];
++        score += MobilityBonus[isEndgame][MOB_BISHOP][mobility];
+     }
+ 
+     pieceBitboard = bitboard->pieces[bb];
+@@ -325,7 +330,7 @@ int evalPosition()
+ 
+         // mobility bonus
+         mobility = __builtin_popcountll(getBishopAttacks(sq) & ~allBlackPieces);
+-        score -= MobilityBonus[isEndgame][wb][mobility];
++        score -= MobilityBonus[isEndgame][MOB_BISHOP][mobility];
+     }
+     // printf("Bishop: %d\n", score);
+ 
+@@ -333,8 +338,9 @@ int evalPosition()
+     // ============================= ROOK ==============================
+     // =================================================================
+ 
+-    pieceBitboard = bitboard->pieces[wr];
+     U64 rookAttack = 0ULL;
++    U64 allWhiteRooks = bitboard->pieces[wr];
++    pieceBitboard = allWhiteRooks;
+     while (pieceBitboard)
+     {
+         sq = __builtin_ctzll(pieceBitboard);
+@@ -342,19 +348,22 @@ int evalPosition()
+         rookAttack = getRookAttacks(sq);
+         score += RookTable[sq];
+ 
++        // Build a mask of all OTHER white rooks (exclude current sq)
++        U64 otherRooks = allWhiteRooks & ~(1ULL << sq);
++
+         // Brothers
+-        if (rookAttack & bitboard->fileMasks[sq % 8] & pieceBitboard)
++        if (rookAttack & bitboard->fileMasks[sq % 8] & otherRooks)
+         {
+             score += rookSupportSameFile;
+         }
+-        if (rookAttack & bitboard->rankMasks[sq / 8] & pieceBitboard)
++        if (rookAttack & bitboard->rankMasks[sq / 8] & otherRooks)
+         {
+             score += rookSupportSameRank;
+         }
+ 
+         // mobility bonus
+         mobility = __builtin_popcountll(rookAttack & ~allWhitePieces);
+-        score += MobilityBonus[isEndgame][wr][mobility];
++        score += MobilityBonus[isEndgame][MOB_ROOK][mobility];
+ 
+         if (((bitboard->pieces[wp] | bitboard->pieces[bp]) & bitboard->fileMasks[sq % 8]) == 0)
+         {
+@@ -366,26 +375,31 @@ int evalPosition()
+         }
+     }
+ 
+-    pieceBitboard = bitboard->pieces[br];
++    U64 allBlackRooks = bitboard->pieces[br];
++    pieceBitboard = allBlackRooks;
++
+     while (pieceBitboard)
+     {
+         sq = __builtin_ctzll(pieceBitboard);
+         pieceBitboard &= pieceBitboard - 1;
+         score -= RookTable[Mirror64[sq]];
+         rookAttack = getRookAttacks(sq);
++
++        U64 otherRooks = allBlackRooks & ~(1ULL << sq);
++
+         // Brothers
+-        if (rookAttack & bitboard->fileMasks[sq % 8] & pieceBitboard)
++        if (rookAttack & bitboard->fileMasks[sq % 8] & otherRooks)
+         {
+             score -= rookSupportSameFile;
+         }
+-        if (rookAttack & bitboard->rankMasks[sq / 8] & pieceBitboard)
++        if (rookAttack & bitboard->rankMasks[sq / 8] & otherRooks)
+         {
+             score -= rookSupportSameRank;
+         }
+ 
+         // Mobility bonus
+         mobility = __builtin_popcountll(rookAttack & ~allBlackPieces);
+-        score -= MobilityBonus[isEndgame][wr][mobility];
++        score -= MobilityBonus[isEndgame][MOB_ROOK][mobility];
+ 
+         // Open file bonus
+         if (((bitboard->pieces[wp] | bitboard->pieces[bp]) & bitboard->fileMasks[sq % 8]) == 0)
+@@ -416,7 +430,7 @@ int evalPosition()
+ 
+         // mobility bonus
+         mobility = __builtin_popcountll((getRookAttacks(sq) | getBishopAttacks(sq)) & ~allWhitePieces);
+-        score += MobilityBonus[isEndgame][wq][mobility];
++        score += MobilityBonus[isEndgame][MOB_QUEEN][mobility];
+ 
+         // open file bonus
+         if (((bitboard->pieces[wp] | bitboard->pieces[bp]) & bitboard->fileMasks[sq % 8]) == 0)
+@@ -442,7 +456,7 @@ int evalPosition()
+ 
+         // mobility bonus
+         mobility = __builtin_popcountll((getRookAttacks(sq) | getBishopAttacks(sq)) & ~allBlackPieces);
+-        score -= MobilityBonus[isEndgame][wq][mobility];
++        score -= MobilityBonus[isEndgame][MOB_QUEEN][mobility];
+ 
+         // open file bonus
+         if (((bitboard->pieces[wp] | bitboard->pieces[bp]) & bitboard->fileMasks[sq % 8]) == 0)
+diff --git a/makefile b/makefile
+index 2e667c4..faa2b20 100644
+--- a/makefile
++++ b/makefile
+@@ -1,8 +1,8 @@
+ # Compiler
+ CXX = g++
+ 
+-# Compiler flags
+-CXXFLAGS = -std=c++11 -Wall -Wextra -Ofast
++# Debug flags
++CXXFLAGS = -std=c++11 -Wall -Wextra -g -O0
+ 
+ # Executable name
+ EXEC = chess
+@@ -16,19 +16,15 @@ HEADERS = defs.hpp board.hpp bitboard.hpp utils.hpp evaluation.hpp move.hpp move
+ # Object files
+ OBJS = $(SRCS:.cpp=.o)
+ 
+-# Default target
+ all: $(EXEC)
+ 
+-# Link object files to create the executable
+ $(EXEC): $(OBJS)
+ 	$(CXX) $(CXXFLAGS) -o $@ $^
+ 
+-# Compile source files into object files
+ %.o: %.cpp $(HEADERS)
+ 	$(CXX) $(CXXFLAGS) -c $< -o $@
+ 
+-# Clean up build files
+ clean:
+ 	rm -f $(OBJS) $(EXEC)
+ 
+-.PHONY: all clean
++.PHONY: all clean
+\ No newline at end of file
+diff --git a/movegen.cpp b/movegen.cpp
+index 12be43e..4400af8 100644
+--- a/movegen.cpp
++++ b/movegen.cpp
+@@ -37,10 +37,6 @@ void addCaptureMove(int move)
+ void addQuiteMove(int move)
+ {
+     int score = 0;
+-    if (searchController->ply < 0 && searchController->ply >= 64)
+-    {
+-        printf("---- %d\n", searchController->ply);
+-    }
+     if (searchController->killers[searchController->ply][0] == move)
+     {
+         score = 900000;
+diff --git a/polyglot.cpp b/polyglot.cpp
+index 17a5d14..0507e8c 100644
+--- a/polyglot.cpp
++++ b/polyglot.cpp
+@@ -156,7 +156,7 @@ void readBook()
+ int getRandBookMove(){
+     std::vector<std::string> moves;
+     U64 currPolyKey = getPolyKey();
+-    if(!openingBook.empty() || openingBook.find(currPolyKey) != openingBook.end()){
++    if(!openingBook.empty() && openingBook.find(currPolyKey) != openingBook.end()){
+         for(auto &entry : openingBook[currPolyKey]){
+             moves.push_back(extractPolyMove(endian_swap_u16(entry.move)));
+         }
+@@ -182,41 +182,45 @@ int getRandBookMove(){
+ 
+ std::string extractPolyMove(uint16_t move)
+ {
+-    // Extract components from the move using bit manipulation
+-    int toFile = (move & 0x7);                 // bits 0,1,2
+-    int toRow = ((move >> 3) & 0x7);           // bits 3,4,5
+-    int fromFile = ((move >> 6) & 0x7);        // bits 6,7,8
+-    int fromRow = ((move >> 9) & 0x7);         // bits 9,10,11
+-    int promotionPiece = ((move >> 12) & 0x7); // bits 12,13,14
+-
+-    // Convert the extracted bits into meaningful chess move components
++    int toFile   = (move & 0x7);
++    int toRow    = ((move >> 3) & 0x7);
++    int fromFile = ((move >> 6) & 0x7);
++    int fromRow  = ((move >> 9) & 0x7);
++    int promotionPiece = ((move >> 12) & 0x7);
++
+     char fromFileChar = 'a' + fromFile;
+-    char toFileChar = 'a' + toFile;
++    char toFileChar   = 'a' + toFile;
+     int fromRank = fromRow + 1;
+-    int toRank = toRow + 1;
++    int toRank   = toRow + 1;
++
++    // Fix castling: polyglot uses king-to-rook, engine uses king-to-dest
++    // white short: e1h1 -> e1g1
++    // white long:  e1a1 -> e1c1
++    // black short: e8h8 -> e8g8
++    // black long:  e8a8 -> e8c8
++    if (fromFileChar == 'e' && toFileChar == 'h' && fromFile == 4)
++        toFileChar = 'g';
++    else if (fromFileChar == 'e' && toFileChar == 'a' && fromFile == 4)
++        toFileChar = 'c';
+ 
+     std::string promotion;
+     switch (promotionPiece)
+     {
+-        case 1: promotion = "q"; break;
+-        case 2: promotion = "r"; break;
+-        case 3: promotion = "b"; break;
+-        case 4: promotion = "n"; break;
++        case 1: promotion = "n"; break;
++        case 2: promotion = "b"; break;
++        case 3: promotion = "r"; break;
++        case 4: promotion = "q"; break;
+         default: promotion = "";
+-        break;
+     }
+ 
+-    // Construct and return the human-readable move notation
+     std::string result = "";
+     result += fromFileChar;
+     result += std::to_string(fromRank);
+     result += toFileChar;
+     result += std::to_string(toRank);
+     result += promotion;
+-
+     return result;
+ }
+-
+ // Castling moves
+ // white short      e1h1
+ // white long       e1a1
+diff --git a/search.cpp b/search.cpp
+index 8d4c422..1351cb6 100644
+--- a/search.cpp
++++ b/search.cpp
+@@ -77,9 +77,15 @@ int searchPosition()
+             lineStr += moveStr(move) + ' ';
+         }
+ 
+-        printf("info score cp %d depth %d ordering %.2f nodes %lld time %lld ",
+-               bestScore, depth, ordering, searchController->nodes, getCurrTime() - searchController->startTime);
+-        std::cout << "pv " << lineStr << std::endl;
++        std::cout
++            << "info "
++            << "score cp "  << bestScore
++            << " depth "    << depth
++            << " ordering " << ordering
++            << " nodes "    << searchController->nodes
++            << " time "     << (getCurrTime() - searchController->startTime)
++            << " pv "       << lineStr
++            << std::endl;
+     }
+     std::cout << "bestmove " << moveStr(bestMove) << std::endl;
+     return bestMove;

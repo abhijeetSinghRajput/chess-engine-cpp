@@ -77,9 +77,15 @@ int searchPosition()
             lineStr += moveStr(move) + ' ';
         }
 
-        printf("info score cp %d depth %d ordering %.2f nodes %lld time %lld ",
-               bestScore, depth, ordering, searchController->nodes, getCurrTime() - searchController->startTime);
-        std::cout << "pv " << lineStr << std::endl;
+        std::cout
+            << "info "
+            << "score cp "  << bestScore
+            << " depth "    << depth
+            << " ordering " << ordering
+            << " nodes "    << searchController->nodes
+            << " time "     << (getCurrTime() - searchController->startTime)
+            << " pv "       << lineStr
+            << std::endl;
     }
     std::cout << "bestmove " << moveStr(bestMove) << std::endl;
     return bestMove;

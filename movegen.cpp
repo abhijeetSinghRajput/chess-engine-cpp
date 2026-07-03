@@ -37,10 +37,6 @@ void addCaptureMove(int move)
 void addQuiteMove(int move)
 {
     int score = 0;
-    if (searchController->ply < 0 && searchController->ply >= 64)
-    {
-        printf("---- %d\n", searchController->ply);
-    }
     if (searchController->killers[searchController->ply][0] == move)
     {
         score = 900000;
