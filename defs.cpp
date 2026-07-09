@@ -7,6 +7,11 @@ std::string startFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1
 int sq120To64[120];
 int sq64To120[64];
 
+const char* pieceIcon[] = {
+    ".",
+    u8"♙", u8"♖", u8"♘", u8"♗", u8"♕", u8"♔",
+    u8"♟", u8"♜", u8"♞", u8"♝", u8"♛", u8"♚"
+};
 const char pieceChar[] = ".PRNBQKprnbqk";
 const char pieceType[] = ".prnbqkprnbqk";
 const char fileChar[] = "abcdefgh";
@@ -123,10 +128,12 @@ void initialize() {
     initSquareMappings();
 }
 
-std::string moveStr(int move) {
+std::string moveStr(int move)
+{
     if (!move) return "";
 
-    char moveStr[5];
+    char moveStr[6];
+
     int from = moveFrom(move);
     int to = moveTo(move);
 
@@ -134,7 +141,16 @@ std::string moveStr(int move) {
     moveStr[1] = '1' + rankOf(from);
     moveStr[2] = 'a' + fileOf(to);
     moveStr[3] = '1' + rankOf(to);
-    moveStr[4] = '\0';
+
+    switch (movePromotionPiece(move))
+    {
+        case wq: case bq:   moveStr[4] = 'q'; moveStr[5] = '\0'; break;
+        case wr: case br:   moveStr[4] = 'r'; moveStr[5] = '\0'; break;
+        case wb: case bb:   moveStr[4] = 'b'; moveStr[5] = '\0'; break;
+        case wn: case bn:   moveStr[4] = 'n'; moveStr[5] = '\0'; break;
+
+        default:                              moveStr[4] = '\0'; break;
+    }
 
     return std::string(moveStr);
 }

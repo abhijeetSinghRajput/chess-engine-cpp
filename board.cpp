@@ -123,11 +123,11 @@ void Board::print()
             piece = pieces[sq];
             if (pieceColor[piece] == black)
             {
-                printf("\033[2m%c  \033[0m", pieceChar[piece]);
+                printf("\033[2m%s  \033[0m", pieceIcon[piece]);
             }
             else
             {
-                printf("%c  ", pieceChar[piece]);
+                printf("%s  ", pieceIcon[piece]);
             }
         }
         std::cout << std::endl;

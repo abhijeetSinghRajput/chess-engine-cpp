@@ -12,6 +12,7 @@ extern std::string startFen;
 extern int sq120To64[120];
 extern int sq64To120[64];
 
+extern const char *pieceIcon[];
 extern const char pieceChar[];
 extern const char pieceType[];
 extern const char fileChar[];
