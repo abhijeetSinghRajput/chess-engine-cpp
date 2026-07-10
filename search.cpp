@@ -79,12 +79,12 @@ int searchPosition()
 
         std::cout
             << "info "
-            << "score cp "  << bestScore
-            << " depth "    << depth
+            << "score cp " << bestScore
+            << " depth " << depth
             << " ordering " << ordering
-            << " nodes "    << searchController->nodes
-            << " time "     << (getCurrTime() - searchController->startTime)
-            << " pv "       << lineStr
+            << " nodes " << searchController->nodes
+            << " time " << (getCurrTime() - searchController->startTime)
+            << " pv " << lineStr
             << std::endl;
     }
     std::cout << "bestmove " << moveStr(bestMove) << std::endl;

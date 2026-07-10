@@ -262,9 +262,14 @@ bool makeMove(int move)
 
 
 void makeNullMove() {
-    if(board->checkSq != noSq) return;
+    if (board->checkSq != noSq)  return;
 
     board->pushMoveToHistory(0);
+
+    if (board->enPassantSq != noSq) {
+        hashEnPassant();
+    }
+
     board->enPassantSq = noSq;
     board->side ^= 1;
     hashSide();
