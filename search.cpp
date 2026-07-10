@@ -331,7 +331,9 @@ void swapWithBest(int i, std::vector<std::pair<int, int>> &moves)
 
 bool isRepetition()
 {
-    for (int i = board->ply - board->fiftyMove; i < board->ply - 1; ++i)
+    int start = std::max(0, board->ply - board->fiftyMove);
+
+    for (int i = start; i < board->ply; ++i)
     {
         if (board->positionKey == board->history[i].positionKey)
         {
