@@ -188,3 +188,12 @@ int parseMove(std::string &move_str)
     }
     return 0;
 }
+
+
+int bigPieceCount(int side)
+{
+    if (side == white)
+        return board->pieceCount[wn] + board->pieceCount[wb] + board->pieceCount[wr] + board->pieceCount[wq];
+    else
+        return board->pieceCount[bn] + board->pieceCount[bb] + board->pieceCount[br] + board->pieceCount[bq];
+}

@@ -14,20 +14,30 @@ std::thread searchThread;
 
 void handlePosition(std::istringstream &iss)
 {
-    std::string positionType, fen, token;
+    std::string positionType, token;
+    std::string fen = "";
 
     iss >> positionType;
+    
     if (positionType == "startpos")
     {
         board->parseFen(startFen);
     }
     else if (positionType == "fen")
     {
-        getline(iss, fen);
+        // Read exactly 6 FEN fields
+        for (int i = 0; i < 6; i++) {
+            std::string field;
+            iss >> field;
+            fen += field;
+            if (i < 5) fen += " ";
+        }
+        
         std::cout << "fen : " << fen << std::endl;
         board->parseFen(fen);
     }
 
+    // Now read remaining tokens (should be "moves" if present)
     while (iss >> token)
     {
         if (token == "moves")
@@ -35,10 +45,10 @@ void handlePosition(std::istringstream &iss)
             while (iss >> token)
             {
                 int move = parseMove(token);
-                if (!move)
-                    break;
+                if (!move) break;
                 makeMove(move);
             }
+            break;  // No need to process more after "moves"
         }
     }
 }

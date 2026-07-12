@@ -78,7 +78,7 @@ void Board::updateMaterial()
 void Board::reset()
 {
     if (transpositionTable) transpositionTable->clear();
-    
+
     for (int i = 0; i < 1024; ++i)
     {
         history[i].fiftyMove = 0;
@@ -142,18 +142,19 @@ void Board::print()
     std::cout << "side : " << side << std::endl;
     std::cout << "Key: 0x" << std::hex << positionKey << std::dec << std::endl;
     std::cout << "Fen: " << getFen() << std::endl;
-    std::cout << "Castle: " 
-          << ((castlePermission & castle_K) ? "K" : "_")
-          << ((castlePermission & castle_Q) ? "Q" : "_")
-          << ((castlePermission & castle_k) ? "k" : "_")
-          << ((castlePermission & castle_q) ? "q" : "_")
-          << std::endl;
+    std::cout << "Castle: "
+              << ((castlePermission & castle_K) ? "K" : "_")
+              << ((castlePermission & castle_Q) ? "Q" : "_")
+              << ((castlePermission & castle_k) ? "k" : "_")
+              << ((castlePermission & castle_q) ? "q" : "_")
+              << std::endl;
 
     if (board->checkSq != noSq)
     {
         printf("\033[31mcheck: %s\033[0m\n", squareChar[board->checkSq]);
     }
-    if(board->enPassantSq != noSq){
+    if (board->enPassantSq != noSq)
+    {
         printf("\033[33mEP: %s\033[0m\n", squareChar[board->enPassantSq]);
     }
 }
@@ -219,14 +220,16 @@ void Board::parseFen(std::string &fen)
         }
     }
 
-    while (fen[++i] == ' '); // skip white space
+    while (fen[++i] == ' ')
+        ; // skip white space
     if (fen[i] != '-')
     {
         int file = fen[i++] - 'a';
         int rank = fen[i] - '1';
         enPassantSq = fileRank2Sq(file, rank);
     }
-    else{
+    else
+    {
         enPassantSq = noSq;
     }
     updateMaterial();
@@ -234,8 +237,7 @@ void Board::parseFen(std::string &fen)
 
     // is in check
     int kingOnSq = __builtin_ctzll(bitboard->pieces[Kings[side]]);
-    board->checkSq = isUnderAttack(kingOnSq, board->side ^ 1)? sq64To120[kingOnSq] : noSq;
-
+    board->checkSq = isUnderAttack(kingOnSq, board->side ^ 1) ? sq64To120[kingOnSq] : noSq;
 
     // generate a uniqe position key
     positionKey = generatePositionKey();
@@ -280,33 +282,33 @@ std::string Board::getFen()
     fen += ' ';
     fen += (side == white) ? 'w' : 'b';
     fen += ' ';
+
     if (castlePermission)
     {
-        if (castlePermission & castle_K)
-            fen += 'K';
-        if (castlePermission & castle_Q)
-            fen += 'Q';
-        if (castlePermission & castle_k)
-            fen += 'k';
-        if (castlePermission & castle_q)
-            fen += 'q';
+        if (castlePermission & castle_K) fen += 'K';
+        if (castlePermission & castle_Q) fen += 'Q';
+        if (castlePermission & castle_k) fen += 'k';
+        if (castlePermission & castle_q) fen += 'q';
     }
     else
     {
         fen += '-';
     }
 
+    fen += ' ';
     if (enPassantSq != noSq)
     {
-        fen += " ";
         fen += squareChar[enPassantSq];
-        fen += " ";
     }
     else
     {
-        fen += " - ";
+        fen += '-';
     }
-    fen += std::to_string(fiftyMove) + ' ';
-    fen += std::to_string(ply + 1);
+
+    fen += ' ';
+    fen += std::to_string(fiftyMove);
+    fen += ' ';
+    fen += std::to_string((ply / 2) + 1);
+
     return fen;
 }

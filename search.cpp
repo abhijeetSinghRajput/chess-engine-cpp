@@ -53,7 +53,7 @@ int searchPosition()
         bestMove = getRandBookMove();
         if (bestMove)
         {
-            std::cout << "bestmove (book)" << moveStr(bestMove) << std::endl;
+            std::cout << "bestmove " << moveStr(bestMove) << std::endl;
             return bestMove;
         }
     }
@@ -141,14 +141,14 @@ int alphaBeta(int alpha, int beta, int depth, bool doNull)
     }
 
     // NULL Move Pruning
-    if (doNull && !inCheck && searchController->ply && depth >= 4)
+    if (doNull && !inCheck && searchController->ply && depth >= 4 && bigPieceCount(board->side) > 1)
     {
         makeNullMove();
         score = -alphaBeta(-beta, -beta + 1, depth - 4, false);
         takeNullMove();
         if (searchController->stopped)
             return 0;
-        if (score >= beta)
+        if (score >= beta && abs(score) < Mate)
         {
             return beta;
         }
