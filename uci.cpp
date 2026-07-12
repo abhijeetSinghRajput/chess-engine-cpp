@@ -33,7 +33,7 @@ void handlePosition(std::istringstream &iss)
             if (i < 5) fen += " ";
         }
         
-        std::cout << "fen : " << fen << std::endl;
+        // std::cout << "fen : " << fen << std::endl; // todo 
         board->parseFen(fen);
     }
 

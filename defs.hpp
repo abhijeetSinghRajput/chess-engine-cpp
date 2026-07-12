@@ -92,6 +92,7 @@ struct TableData
 {
     U64 smp_data;
     U64 smp_key;
+    int age;
 };
 
 struct polyEntry{

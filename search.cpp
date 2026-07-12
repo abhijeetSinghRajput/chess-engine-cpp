@@ -48,6 +48,8 @@ int searchPosition()
     int depth = 1;
     float ordering = 0;
 
+    transpositionTable->newSearch();
+
     if (searchController->useBook)
     {
         bestMove = getRandBookMove();
