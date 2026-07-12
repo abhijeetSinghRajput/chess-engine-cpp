@@ -365,6 +365,22 @@ int evalPosition()
         mobility = __builtin_popcountll(rookAttack & ~allWhitePieces);
         score += MobilityBonus[isEndgame][MOB_ROOK][mobility];
 
+        // Taretary penetration
+        if (rankOf(sq64To120[sq]) == rank7) {
+            // bonus if white rook attacks black pawns on 7th rank
+            U64 attackedPawns = rookAttack & bitboard->pieces[bp] & bitboard->rankMasks[rank7];
+            if (attackedPawns) {
+                score += 20 * __builtin_popcountll(attackedPawns);  // Per pawn attacked
+            }
+            // bonus if white rook is on same file/rank as black king
+            int blackKingSq = __builtin_ctzll(bitboard->pieces[bk]);
+            int rookFile = fileOf(sq64To120[sq]);
+            int kingFile = fileOf(sq64To120[blackKingSq]);
+            if (abs(rookFile - kingFile) <= 1) {
+                score += 40;  // Rook near king = dangerous!
+            }
+        }
+
         if (((bitboard->pieces[wp] | bitboard->pieces[bp]) & bitboard->fileMasks[sq % 8]) == 0)
         {
             score += RookOpenFile;
@@ -400,6 +416,22 @@ int evalPosition()
         // Mobility bonus
         mobility = __builtin_popcountll(rookAttack & ~allBlackPieces);
         score -= MobilityBonus[isEndgame][MOB_ROOK][mobility];
+
+        // Taretary penetration
+        if (rankOf(sq64To120[sq]) == rank2) {
+            // bonus if black rook attacks white pawns on 2nd rank
+            U64 attackedPawns = rookAttack & bitboard->pieces[wp] & bitboard->rankMasks[rank2];
+            if (attackedPawns) {
+                score -= 20 * __builtin_popcountll(attackedPawns);  // Per pawn attacked
+            }
+            // bonus if black rook is on same file/rank as white king
+            int whiteKingSq = __builtin_ctzll(bitboard->pieces[wk]);
+            int rookFile = fileOf(sq64To120[sq]);
+            int kingFile = fileOf(sq64To120[whiteKingSq]);
+            if (abs(rookFile - kingFile) <= 1) {
+                score -= 40;  // Rook near king = dangerous!
+            }
+        }
 
         // Open file bonus
         if (((bitboard->pieces[wp] | bitboard->pieces[bp]) & bitboard->fileMasks[sq % 8]) == 0)
