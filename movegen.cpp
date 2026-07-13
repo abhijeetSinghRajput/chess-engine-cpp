@@ -38,20 +38,20 @@ void addQuiteMove(int move)
 {
     int score = 0;
     if (searchController->killers[searchController->ply][0] == move)
-    {
         score = 900000;
-    }
     else if (searchController->killers[searchController->ply][1] == move)
-    {
         score = 800000;
-    }
     else
     {
         int piece = board->pieces[moveFrom(move)];
         int toSq = moveTo(move);
+        // Give a small bonus to all moves based on history
         score = searchController->history[piece][toSq];
+        if (score == 0) {
+            // Give random small scores to avoid ties
+            score = 1 + (moveFrom(move) % 1000);
+        }
     }
-
     moves.push_back({move, score});
 }
 

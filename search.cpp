@@ -181,7 +181,33 @@ int alphaBeta(int alpha, int beta, int depth, bool doNull)
             continue;
         legalMoves++;
         searchController->ply++;
-        score = -alphaBeta(-beta, -alpha, depth - 1, true);
+
+        // ===== LMR =====
+        int reduction = 0;
+        if (depth >= 3 && i >= 4 && !(move & captureFlag) && !inCheck && !(move & promotionFlag))
+        {
+            reduction = 1;
+            if (i >= 8)
+                reduction = 2;
+            if (i >= 16)
+                reduction = 3;
+            // Don't reduce killer moves
+            if (move == searchController->killers[searchController->ply][0] ||
+                move == searchController->killers[searchController->ply][1])
+            {
+                reduction = 0;
+            }
+        }
+
+        score = -alphaBeta(-beta, -alpha, depth - 1 - reduction, true);
+
+        // Re-search if reduction failed
+        if (reduction && score > alpha)
+        {
+            score = -alphaBeta(-beta, -alpha, depth - 1, true);
+        }
+
+        // ===== End LMR =====
 
         takeMove();
         searchController->ply--;
