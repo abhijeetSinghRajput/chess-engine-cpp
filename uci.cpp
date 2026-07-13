@@ -156,6 +156,10 @@ void UCI()
         {
             std::cout << "id name " << name << std::endl;
             std::cout << "id author " << author << std::endl;
+            std::cout << "option name usebook type check default " 
+                      << (searchController->useBook ? "true" : "false") 
+                      << std::endl;
+
             std::cout << "uciok" << std::endl;
         }
         else if (command == "isready")
