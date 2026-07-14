@@ -17,113 +17,29 @@ Supports **FEN**, **Polyglot opening book**, **time controls**, and standard UCI
 
 ---
 
-## 🕹️ UCI Commands
+## 📊 Engine Strength
 
-Below is a full list of commands supported by the engine with **examples**.
+Chanakya's playing strength has been benchmarked at approximately
+**2326 Elo (± 16)** using [cutechess-cli](https://github.com/cutechess/cutechess)
+and [Ordo](https://github.com/michiguel/Ordo)'s Bayesian anchored rating
+calculation, based on 827 valid games against Stockfish 18 (throttled to
+2300 and 2400 via `UCI_LimitStrength`) at a 60s+0.6s time control.
 
----
+| Metric | Value |
+|---|---|
+| Rating | 2325.8 Elo |
+| Error margin (95% CI) | ± 16.1 |
+| Games played | 827 |
+| Opponents | Stockfish 18 @ UCI_Elo 2300 and 2400 |
+| Time control | 60+0.6 |
+| Rating method | Ordo, multi-anchor Bayesian estimation |
 
-### 1️⃣ `uci`  
-**Initialize the engine in UCI mode.**  
-
-```bash
-uci
-id name MyChessEngine
-id author Abhijeet Singh
-uciok
-```
-
-### 2️⃣ `isready`  
-**Check if the engine is ready.**  
-
-```bash
-isready
-readyok
-```
-
-### 3️⃣ `setoption`  
-**Set engine options**  
-
-```bash
-setoption name usebook value true
-book move on
-```
-
-### 4️⃣ `ucinewgame`
-
-**Start a new game.**
-Resets internal search state and clears previous positions.
-```bash
-ucinewgame
-```
-
-### 5️⃣ `position`
-
-**Set board position.**
-
-- From starting position:
-  ```bash
-  position startpos
-  position startpos moves e2e4 e7e5 g1f3
-  ```
-- From FEN:
-  ```bash
-  position fen position fen rn3rk1/pp1q1ppp/4pn2/1b1p4/2p2N2/P1B1P3/2PPBPPP/1R1Q1RK1 w - - 4 13
-  ```
-
-### 6️⃣ `go`
-
-**Start searching for the best move.**
-
-a) Search by depth
-  ```bash
-  go depth 10
-  ```
-
-b) Search by fixed time
-  ```bash
-  go movetime 2000
-  ```
-c) Search with remaining time
-  ```bash
-  go wtime 300000 btime 300000 winc 2000 binc 2000 movestogo 30
-  ```
-
-- `wtime` / `btime` → milliseconds left for white/black
-- `winc` / `binc` → increment per move (ms)
-- `movestogo` → moves until next time control
-
-**Response:**
-```base
-info score cp 52 depth 1 ordering 0.00 nodes 48 time 1 pv d7d5 
-info score cp -20 depth 2 ordering 83.61 nodes 205 time 5 pv d7d5 d2d4 
-info score cp 39 depth 3 ordering 84.86 nodes 1880 time 11 pv d7d5 d2d4 f8b4 
-info score cp -56 depth 4 ordering 79.62 nodes 14784 time 33 pv d7d5 f3e5 d5e4 d2d4 
-info score cp 0 depth 5 ordering 82.11 nodes 72036 time 115 pv g8f6 d2d4 f6e4 f3e5 d7d5 
-info score cp -36 depth 6 ordering 88.22 nodes 429954 time 624 pv d7d5 
-info score cp 5 depth 7 ordering 86.80 nodes 1342069 time 1801 pv g8f6
-```
-
-### 7️⃣ stop
-
-**Stop current search immediately.**
-```base
-stop
-```
-- Engine returns the bestmove found so far
-
-### 8️⃣ quit
-
-**Exit the engine.**
-```bash
-quit
-```
-
-### 9️⃣ Debug & Manual Commands
-| Command | Description | Example |
-|---------|-------------|---------|
-| `d` | Print current board | `uci` |
-| `move <move>` | Make a manual move (UCI format) | `move e2e4` |
-| `undo` | Take back last move | `undo` |
-| `book` | Load Polyglot book manually | `book` |
-
+**Methodology notes:**
+- This is a self-conducted benchmark relative to Stockfish's own strength
+  throttling (`UCI_LimitStrength`), not an official CCRL/CEGT rating.
+  Actual tournament or CCRL-list strength may differ.
+- Games were played with Chanakya's internal opening book disabled
+  (`usebook=false`) so both engines drew openings from a shared,
+  randomized 8-move opening book, removing opening bias from the results.
+- Games ending in engine time forfeits from an earlier, unpatched build
+  were identified and excluded prior to the final rating calculation.

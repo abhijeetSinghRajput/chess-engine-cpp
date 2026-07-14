@@ -93,7 +93,19 @@ void handleSearch(std::istringstream &iss)
         {
             movestogo = 1; // Avoid division by zero
         }
-        time /= movestogo;
+        int perMove = time / movestogo;
+
+        // Safety cap: never allocate more than 70% of the RAW remaining clock
+        // to a single move, no matter how small movestogo is (e.g. movestogo=1).
+        int maxAllowed = static_cast<int>(time * 0.7);
+        perMove = std::min(perMove, maxAllowed);
+
+        constexpr int MOVE_OVERHEAD = 50;
+        perMove -= MOVE_OVERHEAD;
+        if (perMove < 1)
+            perMove = 1;
+
+        time = perMove;
     }
 
     // std::cout<<"time: " <<time <<std::endl;
