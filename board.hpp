@@ -10,11 +10,11 @@ class Board
 
 public:
     static int pieces[120];
-    int side = white;
+    int side = WHITE;
     int castlePermission = 0;
     int fiftyMove = 0;
-    int enPassantSq = noSq;
-    int checkSq = noSq;
+    int enPassantSq = SQ_NONE;
+    int checkSq = SQ_NONE;
     int ply = 0;
 
     int pieceCount[13];

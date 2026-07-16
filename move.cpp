@@ -2,13 +2,6 @@
 #include "utils.hpp"
 #include "bitboard.hpp"
 
-int enPassantFlag = 0x400000;
-int castleFlag = 0x800000;
-int pawnStartFlag = 0x1000000;
-
-int captureFlag = 0x3c000;
-int promotionFlag = 0x3c0000;
-
 int buildMove(int from, int to, int capturedPiece, int promotedPiece, int flag)
 {
     return from | (to << 7) | (capturedPiece << 14) | (promotedPiece << 18) | flag;
@@ -38,16 +31,16 @@ void moveDetail(int move)
     if (!move)
         return;
 
-    printf("from : %s\n", squareChar[moveFrom(move)]);
-    printf("to : %s\n", squareChar[moveTo(move)]);
-    printf("capture : %c\n", pieceChar[moveCapturePiece(move)]);
-    printf("promotion : %c\n", pieceChar[movePromotionPiece(move)]);
+    printf("from : %s\n", SQUARE_CHAR[moveFrom(move)]);
+    printf("to : %s\n", SQUARE_CHAR[moveTo(move)]);
+    printf("capture : %c\n", PIECE_CHAR[moveCapturePiece(move)]);
+    printf("promotion : %c\n", PIECE_CHAR[movePromotionPiece(move)]);
 
-    if (move & enPassantFlag)
+    if (move & EN_PASSANT_FLAG)
         printf("flag : enPassant\n");
-    if (move & pawnStartFlag)
+    if (move & PAWN_START_FLAG)
         printf("flag : pawn start\n");
-    if (move & castleFlag)
+    if (move & CASTLE_FLAG)
         printf("flag : castle\n");
     printf("\n");
 }
@@ -57,7 +50,7 @@ void movePiece(int from, int to)
     int piece = board->pieces[from];
 
     hashPiece(from, piece);
-    board->pieces[from] = empty;
+    board->pieces[from] = PIECE_EMPTY;
 
     hashPiece(to, piece);
     board->pieces[to] = piece;
@@ -67,13 +60,13 @@ void movePiece(int from, int to)
 
 void addPiece(int sq, int piece)
 {
-    if (board->pieces[sq] != empty)
+    if (board->pieces[sq] != PIECE_EMPTY)
     {
         // error
     }
     hashPiece(sq, piece);
     board->pieces[sq] = piece;
-    board->material[pieceColor[piece]] += pieceValue[piece];
+    board->material[PIECE_COLOR[piece]] += pieceValue[piece];
     board->pieceCount[piece]++;
 
     bitboard->setBit(piece, sq120To64[sq]);
@@ -83,8 +76,8 @@ void removePiece(int sq)
 {
     int piece = board->pieces[sq];
     hashPiece(sq, piece);
-    board->pieces[sq] = empty;
-    board->material[pieceColor[piece]] -= pieceValue[piece];
+    board->pieces[sq] = PIECE_EMPTY;
+    board->material[PIECE_COLOR[piece]] -= pieceValue[piece];
     board->pieceCount[piece]--;
 
     bitboard->clearBit(piece, sq120To64[sq]);
@@ -97,7 +90,7 @@ int takeMove() {
     }
 
     MoveInfo *moveInfo = board->popMoveFromHistory(); 
-    if (board->enPassantSq != noSq) {
+    if (board->enPassantSq != SQ_NONE) {
         hashEnPassant();
     }
     hashCastle();
@@ -107,7 +100,7 @@ int takeMove() {
     board->castlePermission = moveInfo->castlePermission;
     board->checkSq = moveInfo->checkSq;
 
-    if (board->enPassantSq != noSq) {
+    if (board->enPassantSq != SQ_NONE) {
         hashEnPassant();
     }
     hashCastle();
@@ -118,21 +111,21 @@ int takeMove() {
     const int from = moveFrom(move);
     const int to = moveTo(move);
 
-    if (move & enPassantFlag) {
-        if (board->side == white) {
-            addPiece(to - 10, bp);
+    if (move & EN_PASSANT_FLAG) {
+        if (board->side == WHITE) {
+            addPiece(to - 10, PIECE_BP);
         }
         else {
-            addPiece(to + 10, wp);
+            addPiece(to + 10, PIECE_WP);
         }
     }
-    else if (move & castleFlag) {
+    else if (move & CASTLE_FLAG) {
         switch (to) {
-            case g1: movePiece(f1, h1); break;
-            case c1: movePiece(d1, a1); break;
+            case SQ_G1: movePiece(SQ_F1, SQ_H1); break;
+            case SQ_C1: movePiece(SQ_D1, SQ_A1); break;
 
-            case g8: movePiece(f8, h8); break;
-            case c8: movePiece(d8, a8); break;
+            case SQ_G8: movePiece(SQ_F8, SQ_H8); break;
+            case SQ_C8: movePiece(SQ_D8, SQ_A8); break;
 
             default: break;
         }
@@ -140,12 +133,12 @@ int takeMove() {
 
 
     movePiece(to, from);
-    if (move & captureFlag) {
+    if (move & CAPTURE_FLAG) {
         addPiece(to, moveCapturePiece(move));
     }
-    if (move & promotionFlag) {
+    if (move & PROMOTION_FLAG) {
         removePiece(from);
-        addPiece(from, pieceColor[movePromotionPiece(move)] == white ? wp : bp);
+        addPiece(from, PIECE_COLOR[movePromotionPiece(move)] == WHITE ? PIECE_WP : PIECE_BP);
     }
 
     return move;
@@ -167,9 +160,9 @@ bool makeMove(int move)
 
     board->pushMoveToHistory(move);
 
-    if (move & enPassantFlag)
+    if (move & EN_PASSANT_FLAG)
     {
-        if (side == white)
+        if (side == WHITE)
         {
             removePiece(to - 10);
         }
@@ -178,41 +171,41 @@ bool makeMove(int move)
             removePiece(to + 10);
         }
     }
-    else if (move & castleFlag)
+    else if (move & CASTLE_FLAG)
     {
         switch (to)
         {
-            case g1: movePiece(h1, f1); break;
-            case c1: movePiece(a1, d1); break;
+            case SQ_G1: movePiece(SQ_H1, SQ_F1); break;
+            case SQ_C1: movePiece(SQ_A1, SQ_D1); break;
 
-            case g8: movePiece(h8, f8); break;
-            case c8: movePiece(a8, d8); break;
+            case SQ_G8: movePiece(SQ_H8, SQ_F8); break;
+            case SQ_C8: movePiece(SQ_A8, SQ_D8); break;
 
             default: break;
         }
     }
     // hash out
-    if (board->enPassantSq != noSq)
+    if (board->enPassantSq != SQ_NONE)
     {
         hashEnPassant();
     }
     hashCastle();
 
-    board->castlePermission &= CastlePermission[from];
-    board->castlePermission &= CastlePermission[to];
-    board->enPassantSq = noSq;
+    board->castlePermission &= CASTLE_PERMISSION[from];
+    board->castlePermission &= CASTLE_PERMISSION[to];
+    board->enPassantSq = SQ_NONE;
 
     // hash in
     hashCastle();
 
     board->fiftyMove++;
 
-    if (piece == wp || piece == bp)
+    if (piece == PIECE_WP || piece == PIECE_BP)
     {
         board->fiftyMove = 0;
-        if (move & pawnStartFlag)
+        if (move & PAWN_START_FLAG)
         {
-            if (side == white)
+            if (side == WHITE)
             {
                 board->enPassantSq = from + 10;
             }
@@ -224,14 +217,14 @@ bool makeMove(int move)
         }
     }
 
-    if (move & captureFlag)
+    if (move & CAPTURE_FLAG)
     {
         board->fiftyMove = 0;
         removePiece(to);
     }
     movePiece(from, to);
 
-    if (move & promotionFlag)
+    if (move & PROMOTION_FLAG)
     {
         removePiece(to);
         addPiece(to, movePromotionPiece(move));
@@ -255,22 +248,22 @@ bool makeMove(int move)
     }
     else
     {
-        board->checkSq = noSq;
+        board->checkSq = SQ_NONE;
     }
     return true;
 }
 
 
 void makeNullMove() {
-    if (board->checkSq != noSq)  return;
+    if (board->checkSq != SQ_NONE)  return;
 
     board->pushMoveToHistory(0);
 
-    if (board->enPassantSq != noSq) {
+    if (board->enPassantSq != SQ_NONE) {
         hashEnPassant();
     }
 
-    board->enPassantSq = noSq;
+    board->enPassantSq = SQ_NONE;
     board->side ^= 1;
     hashSide();
 }
@@ -283,7 +276,7 @@ int takeNullMove(){
     MoveInfo *moveInfo = board->popMoveFromHistory(); 
 
 
-    if(board->enPassantSq != noSq) {
+    if(board->enPassantSq != SQ_NONE) {
         hashEnPassant();
     }
 
@@ -292,7 +285,7 @@ int takeNullMove(){
     board->enPassantSq = moveInfo->enPassantSq;
     board->checkSq = moveInfo->checkSq;
 
-    if(board->enPassantSq != noSq) {
+    if(board->enPassantSq != SQ_NONE) {
         hashEnPassant();
     }
     board->side ^= 1;

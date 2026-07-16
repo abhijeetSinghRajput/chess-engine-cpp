@@ -10,12 +10,12 @@
 //  0001 0000 0000 0000 0000 0000 0000   0x1000000     pawnstart
 
 // flags 🚩
-extern int enPassantFlag;
-extern int castleFlag;
-extern int pawnStartFlag;
+constexpr int EN_PASSANT_FLAG  = 0x400000;
+constexpr int CASTLE_FLAG      = 0x800000;
+constexpr int PAWN_START_FLAG  = 0x1000000;
 
-extern int captureFlag;
-extern int promotionFlag;
+constexpr int CAPTURE_FLAG     = 0x3c000;
+constexpr int PROMOTION_FLAG   = 0x3c0000;
 
 int buildMove(int from, int to, int capturedPiece, int promotedPiece, int flag);
 int moveFrom(int move);

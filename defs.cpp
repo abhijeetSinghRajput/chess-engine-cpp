@@ -3,24 +3,24 @@
 #include <chrono>
 
 // Initialize global variables
-std::string startFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+std::string START_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 int sq120To64[120];
 int sq64To120[64];
 
-const char* pieceIcon[] = {
+const char* PIECE_ICON[] = {
     ".",
     u8"♙", u8"♖", u8"♘", u8"♗", u8"♕", u8"♔",
     u8"♟", u8"♜", u8"♞", u8"♝", u8"♛", u8"♚"
 };
-const char pieceChar[] = ".PRNBQKprnbqk";
-const char pieceType[] = ".prnbqkprnbqk";
-const char fileChar[] = "abcdefgh";
-const int pieceColor[] = {
+const char PIECE_CHAR[] = ".PRNBQKprnbqk";
+const char PIECE_TYPE[] = ".prnbqkprnbqk";
+const char FILE_CHAR[] = "abcdefgh";
+const int  PIECE_COLOR[] = {
     2,
     0, 0, 0, 0, 0, 0,
     1, 1, 1, 1, 1, 1,
 };
-const char *squareChar[] = {
+const char *SQUARE_CHAR[] = {
     ".", ".", ".", ".", ".", ".", ".", ".", ".", ".",
     ".", ".", ".", ".", ".", ".", ".", ".", ".", ".",
     ".", "a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1", ".",
@@ -34,44 +34,45 @@ const char *squareChar[] = {
     ".", ".", ".", ".", ".", ".", ".", ".", ".", ".",
     ".", ".", ".", ".", ".", ".", ".", ".", ".", ".",
 };
-const char *pieceName[] = {
+const char *PIECE_NAME[] = {
     ".",
     "wp", "wr", "wn", "wb", "wq", "wk",
     "bp", "br", "bn", "bb", "bq", "bk"
 };
 
-constexpr int VALUE_ZERO  = 0;
-constexpr int PawnValue   = 208;
-constexpr int KnightValue = 781;
-constexpr int BishopValue = 825;
-constexpr int RookValue   = 1276;
-constexpr int QueenValue  = 2538;
+constexpr int VALUE_ZERO   = 0;
+constexpr int PAWN_VALUE   = 208;
+constexpr int KNIGHT_VALUE = 781;
+constexpr int BISHOP_VALUE = 825;
+constexpr int ROOK_VALUE   = 1276;
+constexpr int QUEEN_VALUE  = 2538;
+constexpr int KING_VALUE   = 50000;
 
 const int pieceValue[13] = {
-    VALUE_ZERO,              // empty
-    PawnValue,      // wp
-    RookValue,      // wr  (5 pawns)
-    KnightValue,    // wn  (approx 3.2 pawns)
-    BishopValue,    // wb  (approx 3.3 pawns)
-    QueenValue,     // wq  (9 pawns)
-    50000,          // wk  (king has no material value)
+    VALUE_ZERO,      // empty
+    PAWN_VALUE,      // wp
+    ROOK_VALUE,      // wr  (5 pawns)
+    KNIGHT_VALUE,    // wn  (approx 3.2 pawns)
+    BISHOP_VALUE,    // wb  (approx 3.3 pawns)
+    QUEEN_VALUE,     // wq  (9 pawns)
+    KING_VALUE,      // wk  (king has no material value)
     
-    PawnValue,      // bp
-    RookValue,      // br
-    KnightValue,    // bn
-    BishopValue,    // bb
-    QueenValue,     // bq
-    50000           // bk
+    PAWN_VALUE,      // bp
+    ROOK_VALUE,      // br
+    KNIGHT_VALUE,    // bn
+    BISHOP_VALUE,    // bb
+    QUEEN_VALUE,     // bq
+    KING_VALUE       // bk
 };
 
 
-const int Kings[] = {wk, bk};
+const int Kings[] = {PIECE_WK, PIECE_BK};
 
-const int maxDepth = 64;
-const int Infinite = 32001;
-const int Mate = Infinite - maxDepth;
+const int MAX_DEPTH = 64;
+const int INFINITE = 32001;
+const int MATE = INFINITE - MAX_DEPTH;
 
-const int CastlePermission[] = {
+const int CASTLE_PERMISSION[] = {
     15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
     15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
     15, 11, 15, 15, 15, 3, 15, 15, 7, 15,//white 1011 0011 0111
@@ -86,7 +87,7 @@ const int CastlePermission[] = {
     15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
 };
 
-const int Mirror64[] = {
+const int MIRROR_64[] = {
     56	,	57	,	58	,	59	,	60	,	61	,	62	,	63	,
     48	,	49	,	50	,	51	,	52	,	53	,	54	,	55	,
     40	,	41	,	42	,	43	,	44	,	45	,	46	,	47	,
@@ -98,24 +99,24 @@ const int Mirror64[] = {
 };
 
 
-const int rookDirections[] = {-10, 1, 10, -1};
-const int knightDirections[] = {19, 21, 12, 8, -19, -21, -12, -8};
-const int bishopDirections[] = {-9, -11, 9, 11};
-const int kingDirections[] = {-10, 1, 10, -1, -9, -11, 9, 11};
-const int queenDirections[] = {-10, 1, 10, -1, -9, -11, 9, 11};
+const int ROOK_DIRECTIONS  [] = {-10, 1, 10, -1};
+const int KNIGHT_DIRECTIONS[] = {19, 21, 12, 8, -19, -21, -12, -8};
+const int BISHOP_DIRECTIONS[] = {-9, -11, 9, 11};
+const int KING_DIRECTIONS  [] = {-10, 1, 10, -1, -9, -11, 9, 11};
+const int QUEEN_DIRECTIONS [] = {-10, 1, 10, -1, -9, -11, 9, 11};
 
 const int slidingPieces[2][3] = {
-    wr, wb, wq,
-    br, bb, bq,
+    PIECE_WR, PIECE_WB, PIECE_WQ,
+    PIECE_BR, PIECE_BB, PIECE_BQ,
 };
 const int nonSlidingPieces[2][2] = {
-    wn, wk,
-    bn, bk,
+    PIECE_WN, PIECE_WK,
+    PIECE_BN, PIECE_BK,
 };
 
 void initSquareMappings() {
-    for (int rank = rank1; rank <= rank8; ++rank) {
-        for (int file = fileA; file <= fileH; ++file) {
+    for (int rank = RANK_1; rank <= rank8; ++rank) {
+        for (int file = FILE_A; file <= FILE_H; ++file) {
             int sq120 = fileRank2Sq(file, rank);
             int sq64 = rank * 8 + file;
             sq120To64[sq120] = sq64;
@@ -144,10 +145,10 @@ std::string moveStr(int move)
 
     switch (movePromotionPiece(move))
     {
-        case wq: case bq:   moveStr[4] = 'q'; moveStr[5] = '\0'; break;
-        case wr: case br:   moveStr[4] = 'r'; moveStr[5] = '\0'; break;
-        case wb: case bb:   moveStr[4] = 'b'; moveStr[5] = '\0'; break;
-        case wn: case bn:   moveStr[4] = 'n'; moveStr[5] = '\0'; break;
+        case PIECE_WQ: case PIECE_BQ:   moveStr[4] = 'q'; moveStr[5] = '\0'; break;
+        case PIECE_WR: case PIECE_BR:   moveStr[4] = 'r'; moveStr[5] = '\0'; break;
+        case PIECE_WB: case PIECE_BB:   moveStr[4] = 'b'; moveStr[5] = '\0'; break;
+        case PIECE_WN: case PIECE_BN:   moveStr[4] = 'n'; moveStr[5] = '\0'; break;
 
         default:                              moveStr[4] = '\0'; break;
     }

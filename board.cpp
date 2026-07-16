@@ -45,7 +45,7 @@ U64 Board::generatePositionKey()
     for (auto sq : sq64To120)
     {
         int piece = pieces[sq];
-        if (piece != empty)
+        if (piece != PIECE_EMPTY)
         {
             hashKey ^= pieceKeys[piece][sq];
         }
@@ -53,11 +53,11 @@ U64 Board::generatePositionKey()
 
     hashKey ^= castleKeys[castlePermission];
 
-    if (side == white)
+    if (side == WHITE)
         hashKey ^= sideKey;
-    if (enPassantSq != noSq)
+    if (enPassantSq != SQ_NONE)
     {
-        hashKey ^= pieceKeys[empty][enPassantSq];
+        hashKey ^= pieceKeys[PIECE_EMPTY][enPassantSq];
     }
     return hashKey;
 }
@@ -67,10 +67,10 @@ void Board::updateMaterial()
     for (int sq : sq64To120)
     {
         int piece = pieces[sq];
-        if (piece != empty)
+        if (piece != PIECE_EMPTY)
         {
             pieceCount[piece]++;
-            material[pieceColor[piece]] += pieceValue[piece];
+            material[PIECE_COLOR[piece]] += pieceValue[piece];
         }
     }
 }
@@ -83,9 +83,9 @@ void Board::reset()
     {
         history[i].fiftyMove = 0;
         history[i].positionKey = 0ULL;
-        history[i].enPassantSq = noSq;
+        history[i].enPassantSq = SQ_NONE;
         history[i].castlePermission = 0;
-        history[i].checkSq = noSq;
+        history[i].checkSq = SQ_NONE;
         history[i].move = 0;
     }
     for (int i = 0; i < 120; ++i)
@@ -94,18 +94,18 @@ void Board::reset()
     }
     for (auto sq : sq64To120)
     {
-        pieces[sq] = empty;
+        pieces[sq] = PIECE_EMPTY;
     }
     for (int i = 0; i < 13; ++i)
     {
         pieceCount[i] = 0;
     }
-    material[white] = 0;
-    material[black] = 0;
-    side = white;
+    material[WHITE] = 0;
+    material[BLACK] = 0;
+    side = WHITE;
     castlePermission = 0;
     fiftyMove = 0;
-    checkSq = noSq;
+    checkSq = SQ_NONE;
     positionKey = 0;
     ply = 0;
 
@@ -114,28 +114,28 @@ void Board::print()
 {
     int sq, piece;
     std::cout << std::endl;
-    for (int rank = rank8; rank >= rank1; --rank)
+    for (int rank = rank8; rank >= RANK_1; --rank)
     {
         std::cout << rank + 1 << "   ";
-        for (int file = fileA; file <= fileH; ++file)
+        for (int file = FILE_A; file <= FILE_H; ++file)
         {
             sq = fileRank2Sq(file, rank);
             piece = pieces[sq];
-            if (pieceColor[piece] == black)
+            if (PIECE_COLOR[piece] == BLACK)
             {
-                printf("\033[2m%c  \033[0m", pieceChar[piece]);
+                printf("\033[2m%c  \033[0m", PIECE_CHAR[piece]);
             }
             else
             {
-                printf("%c  ", pieceChar[piece]);
+                printf("%c  ", PIECE_CHAR[piece]);
             }
         }
         std::cout << std::endl;
     }
     std::cout << "\n    ";
-    for (int file = fileA; file <= fileH; ++file)
+    for (int file = FILE_A; file <= FILE_H; ++file)
     {
-        std::cout << fileChar[file] << "  ";
+        std::cout << FILE_CHAR[file] << "  ";
     }
     std::cout << std::endl
               << std::endl;
@@ -143,19 +143,19 @@ void Board::print()
     std::cout << "Key: 0x" << std::hex << positionKey << std::dec << std::endl;
     std::cout << "Fen: " << getFen() << std::endl;
     std::cout << "Castle: "
-              << ((castlePermission & castle_K) ? "K" : "_")
-              << ((castlePermission & castle_Q) ? "Q" : "_")
-              << ((castlePermission & castle_k) ? "k" : "_")
-              << ((castlePermission & castle_q) ? "q" : "_")
+              << ((castlePermission & CASTLE_WK) ? "K" : "_")
+              << ((castlePermission & CASTLE_WQ) ? "Q" : "_")
+              << ((castlePermission & CASTLE_BK) ? "k" : "_")
+              << ((castlePermission & CASTLE_BQ) ? "q" : "_")
               << std::endl;
 
-    if (board->checkSq != noSq)
+    if (board->checkSq != SQ_NONE)
     {
-        printf("\033[31mcheck: %s\033[0m\n", squareChar[board->checkSq]);
+        printf("\033[31mcheck: %s\033[0m\n", SQUARE_CHAR[board->checkSq]);
     }
-    if (board->enPassantSq != noSq)
+    if (board->enPassantSq != SQ_NONE)
     {
-        printf("\033[33mEP: %s\033[0m\n", squareChar[board->enPassantSq]);
+        printf("\033[33mEP: %s\033[0m\n", SQUARE_CHAR[board->enPassantSq]);
     }
 }
 
@@ -164,7 +164,7 @@ void Board::parseFen(std::string &fen)
     reset();
 
     int i = 0;
-    int file = fileA;
+    int file = FILE_A;
     int rank = rank8;
     int sq;
     while (fen[i] == ' ') i++; // skip white space
@@ -175,25 +175,25 @@ void Board::parseFen(std::string &fen)
         if (fen[i] == '/')
         {
             --rank;
-            file = fileA;
+            file = FILE_A;
         }
         else if (isalpha(fen[i]))
         {
             switch (fen[i])
             {
-                case 'P': pieces[sq] = wp; break;
-                case 'N': pieces[sq] = wn; break;
-                case 'B': pieces[sq] = wb; break;
-                case 'R': pieces[sq] = wr; break;
-                case 'Q': pieces[sq] = wq; break;
-                case 'K': pieces[sq] = wk; break;
+                case 'P': pieces[sq] = PIECE_WP; break;
+                case 'N': pieces[sq] = PIECE_WN; break;
+                case 'B': pieces[sq] = PIECE_WB; break;
+                case 'R': pieces[sq] = PIECE_WR; break;
+                case 'Q': pieces[sq] = PIECE_WQ; break;
+                case 'K': pieces[sq] = PIECE_WK; break;
 
-                case 'p': pieces[sq] = bp; break;
-                case 'n': pieces[sq] = bn; break;
-                case 'b': pieces[sq] = bb; break;
-                case 'r': pieces[sq] = br; break;
-                case 'q': pieces[sq] = bq; break;
-                case 'k': pieces[sq] = bk; break;
+                case 'p': pieces[sq] = PIECE_BP; break;
+                case 'n': pieces[sq] = PIECE_BN; break;
+                case 'b': pieces[sq] = PIECE_BB; break;
+                case 'r': pieces[sq] = PIECE_BR; break;
+                case 'q': pieces[sq] = PIECE_BQ; break;
+                case 'k': pieces[sq] = PIECE_BK; break;
 
                 default: return;
             }
@@ -206,16 +206,16 @@ void Board::parseFen(std::string &fen)
         ++i;
     }
     while (fen[++i] == ' '); // skip white space
-    side = (fen[i] == 'w') ? white : black;
+    side = (fen[i] == 'w') ? WHITE : BLACK;
     while (fen[++i] == ' '); // skip white space
     while (fen[i] != ' ')
     {
         switch (fen[i++])
         {
-            case 'K': castlePermission |= castle_K; break;
-            case 'Q': castlePermission |= castle_Q; break;
-            case 'k': castlePermission |= castle_k; break;
-            case 'q': castlePermission |= castle_q; break;
+            case 'K': castlePermission |= CASTLE_WK; break;
+            case 'Q': castlePermission |= CASTLE_WQ; break;
+            case 'k': castlePermission |= CASTLE_BK; break;
+            case 'q': castlePermission |= CASTLE_BQ; break;
             default: break;
         }
     }
@@ -230,14 +230,14 @@ void Board::parseFen(std::string &fen)
     }
     else
     {
-        enPassantSq = noSq;
+        enPassantSq = SQ_NONE;
     }
     updateMaterial();
     bitboard->initBoard(this);
 
     // is in check
     int kingOnSq = __builtin_ctzll(bitboard->pieces[Kings[side]]);
-    board->checkSq = isUnderAttack(kingOnSq, board->side ^ 1) ? sq64To120[kingOnSq] : noSq;
+    board->checkSq = isUnderAttack(kingOnSq, board->side ^ 1) ? sq64To120[kingOnSq] : SQ_NONE;
 
     // generate a uniqe position key
     positionKey = generatePositionKey();
@@ -246,16 +246,17 @@ void Board::parseFen(std::string &fen)
 std::string Board::getFen()
 {
     std::string fen;
-    int emptySq = 0, sq, piece;
+    int emptySq = 0, sq;
+    int piece;
 
-    for (int rank = rank8; rank >= rank1; --rank)
+    for (int rank = rank8; rank >= RANK_1; --rank)
     {
         emptySq = 0;
-        for (int file = fileA; file <= fileH; ++file)
+        for (int file = FILE_A; file <= FILE_H; ++file)
         {
             sq = fileRank2Sq(file, rank);
             piece = pieces[sq];
-            if (piece == empty)
+            if (piece == PIECE_EMPTY)
             {
                 emptySq++;
             }
@@ -266,29 +267,29 @@ std::string Board::getFen()
                     fen += std::to_string(emptySq);
                     emptySq = 0;
                 }
-                fen += pieceChar[piece];
+                fen += PIECE_CHAR[piece];
             }
         }
         if (emptySq)
         {
             fen += std::to_string(emptySq);
         }
-        if (rank != rank1)
+        if (rank != RANK_1)
         {
             fen += '/';
         }
     }
 
     fen += ' ';
-    fen += (side == white) ? 'w' : 'b';
+    fen += (side == WHITE) ? 'w' : 'b';
     fen += ' ';
 
     if (castlePermission)
     {
-        if (castlePermission & castle_K) fen += 'K';
-        if (castlePermission & castle_Q) fen += 'Q';
-        if (castlePermission & castle_k) fen += 'k';
-        if (castlePermission & castle_q) fen += 'q';
+        if (castlePermission & CASTLE_WK) fen += 'K';
+        if (castlePermission & CASTLE_WQ) fen += 'Q';
+        if (castlePermission & CASTLE_BK) fen += 'k';
+        if (castlePermission & CASTLE_BQ) fen += 'q';
     }
     else
     {
@@ -296,9 +297,9 @@ std::string Board::getFen()
     }
 
     fen += ' ';
-    if (enPassantSq != noSq)
+    if (enPassantSq != SQ_NONE)
     {
-        fen += squareChar[enPassantSq];
+        fen += SQUARE_CHAR[enPassantSq];
     }
     else
     {

@@ -21,7 +21,7 @@ void handlePosition(std::istringstream &iss)
     
     if (positionType == "startpos")
     {
-        board->parseFen(startFen);
+        board->parseFen(START_FEN);
     }
     else if (positionType == "fen")
     {
@@ -55,7 +55,7 @@ void handlePosition(std::istringstream &iss)
 
 void handleSearch(std::istringstream &iss)
 {
-    int depth = maxDepth, time = 0, inc = 0, movetime = 0, movestogo = 30;
+    int depth = MAX_DEPTH, time = 0, inc = 0, movetime = 0, movestogo = 30;
     std::string token;
 
     while (iss >> token)
@@ -66,13 +66,13 @@ void handleSearch(std::istringstream &iss)
             iss >> movetime;
         else if (token == "movestogo")
             iss >> movestogo;
-        else if (board->side == white && token == "wtime")
+        else if (board->side == WHITE && token == "wtime")
             iss >> time;
-        else if (board->side == black && token == "btime")
+        else if (board->side == BLACK && token == "btime")
             iss >> time;
-        else if (board->side == white && token == "winc")
+        else if (board->side == WHITE && token == "winc")
             iss >> inc;
-        else if (board->side == black && token == "binc")
+        else if (board->side == BLACK && token == "binc")
             iss >> inc;
     }
 
@@ -230,7 +230,7 @@ void UCI()
             board->print();
 
             // engine move
-            searchController->depth = maxDepth;
+            searchController->depth = MAX_DEPTH;
             searchController->startTime = getCurrTime();
             searchController->stopTime = searchController->startTime + 2000;
             searchController->timeSet = true;

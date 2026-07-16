@@ -51,10 +51,8 @@ void TranspositionTable::newSearch()
 
 void TranspositionTable::add(U64 positionKey, int move, int score, int flag, int depth)
 {
-    if (score > Mate)
-        score -= searchController->ply;
-    if (score < -Mate)
-        score += searchController->ply;
+    if (score > MATE)       score -= searchController->ply;
+    else if (score < -MATE) score += searchController->ply;
 
     size_t index = positionKey % (size_t)this->maxEntries;
     TableData *entry = &this->entries[index];

@@ -58,7 +58,7 @@ void addQuiteMove(int move)
 void addEnPassantMove(int move)
 {
     // MvvLva[Pieces.wp][Pieces.bp] == MvvLva[Pieces.bp][Pieces.wp]
-    int score = MvvLva[wp][bp] + 1000000;
+    int score = MvvLva[PIECE_WP][PIECE_BP] + 1000000;
     moves.push_back({move, score});
 }
 
@@ -67,10 +67,10 @@ void addWhitePawnQuietMove(int from, int to)
     // handling promotion move
     if (rankOf(to) == rank8)
     {
-        addQuiteMove(buildMove(from, to, 0, wq, 0));
-        addQuiteMove(buildMove(from, to, 0, wr, 0));
-        addQuiteMove(buildMove(from, to, 0, wb, 0));
-        addQuiteMove(buildMove(from, to, 0, wn, 0));
+        addQuiteMove(buildMove(from, to, 0, PIECE_WQ, 0));
+        addQuiteMove(buildMove(from, to, 0, PIECE_WR, 0));
+        addQuiteMove(buildMove(from, to, 0, PIECE_WB, 0));
+        addQuiteMove(buildMove(from, to, 0, PIECE_WN, 0));
     }
     else
     {
@@ -80,12 +80,12 @@ void addWhitePawnQuietMove(int from, int to)
 void addBlackPawnQuietMove(int from, int to)
 {
     // handling promotion move
-    if (rankOf(to) == rank1)
+    if (rankOf(to) == RANK_1)
     {
-        addQuiteMove(buildMove(from, to, 0, bq, 0));
-        addQuiteMove(buildMove(from, to, 0, br, 0));
-        addQuiteMove(buildMove(from, to, 0, bb, 0));
-        addQuiteMove(buildMove(from, to, 0, bn, 0));
+        addQuiteMove(buildMove(from, to, 0, PIECE_BQ, 0));
+        addQuiteMove(buildMove(from, to, 0, PIECE_BR, 0));
+        addQuiteMove(buildMove(from, to, 0, PIECE_BB, 0));
+        addQuiteMove(buildMove(from, to, 0, PIECE_BN, 0));
     }
     else
     {
@@ -98,10 +98,10 @@ void addWhiteCaptureMove(int from, int to, int capture)
     // handling promotion move
     if (rankOf(to) == rank8)
     {
-        addCaptureMove(buildMove(from, to, capture, wq, 0));
-        addCaptureMove(buildMove(from, to, capture, wr, 0));
-        addCaptureMove(buildMove(from, to, capture, wb, 0));
-        addCaptureMove(buildMove(from, to, capture, wn, 0));
+        addCaptureMove(buildMove(from, to, capture, PIECE_WQ, 0));
+        addCaptureMove(buildMove(from, to, capture, PIECE_WR, 0));
+        addCaptureMove(buildMove(from, to, capture, PIECE_WB, 0));
+        addCaptureMove(buildMove(from, to, capture, PIECE_WN, 0));
     }
     else
     {
@@ -111,12 +111,12 @@ void addWhiteCaptureMove(int from, int to, int capture)
 void addBlackCaptureMove(int from, int to, int capture)
 {
     // handling promotion move
-    if (rankOf(to) == rank1)
+    if (rankOf(to) == RANK_1)
     {
-        addCaptureMove(buildMove(from, to, capture, bq, 0));
-        addCaptureMove(buildMove(from, to, capture, br, 0));
-        addCaptureMove(buildMove(from, to, capture, bb, 0));
-        addCaptureMove(buildMove(from, to, capture, bn, 0));
+        addCaptureMove(buildMove(from, to, capture, PIECE_BQ, 0));
+        addCaptureMove(buildMove(from, to, capture, PIECE_BR, 0));
+        addCaptureMove(buildMove(from, to, capture, PIECE_BB, 0));
+        addCaptureMove(buildMove(from, to, capture, PIECE_BN, 0));
     }
     else
     {
@@ -139,7 +139,7 @@ void genNonSlidingMoves(bool capturesOnly)
             int sq = __builtin_ctzll(pieceBitboard);
             pieceBitboard &= pieceBitboard - 1;
 
-            U64 attacksPattern = (pieceType[piece] == 'n') ? bitboard->knightAttacks[sq] : bitboard->kingAttacks[sq];
+            U64 attacksPattern = (PIECE_TYPE[piece] == 'n') ? bitboard->knightAttacks[sq] : bitboard->kingAttacks[sq];
             attacksPattern &= ~friendlyPiecesBitboard;
 
             while (attacksPattern)
@@ -175,7 +175,7 @@ void genSlidingMoves(bool capturesOnly)
             pieceBitboard &= pieceBitboard - 1;
             U64 attacksPattern = 0ULL;
 
-            switch (pieceType[piece])
+            switch (PIECE_TYPE[piece])
             {
             case 'r':
                 attacksPattern = getRookAttacks(sq);
@@ -219,30 +219,30 @@ std::vector<std::pair<int, int>> &generateMoves()
     }
     moves.resize(0);
 
-    if (board->side == white)
+    if (board->side == WHITE)
     {
-        U64 wpBitboard = bitboard->pieces[wp];
+        U64 wpBitboard = bitboard->pieces[PIECE_WP];
         // loop white pawn
         while (wpBitboard)
         {
             int sq = sq64To120[__builtin_ctzll(wpBitboard)];
             wpBitboard &= wpBitboard - 1;
 
-            if (board->pieces[sq + 10] == empty)
+            if (board->pieces[sq + 10] == PIECE_EMPTY)
             {
                 addWhitePawnQuietMove(sq, sq + 10);
-                if (board->pieces[sq + 20] == empty && rankOf(sq) == rank2)
+                if (board->pieces[sq + 20] == PIECE_EMPTY && rankOf(sq) == RANK_2)
                 {
-                    addQuiteMove(buildMove(sq, sq + 20, 0, 0, pawnStartFlag));
+                    addQuiteMove(buildMove(sq, sq + 20, 0, 0, PAWN_START_FLAG));
                 }
             }
 
             // add capture move
-            if (board->pieces[sq + 9] != offBoard && pieceColor[board->pieces[sq + 9]] == black)
+            if (board->pieces[sq + 9] != offBoard && PIECE_COLOR[board->pieces[sq + 9]] == BLACK)
             {
                 addWhiteCaptureMove(sq, sq + 9, board->pieces[sq + 9]);
             }
-            if (board->pieces[sq + 11] != offBoard && pieceColor[board->pieces[sq + 11]] == black)
+            if (board->pieces[sq + 11] != offBoard && PIECE_COLOR[board->pieces[sq + 11]] == BLACK)
             {
                 addWhiteCaptureMove(sq, sq + 11, board->pieces[sq + 11]);
             }
@@ -250,62 +250,62 @@ std::vector<std::pair<int, int>> &generateMoves()
             // add enpassant move
             if (sq + 9 == board->enPassantSq)
             {
-                addEnPassantMove(buildMove(sq, sq + 9, 0, 0, enPassantFlag));
+                addEnPassantMove(buildMove(sq, sq + 9, 0, 0, EN_PASSANT_FLAG));
             }
             if (sq + 11 == board->enPassantSq)
             {
-                addEnPassantMove(buildMove(sq, sq + 11, 0, 0, enPassantFlag));
+                addEnPassantMove(buildMove(sq, sq + 11, 0, 0, EN_PASSANT_FLAG));
             }
 
         } // end loop
 
         // CASTLING
-        if (board->castlePermission & castle_K)
+        if (board->castlePermission & CASTLE_WK)
         {
-            if (board->pieces[f1] == empty && board->pieces[g1] == empty)
+            if (board->pieces[SQ_F1] == PIECE_EMPTY && board->pieces[SQ_G1] == PIECE_EMPTY)
             {
-                if (board->checkSq == noSq && !isUnderAttack(sq120To64[f1], black))
+                if (board->checkSq == SQ_NONE && !isUnderAttack(sq120To64[SQ_F1], BLACK))
                 {
-                    addQuiteMove(buildMove(e1, g1, 0, 0, castleFlag));
+                    addQuiteMove(buildMove(SQ_E1, SQ_G1, 0, 0, CASTLE_FLAG));
                 }
             }
         }
-        if (board->castlePermission & castle_Q)
+        if (board->castlePermission & CASTLE_WQ)
         {
-            if (board->pieces[d1] == empty && board->pieces[c1] == empty && board->pieces[b1] == empty)
+            if (board->pieces[SQ_D1] == PIECE_EMPTY && board->pieces[SQ_C1] == PIECE_EMPTY && board->pieces[SQ_B1] == PIECE_EMPTY)
             {
-                if (board->checkSq == noSq && !isUnderAttack(sq120To64[d1], black))
+                if (board->checkSq == SQ_NONE && !isUnderAttack(sq120To64[SQ_D1], BLACK))
                 {
-                    addQuiteMove(buildMove(e1, c1, 0, 0, castleFlag));
+                    addQuiteMove(buildMove(SQ_E1, SQ_C1, 0, 0, CASTLE_FLAG));
                 }
             }
         }
     }
     else
     {
-        U64 bpBitboard = bitboard->pieces[bp];
+        U64 bpBitboard = bitboard->pieces[PIECE_BP];
         // loop black pawn
         while (bpBitboard)
         {
             int sq = sq64To120[__builtin_ctzll(bpBitboard)];
             bpBitboard &= bpBitboard - 1;
 
-            if (board->pieces[sq - 10] == empty)
+            if (board->pieces[sq - 10] == PIECE_EMPTY)
             {
                 addBlackPawnQuietMove(sq, sq - 10);
 
-                if (board->pieces[sq - 20] == empty && rankOf(sq) == rank7)
+                if (board->pieces[sq - 20] == PIECE_EMPTY && rankOf(sq) == RANK_7)
                 {
-                    addQuiteMove(buildMove(sq, sq - 20, 0, 0, pawnStartFlag));
+                    addQuiteMove(buildMove(sq, sq - 20, 0, 0, PAWN_START_FLAG));
                 }
             }
 
             // add capture move
-            if (board->pieces[sq - 9] != offBoard && pieceColor[board->pieces[sq - 9]] == white)
+            if (board->pieces[sq - 9] != offBoard && PIECE_COLOR[board->pieces[sq - 9]] == WHITE)
             {
                 addBlackCaptureMove(sq, sq - 9, board->pieces[sq - 9]);
             }
-            if (board->pieces[sq - 11] != offBoard && pieceColor[board->pieces[sq - 11]] == white)
+            if (board->pieces[sq - 11] != offBoard && PIECE_COLOR[board->pieces[sq - 11]] == WHITE)
             {
                 addBlackCaptureMove(sq, sq - 11, board->pieces[sq - 11]);
             }
@@ -313,32 +313,32 @@ std::vector<std::pair<int, int>> &generateMoves()
             // add enpassant move
             if (sq - 9 == board->enPassantSq)
             {
-                addEnPassantMove(buildMove(sq, sq - 9, 0, 0, enPassantFlag));
+                addEnPassantMove(buildMove(sq, sq - 9, 0, 0, EN_PASSANT_FLAG));
             }
             if (sq - 11 == board->enPassantSq)
             {
-                addEnPassantMove(buildMove(sq, sq - 11, 0, 0, enPassantFlag));
+                addEnPassantMove(buildMove(sq, sq - 11, 0, 0, EN_PASSANT_FLAG));
             }
         }
 
         // castling
-        if (board->castlePermission & castle_k)
+        if (board->castlePermission & CASTLE_BK)
         {
-            if (board->pieces[f8] == empty && board->pieces[g8] == empty)
+            if (board->pieces[SQ_F8] == PIECE_EMPTY && board->pieces[SQ_G8] == PIECE_EMPTY)
             {
-                if (board->checkSq == noSq && !isUnderAttack(sq120To64[f8], white))
+                if (board->checkSq == SQ_NONE && !isUnderAttack(sq120To64[SQ_F8], WHITE))
                 {
-                    addQuiteMove(buildMove(e8, g8, 0, 0, castleFlag));
+                    addQuiteMove(buildMove(SQ_E8, SQ_G8, 0, 0, CASTLE_FLAG));
                 }
             }
         }
-        if (board->castlePermission & castle_q)
+        if (board->castlePermission & CASTLE_BQ)
         {
-            if (board->pieces[d8] == empty && board->pieces[c8] == empty && board->pieces[b8] == empty)
+            if (board->pieces[SQ_D8] == PIECE_EMPTY && board->pieces[SQ_C8] == PIECE_EMPTY && board->pieces[SQ_B8] == PIECE_EMPTY)
             {
-                if (board->checkSq == noSq && !isUnderAttack(sq120To64[d8], white))
+                if (board->checkSq == SQ_NONE && !isUnderAttack(sq120To64[SQ_D8], WHITE))
                 {
-                    addQuiteMove(buildMove(e8, c8, 0, 0, castleFlag));
+                    addQuiteMove(buildMove(SQ_E8, SQ_C8, 0, 0, CASTLE_FLAG));
                 }
             }
         }
@@ -356,9 +356,9 @@ std::vector<std::pair<int, int>> &generateCaptureMoves()
     }
     moves.resize(0);
 
-    if (board->side == white)
+    if (board->side == WHITE)
     {
-        U64 wpBitboard = bitboard->pieces[wp];
+        U64 wpBitboard = bitboard->pieces[PIECE_WP];
         // loop white pawn
         while (wpBitboard)
         {
@@ -366,11 +366,11 @@ std::vector<std::pair<int, int>> &generateCaptureMoves()
             wpBitboard &= wpBitboard - 1;
 
             // add capture move
-            if (board->pieces[sq + 9] != offBoard && pieceColor[board->pieces[sq + 9]] == black)
+            if (board->pieces[sq + 9] != offBoard && PIECE_COLOR[board->pieces[sq + 9]] == BLACK)
             {
                 addWhiteCaptureMove(sq, sq + 9, board->pieces[sq + 9]);
             }
-            if (board->pieces[sq + 11] != offBoard && pieceColor[board->pieces[sq + 11]] == black)
+            if (board->pieces[sq + 11] != offBoard && PIECE_COLOR[board->pieces[sq + 11]] == BLACK)
             {
                 addWhiteCaptureMove(sq, sq + 11, board->pieces[sq + 11]);
             }
@@ -379,7 +379,7 @@ std::vector<std::pair<int, int>> &generateCaptureMoves()
     }
     else
     {
-        U64 bpBitboard = bitboard->pieces[bp];
+        U64 bpBitboard = bitboard->pieces[PIECE_BP];
         // loop black pawn
         while (bpBitboard)
         {
@@ -387,11 +387,11 @@ std::vector<std::pair<int, int>> &generateCaptureMoves()
             bpBitboard &= bpBitboard - 1;
 
             // add capture move
-            if (board->pieces[sq - 9] != offBoard && pieceColor[board->pieces[sq - 9]] == white)
+            if (board->pieces[sq - 9] != offBoard && PIECE_COLOR[board->pieces[sq - 9]] == WHITE)
             {
                 addBlackCaptureMove(sq, sq - 9, board->pieces[sq - 9]);
             }
-            if (board->pieces[sq - 11] != offBoard && pieceColor[board->pieces[sq - 11]] == white)
+            if (board->pieces[sq - 11] != offBoard && PIECE_COLOR[board->pieces[sq - 11]] == WHITE)
             {
                 addBlackCaptureMove(sq, sq - 11, board->pieces[sq - 11]);
             }
