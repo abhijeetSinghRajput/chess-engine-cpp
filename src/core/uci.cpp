@@ -224,12 +224,21 @@ void UCI()
             {
                 printf("enter a valid move\n");
                 continue;
-                ;
             }
             makeMove(move);
             board->print();
 
             // engine move
+            if(isGameOver()){
+                if(board->checkSq != SQ_NONE){
+                    printf("Game over by Checkmate\n");
+                }
+                else{
+                    printf("Draw\n");
+                }
+                continue;
+            }
+
             searchController->depth = MAX_DEPTH;
             searchController->startTime = getCurrTime();
             searchController->stopTime = searchController->startTime + 2000;

@@ -125,43 +125,42 @@ int TranspositionTable::getMove()
     return 0;
 }
 
-bool isMoveExists(int arg)
-{
-    std::vector<std::pair<int, int>> moves = generateMoves();
-    for (auto &pair : moves)
-    {
-        if (pair.first == arg)
-        {
-            if (makeMove(pair.first) == false)
-                continue;
-            takeMove();
-            return true;
-        }
-    }
-    return false;
-}
 
-std::vector<int> TranspositionTable::getLine(int depth)
-{
+std::vector<int> TranspositionTable::getLine(int depth) {
     std::vector<int> moveList;
     int move = this->getMove();
     int count = 0;
-
-    while (move && count < depth)
-    {
-        if (isMoveExists(move))
-        {
-            makeMove(move);
-            moveList.push_back(move);
-            count++;
+    
+    // Store moves to make/unmake
+    std::vector<int> madeMoves;
+    
+    while (move && count < depth) {
+        // Check if move is legal without modifying board state
+        bool legal = false;
+        std::vector<std::pair<int, int>> moves = generateMoves();
+        for (auto &pair : moves) {
+            if (pair.first == move) {
+                if (makeMove(move)) {
+                    legal = true;
+                    madeMoves.push_back(move);
+                    moveList.push_back(move);
+                    count++;
+                    break;
+                }
+                takeMove(); // If makeMove failed, ensure board is restored
+            }
         }
-        else
-        {
-            break;
-        }
+        
+        if (!legal) break;
+        
+        // Get next TT move
         move = this->getMove();
     }
-    while (count--)
+    
+    // Unmake all moves in reverse order
+    for (int i = madeMoves.size() - 1; i >= 0; --i) {
         takeMove();
+    }
+    
     return moveList;
 }

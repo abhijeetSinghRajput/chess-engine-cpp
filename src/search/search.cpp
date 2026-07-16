@@ -129,8 +129,8 @@ int alphaBeta(int alpha, int beta, int depth, bool doNull)
         if (extract_depth(ttEntry->smp_data) >= depth)
         {
             score = extract_score(ttEntry->smp_data);
-            if (score > MATE)       score -= searchController->ply;
-            else if (score < -MATE) score += searchController->ply;
+            if (score > MATE)       score += searchController->ply;
+            else if (score < -MATE) score -= searchController->ply;
 
             if (extract_flag(ttEntry->smp_data) == AlphaFlag && score <= alpha)
                 return alpha;

@@ -197,3 +197,21 @@ int bigPieceCount(int side)
     else
         return board->pieceCount[PIECE_BN] + board->pieceCount[PIECE_BB] + board->pieceCount[PIECE_BR] + board->pieceCount[PIECE_BQ];
 }
+
+bool isGameOver(){
+    std::vector<std::pair<int, int>> moves = generateMoves();
+    // No move left to play
+    if(moves.size() == 0) return true;
+
+    // Check Legal move
+    for (auto &pair : moves)
+    {
+        int move = pair.first;
+        if(makeMove(move)){
+            takeMove();
+            return false;
+        }
+    }
+
+    return true;
+}

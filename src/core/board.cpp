@@ -121,7 +121,10 @@ void Board::print()
         {
             sq = fileRank2Sq(file, rank);
             piece = pieces[sq];
-            if (PIECE_COLOR[piece] == BLACK)
+            if(board->checkSq == sq){
+                printf("\033[31m%c  \033[0m", PIECE_CHAR[piece]);
+            }
+            else if (PIECE_COLOR[piece] == BLACK)
             {
                 printf("\033[2m%c  \033[0m", PIECE_CHAR[piece]);
             }
