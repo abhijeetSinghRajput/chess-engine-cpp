@@ -42,20 +42,20 @@
 <details>
 <summary>Table of Contents</summary>
 
-- [About](#-about)
-- [Features](#-features)
-- [VS Code GUI](#️-vs-code-gui)
-- [Engine Strength](#-engine-strength)
-- [Supported Commands](#-supported-commands)
-- [Development](#-development)
-- [Contributing](#-contributing)
-- [License](#-license)
+- [About](#about)
+- [Features](#features)
+- [Installation](#installation)
+- [Engine Strength](#engine-strength)
+- [Supported Commands](#supported-commands)
+- [Development](#development)
+- [Contributing](#contributing)
+- [License](#license)
 
 </details>
 
 ---
 
-# 📖 About
+# About
 
 **Chanakya** is a lightweight chess engine written in modern C++ that fully
 implements the **UCI protocol**.
@@ -69,7 +69,7 @@ GUIs and tooling.
 
 ---
 
-# ✨ Features
+# Features
 
 - Full **UCI protocol** support
 - Supports `startpos` and arbitrary **FEN** positions
@@ -83,37 +83,91 @@ GUIs and tooling.
 
 ---
 
-# 🖥️ VS Code GUI
+# Installation
 
-Chanakya includes a Visual Studio Code extension that lets you:
+Chanakya can be used in two ways:
 
-- Play against the engine directly inside VS Code.
-- Analyze positions and custom FENs.
-- Visualize engine evaluations.
-- Test moves and openings.
-- Use Chanakya without installing a separate GUI.
+- Through the VS Code extension (recommended)
+- Directly from the command line
 
-### Install
+---
 
-**Marketplace**
+## Option 1: VS Code Extension
 
-https://marketplace.visualstudio.com/items?itemName=mrcodium.chess-engine
+### Install from Marketplace
 
-**Open directly in VS Code**
+Install the official VS Code extension to play and analyze games directly inside your editor.
+
+<a href="https://marketplace.visualstudio.com/items?itemName=mrcodium.chess-engine">
+  <img
+    src="https://github.com/abhijeetSinghRajput/github-contributions-calendar/blob/main/media/screenshots/install-from-marketplace.png?raw=true"
+    alt="Install from VS Code Marketplace"
+    height="20"
+  />
+</a>
+
+### Steps
+
+1. Open VS Code.
+2. Open the Extensions panel (`Ctrl+Shift+X`).
+3. Search for **Chanakya Chess Engine**.
+4. Click **Install**.
+5. Open the extension and start playing.
+
+---
+
+## Option 2: Build from Source (CLI)
+
+Clone the repository:
+
+```bash
+git clone https://github.com/abhijeetSinghRajput/chess-engine-cpp.git
+```
+
+Enter the project directory:
+
+```bash
+cd chess-engine-cpp
+```
+
+Build the engine:
+
+```bash
+make
+```
+
+Run the engine:
+
+### Linux / macOS
+
+```bash
+./chanakya
+```
+
+### Windows
+
+```bash
+chanakya.exe
+```
+
+### Test the engine
 
 ```text
-vscode:extension/mrcodium.chess-engine
+uci
+isready
+position startpos
+go depth 10
 ```
 
 ---
 
-# 📊 Engine Strength
+# Engine Strength
 
 Chanakya has been benchmarked at approximately:
 
 <div align="center">
 
-# ⭐ 2326 Elo ± 16
+## ⭐ 2326 Elo ± 16
 
 **827 games · 60+0.6 time control**
 
@@ -141,7 +195,7 @@ using `cutechess-cli` and Ordo's Bayesian anchored rating calculation against
 
 ---
 
-# ⚙️ Supported Commands
+# Supported Commands
 
 | Command | Description |
 |----------|----------|
@@ -157,7 +211,7 @@ using `cutechess-cli` and Ordo's Bayesian anchored rating calculation against
 
 ---
 
-# 🔧 Development
+# Development
 
 ```bash
 make
@@ -175,7 +229,7 @@ go depth 10
 
 ---
 
-# 🤝 Contributing
+# Contributing
 
 Contributions are always welcome.
 
@@ -189,6 +243,6 @@ Please open an issue first if you'd like to discuss major changes.
 
 ---
 
-# 📄 License
+# License
 
 Released under the **GPL-3.0 License**.
