@@ -1,6 +1,6 @@
-#include "move.hpp"
-#include "utils.hpp"
-#include "bitboard.hpp"
+#include "core/move.hpp"
+#include "core/utils.hpp"
+#include "core/bitboard.hpp"
 
 int buildMove(int from, int to, int capturedPiece, int promotedPiece, int flag)
 {

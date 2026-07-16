@@ -1,5 +1,5 @@
 #pragma once
-#include "defs.hpp"
+#include "core/defs.hpp"
 #include <atomic>
 
 class SearchController

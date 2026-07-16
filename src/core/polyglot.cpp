@@ -1,6 +1,6 @@
-#include "polyglot.hpp"
-#include "board.hpp"
-#include "utils.hpp"
+#include "core/polyglot.hpp"
+#include "core/board.hpp"
+#include "core/utils.hpp"
 #include <fstream>
 #include <iostream>
 #include <ctime>

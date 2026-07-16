@@ -1,4 +1,5 @@
 # Compiled Object files
+build
 *.o
 *.test
 test

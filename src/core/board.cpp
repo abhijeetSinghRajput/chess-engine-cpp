@@ -1,8 +1,8 @@
-#include "utils.hpp"
-#include "board.hpp"
-#include "bitboard.hpp"
-#include "zobristKeys.hpp"
-#include "transpositionTable.hpp"
+#include "core/utils.hpp"
+#include "core/board.hpp"
+#include "core/bitboard.hpp"
+#include "core/zobristKeys.hpp"
+#include "search/transpositionTable.hpp"
 #include <iostream>
 #include <iomanip>
 

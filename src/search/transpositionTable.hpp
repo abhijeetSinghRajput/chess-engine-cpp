@@ -1,6 +1,6 @@
 #pragma once
 
-#include "defs.hpp"
+#include "core/defs.hpp"
 
 extern const int AlphaFlag;
 extern const int BetaFlag;

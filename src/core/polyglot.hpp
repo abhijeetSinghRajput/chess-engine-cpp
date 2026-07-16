@@ -1,5 +1,5 @@
 #pragma once
-#include "defs.hpp"
+#include "core/defs.hpp"
 
 U64 getPolyKey();
 void loadPolyBook(const std::string &path);

@@ -1,5 +1,5 @@
-#include "defs.hpp"
-#include "bitboard.hpp"
+#include "core/defs.hpp"
+#include "core/bitboard.hpp"
 #include <iomanip>
 #include <random>
 #include <iostream>

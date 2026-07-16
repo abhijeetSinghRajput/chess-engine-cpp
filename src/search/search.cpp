@@ -1,14 +1,14 @@
-#include "search.hpp"
-#include "board.hpp"
-#include "defs.hpp"
-#include "move.hpp"
-#include "movegen.hpp"
-#include "evaluation.hpp"
-#include "transpositionTable.hpp"
-#include "utils.hpp"
+#include "search/search.hpp"
+#include "core/board.hpp"
+#include "core/defs.hpp"
+#include "core/move.hpp"
+#include "core/movegen.hpp"
+#include "eval/evaluation.hpp"
+#include "search/transpositionTable.hpp"
+#include "core/utils.hpp"
 #include <iostream>
 #include <iomanip>
-#include "polyglot.hpp"
+#include "core/polyglot.hpp"
 
 SearchController *searchController = new SearchController;
 

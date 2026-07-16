@@ -1,7 +1,7 @@
 #pragma once
 
 #include <string>
-#include "defs.hpp"
+#include "core/defs.hpp"
 
 class Board
 {

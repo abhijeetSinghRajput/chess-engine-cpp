@@ -1,8 +1,8 @@
-#include "evaluation.hpp"
-#include "defs.hpp"
-#include "board.hpp"
-#include "bitboard.hpp"
-#include "utils.hpp"
+#include "eval/evaluation.hpp"
+#include "core/defs.hpp"
+#include "core/board.hpp"
+#include "core/bitboard.hpp"
+#include "core/utils.hpp"
 #include <iostream>
 
 const int PawnTable[] = {

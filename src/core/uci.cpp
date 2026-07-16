@@ -1,14 +1,14 @@
-#include "uci.hpp"
-#include "utils.hpp"
-#include "board.hpp"
-#include "search.hpp"
-#include "move.hpp"
+#include "core/uci.hpp"
+#include "core/utils.hpp"
+#include "core/board.hpp"
+#include "search/search.hpp"
+#include "core/move.hpp"
 #include <iostream>
 #include <sstream>
 #include <vector>
 #include <thread>
-#include "polyglot.hpp"
-#include "evaluation.hpp"
+#include "core/polyglot.hpp"
+#include "eval/evaluation.hpp"
 
 std::thread searchThread;
 

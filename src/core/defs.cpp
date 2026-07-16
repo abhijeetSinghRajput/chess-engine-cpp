@@ -1,5 +1,5 @@
-#include "defs.hpp"
-#include "move.hpp"
+#include "core/defs.hpp"
+#include "core/move.hpp"
 #include <chrono>
 
 // Initialize global variables

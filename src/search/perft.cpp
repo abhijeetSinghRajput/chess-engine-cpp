@@ -1,7 +1,7 @@
-#include "defs.hpp"
-#include "move.hpp"
-#include "movegen.hpp"
-#include "board.hpp"
+#include "core/defs.hpp"
+#include "core/move.hpp"
+#include "core/movegen.hpp"
+#include "core/board.hpp"
 #include <vector>
 #include <iomanip>
 #include <iostream>

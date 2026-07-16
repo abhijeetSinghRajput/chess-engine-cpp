@@ -1,30 +1,28 @@
-# Compiler
 CXX = g++
+CXXFLAGS = -std=c++17 -Wall -Wextra -g -O0 -Isrc
+EXEC = chanakya
 
-# Debug flags
-CXXFLAGS = -std=c++11 -Wall -Wextra -g -O0
+BUILD_DIR = build
 
-# Executable name
-EXEC = chess
-
-# Source files
-SRCS = defs.cpp main.cpp board.cpp bitboard.cpp utils.cpp evaluation.cpp move.cpp movegen.cpp transpositionTable.cpp search.cpp perft.cpp uci.cpp polyglot.cpp
-
-# Header files
-HEADERS = defs.hpp board.hpp bitboard.hpp utils.hpp evaluation.hpp move.hpp movegen.hpp transpositionTable.hpp search.hpp perft.hpp uci.hpp polyglot.hpp
-
-# Object files
-OBJS = $(SRCS:.cpp=.o)
+# Find all .cpp files recursively under src/
+SRCS = $(shell find src -name '*.cpp')
+OBJS = $(patsubst src/%.cpp,$(BUILD_DIR)/%.o,$(SRCS))
+DEPS = $(OBJS:.o=.d)
 
 all: $(EXEC)
 
 $(EXEC): $(OBJS)
 	$(CXX) $(CXXFLAGS) -o $@ $^
 
-%.o: %.cpp $(HEADERS)
-	$(CXX) $(CXXFLAGS) -c $< -o $@
+# -MMD -MP auto-generates per-file header dependencies (.d files)
+# so you don't need to hand-maintain a HEADERS list
+$(BUILD_DIR)/%.o: src/%.cpp
+	@mkdir -p $(dir $@)
+	$(CXX) $(CXXFLAGS) -MMD -MP -c $< -o $@
+
+-include $(DEPS)
 
 clean:
-	rm -f $(OBJS) $(EXEC)
+	rm -rf $(BUILD_DIR) $(EXEC)
 
 .PHONY: all clean
