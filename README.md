@@ -2,12 +2,10 @@
 
 <img src="/assets/chanakya_logo.png" alt="Chanakya logo" width="96" height="96" />
 
-<h1>Chanakya</h1>
+<h3>Chanakya</h3>
 
 <p>
-  A Open Source lightweight <strong>UCI-compatible chess engine</strong> written in C++,
-  featuring Polyglot opening books, configurable search, and a dedicated
-  VS Code GUI.
+  A Open Source lightweight <strong>chess engine</strong> written in C++
 </p>
 
 <p align="center">
@@ -23,17 +21,17 @@
 
 <p align="center">
   <a href="https://github.com/abhijeetSinghRajput/chanakya">
-    <img alt="made by" src="https://img.shields.io/badge/made%20by-abhijeetsinghrajput-blueviolet?style=flat" />
+    <img alt="made by" src="https://img.shields.io/badge/MADE_BY-ABHIJEET SINGH RAJPUT-4a4a4a?style=for-the-badge" />
   </a>
-  <img alt="license" src="https://img.shields.io/badge/license-GPL--3.0-brightgreen?style=flat" />
-  <img alt="language" src="https://img.shields.io/badge/language-C%2B%2B-00599C?style=flat&logo=cplusplus" />
-  <img alt="elo" src="https://img.shields.io/badge/Elo-2326%20%C2%B1%2016-red?style=flat" />
-  <img alt="uci" src="https://img.shields.io/badge/UCI-compatible-blue?style=flat" />
-  <img alt="GitHub stars" src="https://img.shields.io/github/stars/abhijeetSinghRajput/chanakya?style=flat&color=blue" />
-  <img alt="GitHub forks" src="https://img.shields.io/github/forks/abhijeetSinghRajput/chanakya?style=flat&color=blue" />
-  <img alt="VS Code Marketplace Installs" src="https://vsmarketplacebadges.dev/installs/mrcodium.chess-engine.svg?color=blue" />
-  <img alt="VS Code Marketplace Rating" src="https://vsmarketplacebadges.dev/rating/mrcodium.chess-engine.svg?color=blue" />
 </p>
+<p align="center">
+  <img alt="license" src="https://img.shields.io/badge/LICENSE-GPL--3.0-38d430?style=for-the-badge" />
+  <img alt="language" src="https://img.shields.io/badge/LANGUAGE-C%2B%2B-0078d4?style=for-the-badge&logo=cplusplus&logoColor=white" />
+  <img alt="elo" src="https://img.shields.io/badge/ELO-2326±16-00a2ff?style=for-the-badge" />
+  <img alt="uci" src="https://img.shields.io/badge/UCI-COMPATIBLE-38d430?style=for-the-badge" />
+</p>
+
+
 
 <img src="assets/chess-vscode-demo.gif" alt="GitHub Contributions Calendar logo" width="600"  />
 
