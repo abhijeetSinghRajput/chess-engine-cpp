@@ -266,35 +266,41 @@ int alphaBeta(int alpha, int beta, int depth, bool doNull)
     return alpha;
 }
 
-int quiescence(int alpha, int beta)
+int quiescence(int alpha, int beta, int checkPly)
 {
-
     if ((searchController->nodes % 2048) == 0)
-    {
         checkTimeUp();
-    }
 
     searchController->nodes++;
 
     if ((isRepetition() || board->fiftyMove >= 100) && searchController->ply != 0)
-    {
         return 0;
-    }
 
     if (searchController->ply >= MAX_DEPTH)
-    {
         return evalPosition();
+
+    const int MAX_QCHECK_PLY = 8;
+    bool inCheck = board->checkSq != SQ_NONE;
+    bool expandFull = inCheck && checkPly < MAX_QCHECK_PLY;
+
+    int score;
+
+    if (!expandFull)
+    {
+        score = evalPosition();
+        if (score >= beta) return beta;
+
+        // Delta pruning: even winning a queen can't save this node, skip captures
+        const int DELTA_MARGIN = 200;
+        if (!inCheck && score + QUEEN_VALUE + DELTA_MARGIN < alpha)
+            return alpha;
+
+        if (score > alpha) alpha = score;
     }
 
-    int score = evalPosition();
-
-    if (score >= beta)
-        return beta;
-    if (score > alpha)
-        alpha = score;
-
     int legalMove = 0;
-    std::vector<std::pair<int, int>> moves = generateCaptureMoves();
+    std::vector<std::pair<int, int>> moves =
+        expandFull ? generateMoves() : generateCaptureMoves();
 
     for (auto i = 0u; i < moves.size(); ++i)
     {
@@ -306,7 +312,7 @@ int quiescence(int alpha, int beta)
         legalMove++;
         searchController->ply++;
 
-        score = -quiescence(-beta, -alpha);
+        score = -quiescence(-beta, -alpha, expandFull ? checkPly + 1 : 0);
 
         takeMove();
         searchController->ply--;
@@ -318,16 +324,16 @@ int quiescence(int alpha, int beta)
         {
             if (score >= beta)
             {
-                if (legalMove == 1)
-                {
-                    searchController->fhf++;
-                }
+                if (legalMove == 1) searchController->fhf++;
                 searchController->fh++;
                 return beta;
             }
             alpha = score;
         }
     }
+
+    if (legalMove == 0 && expandFull)
+        return -INFINITE + searchController->ply;
 
     return alpha;
 }

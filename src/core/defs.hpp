@@ -37,6 +37,14 @@ extern const int MATE;
 extern const int slidingPieces[2][3];
 extern const int nonSlidingPieces[2][2];
 
+constexpr int VALUE_ZERO   = 0;
+constexpr int PAWN_VALUE   = 208;
+constexpr int KNIGHT_VALUE = 781;
+constexpr int BISHOP_VALUE = 825;
+constexpr int ROOK_VALUE   = 1276;
+constexpr int QUEEN_VALUE  = 2538;
+constexpr int KING_VALUE   = 50000;
+
 enum
 {
     PIECE_EMPTY,

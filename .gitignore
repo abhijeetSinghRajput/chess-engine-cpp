@@ -3,3 +3,4 @@ build
 *.o
 *.test
 test
+*.diff

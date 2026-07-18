@@ -9,13 +9,14 @@ extern const int ExactFlag;
 class TranspositionTable
 {
 private:
-    static const int maxEntries = 0x100000 * 16;
-    TableData entries[maxEntries];
+    TableData* entries = nullptr;
+    size_t sizeMask = 0; // numEntries - 1 (numEntries is power of 2)
     int currentAge;    // increments each search
 
 public:
     TranspositionTable();
     ~TranspositionTable();
+    void resize(size_t mbSize);
     void clear();
     void newSearch();  // call at start of each search
     void add(U64 positionKey, int move, int score, int flag, int depth);

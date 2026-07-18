@@ -14,21 +14,40 @@ TranspositionTable *transpositionTable = new TranspositionTable;
 TranspositionTable::TranspositionTable()
 {
     currentAge = 0;
-    clear();
+    resize(16); // default 16MB
 }
 
 TranspositionTable::~TranspositionTable()
 {
+    delete[] entries;
+}
+
+void TranspositionTable::resize(size_t mbSize)
+{
+    delete[] entries; // safe even if entries is nullptr
+
+    size_t bytes = mbSize * 1024ULL * 1024ULL;
+    size_t numEntries = bytes / sizeof(TableData);
+
+    size_t pow2 = 1;
+    while (pow2 * 2 <= numEntries)
+        pow2 *= 2;
+    if (pow2 == 0)
+        pow2 = 1; // safety floor
+
+    entries = new TableData[pow2];
+    sizeMask = pow2 - 1;
     clear();
 }
 
 void TranspositionTable::clear()
 {
-    for (int i = 0; i < this->maxEntries; ++i)
+    size_t numEntries = sizeMask + 1;
+    for (size_t i = 0; i < numEntries; ++i)
     {
-        this->entries[i].smp_data = 0ULL;
-        this->entries[i].smp_key = 0ULL;
-        this->entries[i].age = 0;
+        entries[i].smp_data = 0ULL;
+        entries[i].smp_key = 0ULL;
+        entries[i].age = 0;
     }
 }
 
@@ -39,7 +58,8 @@ void TranspositionTable::newSearch()
     {
         // Prevent overflow, reset ages
         currentAge = 1;
-        for (int i = 0; i < maxEntries; ++i)
+        size_t numEntries = sizeMask + 1;
+        for (size_t i = 0; i < numEntries; ++i)
         {
             if (entries[i].age > 0)
             {
@@ -54,7 +74,7 @@ void TranspositionTable::add(U64 positionKey, int move, int score, int flag, int
     if (score > MATE)       score -= searchController->ply;
     else if (score < -MATE) score += searchController->ply;
 
-    size_t index = positionKey % (size_t)this->maxEntries;
+    size_t index = positionKey & sizeMask;
     TableData *entry = &this->entries[index];
 
     // Depth-preferred + Aging replacement policy
@@ -105,7 +125,7 @@ void TranspositionTable::add(U64 positionKey, int move, int score, int flag, int
 
 TableData *TranspositionTable::get(U64 positionKey)
 {
-    size_t index = positionKey % (size_t)this->maxEntries;
+    size_t index = positionKey & sizeMask;
     TableData *data = &this->entries[index];
 
     if ((data->smp_key ^ data->smp_data) != positionKey)
@@ -116,7 +136,7 @@ TableData *TranspositionTable::get(U64 positionKey)
 
 int TranspositionTable::getMove()
 {
-    size_t index = board->positionKey % (size_t)this->maxEntries;
+    size_t index = board->positionKey & sizeMask;
     TableData *data = &this->entries[index];
 
     if ((data->smp_key ^ data->smp_data) == board->positionKey)
@@ -125,22 +145,26 @@ int TranspositionTable::getMove()
     return 0;
 }
 
-
-std::vector<int> TranspositionTable::getLine(int depth) {
+std::vector<int> TranspositionTable::getLine(int depth)
+{
     std::vector<int> moveList;
     int move = this->getMove();
     int count = 0;
-    
+
     // Store moves to make/unmake
     std::vector<int> madeMoves;
-    
-    while (move && count < depth) {
+
+    while (move && count < depth)
+    {
         // Check if move is legal without modifying board state
         bool legal = false;
         std::vector<std::pair<int, int>> moves = generateMoves();
-        for (auto &pair : moves) {
-            if (pair.first == move) {
-                if (makeMove(move)) {
+        for (auto &pair : moves)
+        {
+            if (pair.first == move)
+            {
+                if (makeMove(move))
+                {
                     legal = true;
                     madeMoves.push_back(move);
                     moveList.push_back(move);
@@ -150,17 +174,18 @@ std::vector<int> TranspositionTable::getLine(int depth) {
                 takeMove(); // If makeMove failed, ensure board is restored
             }
         }
-        
+
         if (!legal) break;
-        
+
         // Get next TT move
         move = this->getMove();
     }
-    
+
     // Unmake all moves in reverse order
-    for (int i = madeMoves.size() - 1; i >= 0; --i) {
+    for (int i = madeMoves.size() - 1; i >= 0; --i)
+    {
         takeMove();
     }
-    
+
     return moveList;
 }

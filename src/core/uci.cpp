@@ -1,14 +1,15 @@
-#include "core/uci.hpp"
-#include "core/utils.hpp"
-#include "core/board.hpp"
-#include "search/search.hpp"
-#include "core/move.hpp"
 #include <iostream>
 #include <sstream>
 #include <vector>
 #include <thread>
+#include "core/uci.hpp"
+#include "core/utils.hpp"
+#include "core/board.hpp"
+#include "core/move.hpp"
 #include "core/polyglot.hpp"
 #include "eval/evaluation.hpp"
+#include "search/search.hpp"
+#include "search/transpositionTable.hpp"
 
 std::thread searchThread;
 
@@ -152,6 +153,10 @@ void handleOptions(std::istringstream &iss)
             printf("book move off\n");
         }
     }
+    else if ( optionName == "Hash"){
+        int mb = std::stoi(optionValue);
+        transpositionTable->resize(mb);
+    }
 }
 
 void UCI()
@@ -168,6 +173,7 @@ void UCI()
         {
             std::cout << "id name " << name << std::endl;
             std::cout << "id author " << author << std::endl;
+            std::cout << "option name Hash type spin default 16 min 1 max 4096\n";
             std::cout << "option name usebook type check default " 
                       << (searchController->useBook ? "true" : "false") 
                       << std::endl;

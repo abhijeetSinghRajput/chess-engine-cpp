@@ -40,14 +40,6 @@ const char *PIECE_NAME[] = {
     "bp", "br", "bn", "bb", "bq", "bk"
 };
 
-constexpr int VALUE_ZERO   = 0;
-constexpr int PAWN_VALUE   = 208;
-constexpr int KNIGHT_VALUE = 781;
-constexpr int BISHOP_VALUE = 825;
-constexpr int ROOK_VALUE   = 1276;
-constexpr int QUEEN_VALUE  = 2538;
-constexpr int KING_VALUE   = 50000;
-
 const int pieceValue[13] = {
     VALUE_ZERO,      // empty
     PAWN_VALUE,      // wp
