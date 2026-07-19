@@ -79,9 +79,26 @@ int searchPosition()
             lineStr += moveStr(move) + ' ';
         }
 
+        
+        // Format the score - mate detection with 100 threshold
+        std::string scoreStr;
+        if (bestScore > AB_BOUND - MAX_DEPTH) {
+            // Mate for current player: mate in N moves
+            int mateIn = (AB_BOUND - bestScore + 1) / 2;
+            scoreStr = "mate " + std::to_string(mateIn);
+        }
+        else if (bestScore < -AB_BOUND + MAX_DEPTH) {
+            // Mate against current player: mate in -N moves
+            int mateIn = (AB_BOUND + bestScore + 1) / 2;
+            scoreStr = "mate -" + std::to_string(mateIn);
+        }
+        else {
+            scoreStr = "cp " + std::to_string(bestScore);
+        }
+
         std::cout
             << "info "
-            << "score cp " << bestScore
+            << "score " << scoreStr
             << " depth " << depth
             << " ordering " << ordering
             << " nodes " << searchController->nodes
