@@ -61,8 +61,9 @@ const int pieceValue[13] = {
 const int Kings[] = {PIECE_WK, PIECE_BK};
 
 const int MAX_DEPTH = 64;
-const int INFINITE = 32001;
-const int MATE = INFINITE - MAX_DEPTH;
+const int INFINITE = 32000;
+const int AB_BOUND = 30000;
+const int MATE = (AB_BOUND - MAX_DEPTH);
 
 const int CASTLE_PERMISSION[] = {
     15, 15, 15, 15, 15, 15, 15, 15, 15, 15,

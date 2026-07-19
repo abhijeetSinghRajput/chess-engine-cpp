@@ -32,6 +32,7 @@ extern const int Kings[];
 
 extern const int MAX_DEPTH;
 extern const int INFINITE;
+extern const int AB_BOUND;
 extern const int MATE;
 
 extern const int slidingPieces[2][3];

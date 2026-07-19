@@ -257,6 +257,7 @@ void Bitboard::init_passedPawnMask()
             int file = fileOf(sq64To120[sq]);
             int rank = rankOf(sq64To120[sq]);
 
+            passedPawnMask[i][sq] |= fileMasks[file];
             if (file > FILE_A)
             {
                 passedPawnMask[i][sq] |= fileMasks[file - 1];

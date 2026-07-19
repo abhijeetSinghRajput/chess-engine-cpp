@@ -71,8 +71,8 @@ void TranspositionTable::newSearch()
 
 void TranspositionTable::add(U64 positionKey, int move, int score, int flag, int depth)
 {
-    if (score > MATE)       score -= searchController->ply;
-    else if (score < -MATE) score += searchController->ply;
+    if (score > MATE)       score += searchController->ply;
+    else if (score < -MATE) score -= searchController->ply;
 
     size_t index = positionKey & sizeMask;
     TableData *entry = &this->entries[index];
@@ -103,11 +103,6 @@ void TranspositionTable::add(U64 positionKey, int move, int score, int flag, int
     // Case 5: Same depth but newer - prefer newer
     else if (depth == extract_depth(entry->smp_data) &&
              currentAge > entry->age)
-    {
-        replace = true;
-    }
-    // Case 6: Always replace if position is old (even if deeper)
-    else if (currentAge - entry->age > 5)
     {
         replace = true;
     }

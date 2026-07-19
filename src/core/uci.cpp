@@ -269,8 +269,11 @@ void UCI()
         {
             readBook();
         }
-        else if(command == "eval"){
-            printf("Eval: %d\n", evalPosition());
+        else if (command == "eval")
+        {
+            std::cout << "evalscore "
+                    << evalPosition()
+                    << std::endl;
         }
         else if(command == "cls" || command == "clear"){
             system("cls");
