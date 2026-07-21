@@ -114,7 +114,7 @@ void Board::print()
 {
     int sq, piece;
     std::cout << std::endl;
-    for (int rank = rank8; rank >= RANK_1; --rank)
+    for (int rank = RANK_8; rank >= RANK_1; --rank)
     {
         std::cout << rank + 1 << "   ";
         for (int file = FILE_A; file <= FILE_H; ++file)
@@ -168,7 +168,7 @@ void Board::parseFen(std::string &fen)
 
     int i = 0;
     int file = FILE_A;
-    int rank = rank8;
+    int rank = RANK_8;
     int sq;
     while (fen[i] == ' ') i++; // skip white space
 
@@ -252,7 +252,7 @@ std::string Board::getFen()
     int emptySq = 0, sq;
     int piece;
 
-    for (int rank = rank8; rank >= RANK_1; --rank)
+    for (int rank = RANK_8; rank >= RANK_1; --rank)
     {
         emptySq = 0;
         for (int file = FILE_A; file <= FILE_H; ++file)

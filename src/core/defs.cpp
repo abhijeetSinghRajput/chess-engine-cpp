@@ -108,7 +108,7 @@ const int nonSlidingPieces[2][2] = {
 };
 
 void initSquareMappings() {
-    for (int rank = RANK_1; rank <= rank8; ++rank) {
+    for (int rank = RANK_1; rank <= RANK_8; ++rank) {
         for (int file = FILE_A; file <= FILE_H; ++file) {
             int sq120 = fileRank2Sq(file, rank);
             int sq64 = rank * 8 + file;

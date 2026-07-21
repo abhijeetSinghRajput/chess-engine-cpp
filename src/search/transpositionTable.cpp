@@ -139,48 +139,49 @@ int TranspositionTable::getMove()
 
     return 0;
 }
-
 std::vector<int> TranspositionTable::getLine(int depth)
 {
-    std::vector<int> moveList;
+    std::vector<int> pvLine;
+
     int move = this->getMove();
     int count = 0;
 
-    // Store moves to make/unmake
     std::vector<int> madeMoves;
 
     while (move && count < depth)
     {
-        // Check if move is legal without modifying board state
         bool legal = false;
-        std::vector<std::pair<int, int>> moves = generateMoves();
-        for (auto &pair : moves)
+
+        MoveList generatedMoves = generateMoves();
+
+        for (int i = 0; i < generatedMoves.count; ++i)
         {
-            if (pair.first == move)
+            if (generatedMoves.moves[i].move == move)
             {
                 if (makeMove(move))
                 {
                     legal = true;
+
                     madeMoves.push_back(move);
-                    moveList.push_back(move);
-                    count++;
+                    pvLine.push_back(move);
+
+                    ++count;
                     break;
                 }
-                takeMove(); // If makeMove failed, ensure board is restored
             }
         }
 
-        if (!legal) break;
+        if (!legal)
+            break;
 
-        // Get next TT move
         move = this->getMove();
     }
 
-    // Unmake all moves in reverse order
-    for (int i = madeMoves.size() - 1; i >= 0; --i)
+    while (!madeMoves.empty())
     {
         takeMove();
+        madeMoves.pop_back();
     }
 
-    return moveList;
+    return pvLine;
 }

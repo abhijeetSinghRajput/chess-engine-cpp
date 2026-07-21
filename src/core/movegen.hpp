@@ -11,5 +11,5 @@ void addBlackCaptureMove(int from,int to,int capture);
 void genNonSlidingMoves(bool capturesOnly = false);
 void genSlidingMoves(bool capturesOnly = false);
 
-std::vector<std::pair<int,int>> &generateMoves();
-std::vector<std::pair<int,int>> &generateCaptureMoves();
+MoveList generateMoves();
+MoveList generateCaptureMoves();

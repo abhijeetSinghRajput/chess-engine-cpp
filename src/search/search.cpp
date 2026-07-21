@@ -179,27 +179,27 @@ int alphaBeta(int alpha, int beta, int depth, bool doNull)
         }
     }
 
-    std::vector<std::pair<int, int>> moves = generateMoves();
+    MoveList moveList = generateMoves();
     int legalMoves = 0;
     int prevAlpha = alpha;
     int bestMove = 0;
 
     if (pvMove)
     {
-        for (auto &pair : moves)
+        for(int i = 0; i<moveList.count; ++i)
         {
-            if (pair.first == pvMove)
+            if (moveList.moves[i].move == pvMove)
             {
-                pair.second = 2000000;
+                moveList.moves[i].score = 2000000;
                 break;
             }
         }
     }
 
-    for (auto i = 0u; i < moves.size(); ++i)
+    for (int i = 0; i < moveList.count; ++i)
     {
-        swapWithBest(i, moves);
-        int move = moves[i].first;
+        swapWithBest(i, moveList);
+        int move = moveList.moves[i].move;
         if (makeMove(move) == false)
             continue;
         legalMoves++;
@@ -328,13 +328,13 @@ int quiescence(int alpha, int beta, int checkPly)
     }
 
     int legalMove = 0;
-    std::vector<std::pair<int, int>> moves =
+    MoveList moveList =
         expandFull ? generateMoves() : generateCaptureMoves();
 
-    for (auto i = 0u; i < moves.size(); ++i)
+    for (auto i = 0u; i < moveList.count; ++i)
     {
-        swapWithBest(i, moves);
-        const int move = moves[i].first;
+        swapWithBest(i, moveList);
+        const int move = moveList.moves[i].move;
 
         if (makeMove(move) == false)
             continue;
@@ -375,20 +375,21 @@ void checkTimeUp()
     }
 }
 
-void swapWithBest(int i, std::vector<std::pair<int, int>> &moves)
+void swapWithBest(int start, MoveList& moveList)
 {
-    int bestIndex = i;
-    for (auto j = unsigned(i + 1); j < moves.size(); ++j)
+    int best = start;
+
+    for (int i = start + 1; i < moveList.count; i++)
     {
-        if (moves[j].second > moves[bestIndex].second)
+        if (moveList.moves[i].score >
+            moveList.moves[best].score)
         {
-            bestIndex = j;
+            best = i;
         }
     }
-    if (bestIndex != i)
-    {
-        std::swap(moves[i], moves[bestIndex]);
-    }
+
+    std::swap(moveList.moves[start],
+              moveList.moves[best]);
 }
 
 bool isRepetition()

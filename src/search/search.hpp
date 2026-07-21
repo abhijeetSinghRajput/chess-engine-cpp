@@ -29,7 +29,7 @@ public:
 int searchPosition();
 int alphaBeta(int alpha, int beta, int depth, bool doNull);
 int quiescence(int alpha, int beta, int checkPly = 0);
-void swapWithBest(int i, std::vector<std::pair<int, int>> &moves);
+void swapWithBest(int start, MoveList& moveList);
 void checkTimeUp();
 bool isRepetition();
 

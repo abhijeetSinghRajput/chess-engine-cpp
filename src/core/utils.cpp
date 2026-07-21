@@ -166,7 +166,8 @@ int parseMove(std::string &move_str)
     int move;
     int promotionPiece = PIECE_EMPTY;
 
-    if(move_str.length() == 5){
+    if (move_str.length() == 5)
+    {
         switch (move_str[4])
         {
             case 'q': promotionPiece = (move_str[3] == '8')? PIECE_WQ : PIECE_BQ; break;
@@ -177,18 +178,21 @@ int parseMove(std::string &move_str)
             default: break;
         }
     }
-   
-    std::vector<std::pair<int, int>> moves = generateMoves();
-    for (auto &pair : moves)
+
+    MoveList moves = generateMoves();
+    for (int i = 0; i < moves.count; ++i)
     {
-        move = pair.first;
-        if(moveFrom(move) == from && moveTo(move) == to && movePromotionPiece(move) == promotionPiece){
+        move = moves.moves[i].move;
+
+        if (moveFrom(move) == from &&
+            moveTo(move) == to &&
+            movePromotionPiece(move) == promotionPiece)
+        {
             return move;
         }
     }
     return 0;
 }
-
 
 int bigPieceCount(int side)
 {
@@ -198,16 +202,18 @@ int bigPieceCount(int side)
         return board->pieceCount[PIECE_BN] + board->pieceCount[PIECE_BB] + board->pieceCount[PIECE_BR] + board->pieceCount[PIECE_BQ];
 }
 
-bool isGameOver(){
-    std::vector<std::pair<int, int>> moves = generateMoves();
+bool isGameOver()
+{
+    MoveList moves = generateMoves();
     // No move left to play
-    if(moves.size() == 0) return true;
+    if (moves.count == 0) return true;
 
     // Check Legal move
-    for (auto &pair : moves)
+    for (int i = 0; i < moves.count; ++i)
     {
-        int move = pair.first;
-        if(makeMove(move)){
+        int move = moves.moves[i].move;
+        if (makeMove(move))
+        {
             takeMove();
             return false;
         }

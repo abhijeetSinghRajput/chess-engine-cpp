@@ -60,7 +60,7 @@ enum
     BOTH
 };
 enum {FILE_A, FILE_B, FILE_C, FILE_D, FILE_E, FILE_F, FILE_G, FILE_H};
-enum {RANK_1, RANK_2, RANK_3, RANK_4, RANK_5, RANK_6, RANK_7, rank8};
+enum {RANK_1, RANK_2, RANK_3, RANK_4, RANK_5, RANK_6, RANK_7, RANK_8};
 
 enum MobilityPiece { MOB_ROOK = 2, MOB_KNIGHT = 3, MOB_BISHOP = 4, MOB_QUEEN = 5 };
 
@@ -86,6 +86,16 @@ enum
     SQ_A7 = 81, SQ_B7, SQ_C7, SQ_D7, SQ_E7, SQ_F7, SQ_G7, SQ_H7, 
     SQ_A8 = 91, SQ_B8, SQ_C8, SQ_D8, SQ_E8, SQ_F8, SQ_G8, SQ_H8, 
     SQ_NONE = -1, offBoard = -2
+};
+
+struct ScoredMove {
+    int move;
+    int score;
+};
+
+struct MoveList {
+    ScoredMove moves[256];
+    uint16_t  count = 0;
 };
 
 struct MoveInfo

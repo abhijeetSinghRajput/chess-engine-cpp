@@ -2,6 +2,7 @@
 #include <sstream>
 #include <vector>
 #include <thread>
+#include "search/perft.hpp"
 #include "core/uci.hpp"
 #include "core/utils.hpp"
 #include "core/board.hpp"
@@ -63,6 +64,11 @@ void handleSearch(std::istringstream &iss)
     {
         if (token == "depth")
             iss >> depth;
+        else if (token == "perft"){
+            iss >> depth;
+            perftTest(depth);
+            return;
+        }
         else if (token == "movetime")
             iss >> movetime;
         else if (token == "movestogo")
