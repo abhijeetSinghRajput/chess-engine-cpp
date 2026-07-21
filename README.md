@@ -2,7 +2,7 @@
 
 <img src="/assets/chanakya_logo.png" alt="Chanakya logo" width="96" height="96" />
 
-<h3>Chanakya</h3>
+<h3>Chanakya (~2350 ELO)</h3>
 
 <p>
   A Open Source lightweight <strong>chess engine</strong> written in C++
