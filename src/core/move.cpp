@@ -60,10 +60,10 @@ void movePiece(int from, int to)
 
 void addPiece(int sq, int piece)
 {
-    if (board->pieces[sq] != PIECE_EMPTY)
-    {
-        // error
-    }
+    // Removed the "if already occupied" defensive check: it was a dead
+    // branch (empty body) that still cost a compare on every single
+    // addPiece call - millions of times per second in make/unmake.
+    // Callers already guarantee sq is empty before calling this.
     hashPiece(sq, piece);
     board->pieces[sq] = piece;
     board->material[PIECE_COLOR[piece]] += pieceValue[piece];
@@ -234,7 +234,6 @@ bool makeMove(int move)
     hashSide();
 
     int kingOnSq = __builtin_ctzll(bitboard->pieces[Kings[side]]);
-    int enemyKingOnSq = __builtin_ctzll(bitboard->pieces[Kings[board->side]]);
 
     if (isUnderAttack(kingOnSq, board->side))
     {
@@ -242,6 +241,7 @@ bool makeMove(int move)
         return false;
     }
 
+    int enemyKingOnSq = __builtin_ctzll(bitboard->pieces[Kings[board->side]]);
     if (isUnderAttack(enemyKingOnSq, side))
     {
         board->checkSq = sq64To120[enemyKingOnSq];
@@ -293,4 +293,3 @@ int takeNullMove(){
 
     return 0;
 }
-

@@ -22,12 +22,15 @@ void hashSide()
 
 U64 getRookAttacks(int sq)
 {
+    // getPieces(BOTH) is now an O(1) load off Bitboard::occupied[] (see
+    // bitboard.hpp/cpp) instead of OR-ing 12 piece bitboards together
+    // on every call - this function runs on every sliding move
+    // generated and every isUnderAttack() check.
     U64 allPieces = bitboard->getPieces(BOTH);
     U64 blocker = allPieces & bitboard->rookAttacks[sq];
 
     int index = (blocker * rookMagics[sq]) >> (64 - 12);
-    U64 attacks = bitboard->rookLookupTable[sq][index];
-    return attacks;
+    return bitboard->rookLookupTable[sq][index];
 }
 
 U64 getBishopAttacks(int sq)
@@ -36,15 +39,14 @@ U64 getBishopAttacks(int sq)
     U64 blocker = allPieces & bitboard->bishopAttacks[sq];
 
     int index = (blocker * bishopMagics[sq]) >> (64 - 12);
-    U64 attacks = bitboard->bishopLookupTable[sq][index];
-    return attacks;
+    return bitboard->bishopLookupTable[sq][index];
 }
 
 bool isUnderAttack(int sq, int attackingSide)
 {
     if (attackingSide == BLACK)
     {
-        // Pawn, knight, and king attacks
+        // Pawn, knight, and king attacks - cheap array lookups, checked first
         if (bitboard->pieces[PIECE_BP] & bitboard->pawnAttacks[WHITE][sq])
             return true;
         if (bitboard->pieces[PIECE_BN] & bitboard->knightAttacks[sq])
@@ -52,23 +54,21 @@ bool isUnderAttack(int sq, int attackingSide)
         if (bitboard->pieces[PIECE_BK] & bitboard->kingAttacks[sq])
             return true;
 
-        // Rook attacks
-        U64 rookAttacks = getRookAttacks(sq);
-        if (bitboard->pieces[PIECE_BR] & rookAttacks)
+        // Rook + queen share the rook attack pattern. Skip the magic
+        // lookup entirely (multiply, shift, 32KB table probe) when
+        // black has neither piece left on the board - common in
+        // endgames and free when it doesn't apply.
+        U64 rookLike = bitboard->pieces[PIECE_BR] | bitboard->pieces[PIECE_BQ];
+        if (rookLike && (rookLike & getRookAttacks(sq)))
             return true;
 
-        // Bishop attacks
-        U64 bishopAttacks = getBishopAttacks(sq);
-        if (bitboard->pieces[PIECE_BB] & bishopAttacks)
-            return true;
-
-        // Queen attacks
-        if (bitboard->pieces[PIECE_BQ] & (rookAttacks | bishopAttacks))
+        // Bishop + queen share the bishop attack pattern - same skip.
+        U64 bishopLike = bitboard->pieces[PIECE_BB] | bitboard->pieces[PIECE_BQ];
+        if (bishopLike && (bishopLike & getBishopAttacks(sq)))
             return true;
     }
     else
     {
-        // Pawn, knight, and king attacks
         if (bitboard->pieces[PIECE_WP] & bitboard->pawnAttacks[BLACK][sq])
             return true;
         if (bitboard->pieces[PIECE_WN] & bitboard->knightAttacks[sq])
@@ -76,18 +76,12 @@ bool isUnderAttack(int sq, int attackingSide)
         if (bitboard->pieces[PIECE_WK] & bitboard->kingAttacks[sq])
             return true;
 
-        // Rook attacks
-        U64 rookAttacks = getRookAttacks(sq);
-        if (bitboard->pieces[PIECE_WR] & rookAttacks)
+        U64 rookLike = bitboard->pieces[PIECE_WR] | bitboard->pieces[PIECE_WQ];
+        if (rookLike && (rookLike & getRookAttacks(sq)))
             return true;
 
-        // Bishop attacks
-        U64 bishopAttacks = getBishopAttacks(sq);
-        if (bitboard->pieces[PIECE_WB] & bishopAttacks)
-            return true;
-
-        // Queen attacks
-        if (bitboard->pieces[PIECE_WQ] & (rookAttacks | bishopAttacks))
+        U64 bishopLike = bitboard->pieces[PIECE_WB] | bitboard->pieces[PIECE_WQ];
+        if (bishopLike && (bishopLike & getBishopAttacks(sq)))
             return true;
     }
     return false;

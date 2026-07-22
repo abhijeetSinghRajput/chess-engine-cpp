@@ -1,3 +1,4 @@
+// movegen.cpp
 #include "core/defs.hpp"
 #include "core/board.hpp"
 #include "core/bitboard.hpp"
@@ -122,11 +123,9 @@ void addBlackCaptureMove(int from, int to, int capture)
 // ==========================================================
 // ===================== pawn move gen (bitboard) ===========
 // ==========================================================
-// Instead of walking every pawn on the 120-mailbox and probing
-// sq+9/sq+10/sq+11 one square at a time, generate all pushes and
-// all captures for the whole pawn bitboard in one shot with shifts,
-// split promo/non-promo with a mask (no per-move rank branch), and
-// only touch the 64->120 conversion table once per resulting move.
+// Whole pawn bitboard shifted at once instead of walking each pawn on
+// the 120-mailbox; promo/non-promo split by mask up front instead of a
+// per-move rank branch; only one 64->120 conversion per emitted move.
 
 void genWhitePawnMoves(U64 empty, U64 enemy, bool capturesOnly)
 {
@@ -212,11 +211,9 @@ void genWhitePawnMoves(U64 empty, U64 enemy, bool capturesOnly)
         addCaptureMove(buildMove(from, to, cap, PIECE_WN, 0));
     }
 
-    // En passant: rare, so a cheap per-pawn scan is fine. Guarded on
-    // enPassantSq being truthy (0 == no ep square in the 120 mailbox,
-    // matching the offBoard/empty convention already used elsewhere) -
-    // remove the guard if that assumption doesn't hold in your defs.hpp.
-    if (board->enPassantSq)
+    // En passant: rare, so a cheap per-pawn scan is fine.
+    // Sentinel confirmed as SQ_NONE from move.cpp (not 0).
+    if (board->enPassantSq != SQ_NONE)
     {
         U64 epPawns = whitePawns;
         while (epPawns)
@@ -316,7 +313,7 @@ void genBlackPawnMoves(U64 empty, U64 enemy, bool capturesOnly)
         addCaptureMove(buildMove(from, to, cap, PIECE_BN, 0));
     }
 
-    if (board->enPassantSq)
+    if (board->enPassantSq != SQ_NONE)
     {
         U64 epPawns = blackPawns;
         while (epPawns)
@@ -335,12 +332,9 @@ void genBlackPawnMoves(U64 empty, U64 enemy, bool capturesOnly)
 // ==========================================================
 // ================= knight/king/sliding move gen ============
 // ==========================================================
-// Same magic-bitboard/attack-table approach as before, but the
-// enemy-piece test now happens directly on the 64-index bit that
-// ctzll already gave us, instead of round-tripping it through
-// sq64To120[] and then back through sq120To64[] (which always
-// just returns the same index - a wasted double table lookup on
-// every single generated move).
+// Enemy-piece test now happens directly on the 64-index bit ctzll
+// already gave us, instead of round-tripping it through sq64To120[]
+// and back through sq120To64[] (which always returns the same index).
 
 void genNonSlidingMoves(bool capturesOnly)
 {

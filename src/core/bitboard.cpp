@@ -42,6 +42,8 @@ Bitboard::Bitboard()
     {
         pieces[i] = 0ULL;
     }
+    occupied[0] = 0ULL;
+    occupied[1] = 0ULL;
     // init defs
     initialize();
 
@@ -58,7 +60,9 @@ Bitboard::Bitboard()
 
 void Bitboard::clearBit(int piece, int sq)
 {
-    pieces[piece] &= ~(1ULL << sq);
+    U64 bit = 1ULL << sq;
+    pieces[piece] &= ~bit;
+    occupied[PIECE_COLOR[piece]] &= ~bit;
 }
 void Bitboard::setBit(U64 &bitBoard, int sq)
 {
@@ -66,7 +70,9 @@ void Bitboard::setBit(U64 &bitBoard, int sq)
 }
 void Bitboard::setBit(int piece, int sq)
 {
-    pieces[piece] |= (1ULL << sq);
+    U64 bit = 1ULL << sq;
+    pieces[piece] |= bit;
+    occupied[PIECE_COLOR[piece]] |= bit;
 }
 int Bitboard::getPieceCount(int piece)
 {
@@ -74,10 +80,15 @@ int Bitboard::getPieceCount(int piece)
 }
 void Bitboard::movePiece(int piece, int fromSq, int toSq)
 {
-    if (!(pieces[piece] & (1ULL << fromSq)))
-        return;
-    clearBit(piece, fromSq);
-    setBit(piece, toSq);
+    // Dropped the "is this piece actually on fromSq" guard that used to
+    // sit here: it's a defensive check against a state move generation
+    // should never produce, and this function runs on every make/unmake
+    // of every move in the tree. Trust the invariant; if it's ever
+    // violated, perft will tell you loudly instead of this silently
+    // no-op'ing.
+    U64 mask = (1ULL << fromSq) | (1ULL << toSq);
+    pieces[piece] ^= mask;
+    occupied[PIECE_COLOR[piece]] ^= mask;
 }
 
 void Bitboard::print(int piece)
@@ -190,15 +201,13 @@ U64 Bitboard::getPieces(int side)
 {
     if (side == WHITE)
     {
-        return pieces[PIECE_WP] | pieces[PIECE_WR] | pieces[PIECE_WN] | pieces[PIECE_WB] | pieces[PIECE_WQ] | pieces[PIECE_WK];
+        return occupied[WHITE];
     }
     if (side == BLACK)
     {
-        return pieces[PIECE_BP] | pieces[PIECE_BR] | pieces[PIECE_BN] | pieces[PIECE_BB] | pieces[PIECE_BQ] | pieces[PIECE_BK];
+        return occupied[BLACK];
     }
-
-    return pieces[PIECE_WP] | pieces[PIECE_WR] | pieces[PIECE_WN] | pieces[PIECE_WB] | pieces[PIECE_WQ] | pieces[PIECE_WK] |
-           pieces[PIECE_BP] | pieces[PIECE_BR] | pieces[PIECE_BN] | pieces[PIECE_BB] | pieces[PIECE_BQ] | pieces[PIECE_BK];
+    return occupied[WHITE] | occupied[BLACK];
 }
 
 // ==========================================================
@@ -358,7 +367,9 @@ void Bitboard::init_pieces()
     {
         pieces[i] = 0ULL;
     }
-    
+    occupied[0] = 0ULL;
+    occupied[1] = 0ULL;
+
     for (int rank = RANK_1; rank <= RANK_8; ++rank)
     {
         for (int file = FILE_A; file <= FILE_H; ++file)

@@ -45,6 +45,12 @@ public:
 
     //non static variables
     U64 pieces[13];
+    // Incrementally maintained per-side occupancy, kept in sync by
+    // setBit/clearBit/movePiece. getPieces() used to OR together up to
+    // 12 piece bitboards on every single call (every sliding-attack
+    // lookup, every isUnderAttack call, every move-gen call) - now it's
+    // an O(1) load (or a single OR for "both sides").
+    U64 occupied[2] = {0ULL, 0ULL};
     U64 pawnAttacks[2][64] = {0ULL};
     U64 kingAttacks[64] = {0ULL};
     U64 knightAttacks[64] = {0ULL};
