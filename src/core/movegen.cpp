@@ -8,7 +8,6 @@
 #include "core/movegen.hpp"
 #include <vector>
 
-MoveList moveList;
 
 // MvvLva = [victim][attacker]
 int MvvLva[13][13] = {
@@ -27,7 +26,7 @@ int MvvLva[13][13] = {
     {0, 605, 602, 604, 603, 601, 600, 605, 602, 604, 603, 601, 600},
 };
 
-inline void addCaptureMove(int move)
+inline void addCaptureMove(MoveList &moveList, int move)
 {
     int victim = moveCapturePiece(move);
     int attacker = board->pieces[moveFrom(move)];
@@ -35,7 +34,7 @@ inline void addCaptureMove(int move)
     moveList.moves[moveList.count++] = {move, score};
 }
 
-inline void addQuiteMove(int move)
+inline void addQuiteMove(MoveList &moveList, int move)
 {
     int score = 0;
     if (searchController->killers[searchController->ply][0] == move)
@@ -53,81 +52,19 @@ inline void addQuiteMove(int move)
     moveList.moves[moveList.count++] = {move, score};
 }
 
-inline void addEnPassantMove(int move)
+inline void addEnPassantMove(MoveList &moveList, int move)
 {
     int score = MvvLva[PIECE_WP][PIECE_BP] + 1000000;
     moveList.moves[moveList.count++] = {move, score};
 }
 
-// Kept for header/ABI compatibility - no longer called from the hot pawn-gen
-// path below (pawns are now generated in bulk via bitboard shifts), but left
-// intact in case anything else links against them.
-void addWhitePawnQuietMove(int from, int to)
-{
-    if (rankOf(to) == RANK_8)
-    {
-        addQuiteMove(buildMove(from, to, 0, PIECE_WQ, 0));
-        addQuiteMove(buildMove(from, to, 0, PIECE_WR, 0));
-        addQuiteMove(buildMove(from, to, 0, PIECE_WB, 0));
-        addQuiteMove(buildMove(from, to, 0, PIECE_WN, 0));
-    }
-    else
-    {
-        addQuiteMove(buildMove(from, to, 0, 0, 0));
-    }
-}
-void addBlackPawnQuietMove(int from, int to)
-{
-    if (rankOf(to) == RANK_1)
-    {
-        addQuiteMove(buildMove(from, to, 0, PIECE_BQ, 0));
-        addQuiteMove(buildMove(from, to, 0, PIECE_BR, 0));
-        addQuiteMove(buildMove(from, to, 0, PIECE_BB, 0));
-        addQuiteMove(buildMove(from, to, 0, PIECE_BN, 0));
-    }
-    else
-    {
-        addQuiteMove(buildMove(from, to, 0, 0, 0));
-    }
-}
-
-void addWhiteCaptureMove(int from, int to, int capture)
-{
-    if (rankOf(to) == RANK_8)
-    {
-        addCaptureMove(buildMove(from, to, capture, PIECE_WQ, 0));
-        addCaptureMove(buildMove(from, to, capture, PIECE_WR, 0));
-        addCaptureMove(buildMove(from, to, capture, PIECE_WB, 0));
-        addCaptureMove(buildMove(from, to, capture, PIECE_WN, 0));
-    }
-    else
-    {
-        addCaptureMove(buildMove(from, to, capture, 0, 0));
-    }
-}
-void addBlackCaptureMove(int from, int to, int capture)
-{
-    if (rankOf(to) == RANK_1)
-    {
-        addCaptureMove(buildMove(from, to, capture, PIECE_BQ, 0));
-        addCaptureMove(buildMove(from, to, capture, PIECE_BR, 0));
-        addCaptureMove(buildMove(from, to, capture, PIECE_BB, 0));
-        addCaptureMove(buildMove(from, to, capture, PIECE_BN, 0));
-    }
-    else
-    {
-        addCaptureMove(buildMove(from, to, capture, 0, 0));
-    }
-}
 
 // ==========================================================
 // ===================== pawn move gen (bitboard) ===========
 // ==========================================================
 // Whole pawn bitboard shifted at once instead of walking each pawn on
-// the 120-mailbox; promo/non-promo split by mask up front instead of a
-// per-move rank branch; only one 64->120 conversion per emitted move.
 
-void genWhitePawnMoves(U64 empty, U64 enemy, bool capturesOnly)
+void genWhitePawnMoves(MoveList &moveList, U64 empty, U64 enemy, bool capturesOnly)
 {
     U64 whitePawns = bitboard->pieces[PIECE_WP];
 
@@ -141,26 +78,44 @@ void genWhitePawnMoves(U64 empty, U64 enemy, bool capturesOnly)
 
         while (pushQuiet)
         {
-            int to64 = __builtin_ctzll(pushQuiet);
+            int to = __builtin_ctzll(pushQuiet);
             pushQuiet &= pushQuiet - 1;
-            addQuiteMove(buildMove(sq64To120[to64 - 8], sq64To120[to64], 0, 0, 0));
+            addQuiteMove(
+                moveList,
+                buildMove(to - 8, to, 0, 0, 0)
+            );
         }
         while (doublePush)
         {
-            int to64 = __builtin_ctzll(doublePush);
+            int to = __builtin_ctzll(doublePush);
             doublePush &= doublePush - 1;
-            addQuiteMove(buildMove(sq64To120[to64 - 16], sq64To120[to64], 0, 0, PAWN_START_FLAG));
+            addQuiteMove(
+                moveList,
+                buildMove(to - 16, to, 0, 0, PAWN_START_FLAG)
+            );
         }
         while (pushPromo)
         {
-            int to64 = __builtin_ctzll(pushPromo);
+            int to = __builtin_ctzll(pushPromo);
             pushPromo &= pushPromo - 1;
-            int from = sq64To120[to64 - 8];
-            int to = sq64To120[to64];
-            addQuiteMove(buildMove(from, to, 0, PIECE_WQ, 0));
-            addQuiteMove(buildMove(from, to, 0, PIECE_WR, 0));
-            addQuiteMove(buildMove(from, to, 0, PIECE_WB, 0));
-            addQuiteMove(buildMove(from, to, 0, PIECE_WN, 0));
+            int from = to - 8;
+
+            addQuiteMove(
+                moveList,
+                buildMove(from, to, 0, PIECE_WQ, 0)
+            );
+            addQuiteMove(
+                moveList,
+                buildMove(from, to, 0, PIECE_WR, 0)
+            );
+            addQuiteMove(
+                moveList,
+                buildMove(from, to, 0, PIECE_WB, 0)
+            );
+            addQuiteMove(
+                moveList,
+                buildMove(from, to, 0, PIECE_WN, 0)
+            );
         }
     }
 
@@ -174,41 +129,71 @@ void genWhitePawnMoves(U64 empty, U64 enemy, bool capturesOnly)
 
     while (captNEQuiet)
     {
-        int to64 = __builtin_ctzll(captNEQuiet);
+        int to = __builtin_ctzll(captNEQuiet);
         captNEQuiet &= captNEQuiet - 1;
-        int to = sq64To120[to64];
-        addCaptureMove(buildMove(sq64To120[to64 - 9], to, board->pieces[to], 0, 0));
+
+        addCaptureMove(
+            moveList,
+            buildMove(to - 9, to, board->pieces[to], 0, 0)
+        );
     }
     while (captNEPromo)
     {
-        int to64 = __builtin_ctzll(captNEPromo);
+        int to = __builtin_ctzll(captNEPromo);
         captNEPromo &= captNEPromo - 1;
-        int from = sq64To120[to64 - 9];
-        int to = sq64To120[to64];
+        int from = to - 9;
+
         int cap = board->pieces[to];
-        addCaptureMove(buildMove(from, to, cap, PIECE_WQ, 0));
-        addCaptureMove(buildMove(from, to, cap, PIECE_WR, 0));
-        addCaptureMove(buildMove(from, to, cap, PIECE_WB, 0));
-        addCaptureMove(buildMove(from, to, cap, PIECE_WN, 0));
+        addCaptureMove(
+            moveList,
+            buildMove(from, to, cap, PIECE_WQ, 0)
+        );
+        addCaptureMove(
+            moveList,
+            buildMove(from, to, cap, PIECE_WR, 0)
+        );
+        addCaptureMove(
+            moveList,
+            buildMove(from, to, cap, PIECE_WB, 0)
+        );
+        addCaptureMove(
+            moveList,
+            buildMove(from, to, cap, PIECE_WN, 0)
+        );
     }
     while (captNWQuiet)
     {
-        int to64 = __builtin_ctzll(captNWQuiet);
+        int to = __builtin_ctzll(captNWQuiet);
         captNWQuiet &= captNWQuiet - 1;
-        int to = sq64To120[to64];
-        addCaptureMove(buildMove(sq64To120[to64 - 7], to, board->pieces[to], 0, 0));
+
+        addCaptureMove(
+            moveList,
+            buildMove(to - 7, to, board->pieces[to], 0, 0)
+        );
     }
     while (captNWPromo)
     {
-        int to64 = __builtin_ctzll(captNWPromo);
+        int to = __builtin_ctzll(captNWPromo);
         captNWPromo &= captNWPromo - 1;
-        int from = sq64To120[to64 - 7];
-        int to = sq64To120[to64];
+        int from = to - 7;
+
         int cap = board->pieces[to];
-        addCaptureMove(buildMove(from, to, cap, PIECE_WQ, 0));
-        addCaptureMove(buildMove(from, to, cap, PIECE_WR, 0));
-        addCaptureMove(buildMove(from, to, cap, PIECE_WB, 0));
-        addCaptureMove(buildMove(from, to, cap, PIECE_WN, 0));
+        addCaptureMove(
+            moveList,
+            buildMove(from, to, cap, PIECE_WQ, 0)
+        );
+        addCaptureMove(
+            moveList,
+            buildMove(from, to, cap, PIECE_WR, 0)
+        );
+        addCaptureMove(
+            moveList,
+            buildMove(from, to, cap, PIECE_WB, 0)
+        );
+        addCaptureMove(
+            moveList,
+            buildMove(from, to, cap, PIECE_WN, 0)
+        );
     }
 
     // En passant: rare, so a cheap per-pawn scan is fine.
@@ -220,16 +205,23 @@ void genWhitePawnMoves(U64 empty, U64 enemy, bool capturesOnly)
         {
             int sq64 = __builtin_ctzll(epPawns);
             epPawns &= epPawns - 1;
-            int sq = sq64To120[sq64];
-            if (sq + 9 == board->enPassantSq)
-                addEnPassantMove(buildMove(sq, sq + 9, 0, 0, EN_PASSANT_FLAG));
-            if (sq + 11 == board->enPassantSq)
-                addEnPassantMove(buildMove(sq, sq + 11, 0, 0, EN_PASSANT_FLAG));
+            int sq = sq64;
+
+            if (fileOf(sq) < FILE_H && sq + 9 == board->enPassantSq)
+                addEnPassantMove(
+                    moveList,
+                    buildMove(sq, sq + 9, 0, 0, EN_PASSANT_FLAG)
+                );
+            if (fileOf(sq) > FILE_A && sq + 7 == board->enPassantSq)
+                addEnPassantMove(
+                    moveList,
+                    buildMove(sq, sq + 7, 0, 0, EN_PASSANT_FLAG)
+                );
         }
     }
 }
 
-void genBlackPawnMoves(U64 empty, U64 enemy, bool capturesOnly)
+void genBlackPawnMoves(MoveList &moveList, U64 empty, U64 enemy, bool capturesOnly)
 {
     U64 blackPawns = bitboard->pieces[PIECE_BP];
 
@@ -243,26 +235,44 @@ void genBlackPawnMoves(U64 empty, U64 enemy, bool capturesOnly)
 
         while (pushQuiet)
         {
-            int to64 = __builtin_ctzll(pushQuiet);
+            int to = __builtin_ctzll(pushQuiet);
             pushQuiet &= pushQuiet - 1;
-            addQuiteMove(buildMove(sq64To120[to64 + 8], sq64To120[to64], 0, 0, 0));
+            addQuiteMove(
+                moveList,
+                buildMove(to + 8, to, 0, 0, 0)
+            );
         }
         while (doublePush)
         {
-            int to64 = __builtin_ctzll(doublePush);
+            int to = __builtin_ctzll(doublePush);
             doublePush &= doublePush - 1;
-            addQuiteMove(buildMove(sq64To120[to64 + 16], sq64To120[to64], 0, 0, PAWN_START_FLAG));
+            addQuiteMove(
+                moveList,
+                buildMove(to + 16, to, 0, 0, PAWN_START_FLAG)
+            );
         }
         while (pushPromo)
         {
-            int to64 = __builtin_ctzll(pushPromo);
+            int to = __builtin_ctzll(pushPromo);
             pushPromo &= pushPromo - 1;
-            int from = sq64To120[to64 + 8];
-            int to = sq64To120[to64];
-            addQuiteMove(buildMove(from, to, 0, PIECE_BQ, 0));
-            addQuiteMove(buildMove(from, to, 0, PIECE_BR, 0));
-            addQuiteMove(buildMove(from, to, 0, PIECE_BB, 0));
-            addQuiteMove(buildMove(from, to, 0, PIECE_BN, 0));
+            int from = to + 8;
+
+            addQuiteMove(
+                moveList,
+                buildMove(from, to, 0, PIECE_BQ, 0)
+            );
+            addQuiteMove(
+                moveList,
+                buildMove(from, to, 0, PIECE_BR, 0)
+            );
+            addQuiteMove(
+                moveList,
+                buildMove(from, to, 0, PIECE_BB, 0)
+            );
+            addQuiteMove(
+                moveList,
+                buildMove(from, to, 0, PIECE_BN, 0)
+            );
         }
     }
 
@@ -276,41 +286,71 @@ void genBlackPawnMoves(U64 empty, U64 enemy, bool capturesOnly)
 
     while (captSWQuiet)
     {
-        int to64 = __builtin_ctzll(captSWQuiet);
+        int to = __builtin_ctzll(captSWQuiet);
         captSWQuiet &= captSWQuiet - 1;
-        int to = sq64To120[to64];
-        addCaptureMove(buildMove(sq64To120[to64 + 9], to, board->pieces[to], 0, 0));
+
+        addCaptureMove(
+            moveList,
+            buildMove(to + 9, to, board->pieces[to], 0, 0)
+        );
     }
     while (captSWPromo)
     {
-        int to64 = __builtin_ctzll(captSWPromo);
+        int to = __builtin_ctzll(captSWPromo);
         captSWPromo &= captSWPromo - 1;
-        int from = sq64To120[to64 + 9];
-        int to = sq64To120[to64];
+        int from = to + 9;
+
         int cap = board->pieces[to];
-        addCaptureMove(buildMove(from, to, cap, PIECE_BQ, 0));
-        addCaptureMove(buildMove(from, to, cap, PIECE_BR, 0));
-        addCaptureMove(buildMove(from, to, cap, PIECE_BB, 0));
-        addCaptureMove(buildMove(from, to, cap, PIECE_BN, 0));
+        addCaptureMove(
+            moveList,
+            buildMove(from, to, cap, PIECE_BQ, 0)
+        );
+        addCaptureMove(
+            moveList,
+            buildMove(from, to, cap, PIECE_BR, 0)
+        );
+        addCaptureMove(
+            moveList,
+            buildMove(from, to, cap, PIECE_BB, 0)
+        );
+        addCaptureMove(
+            moveList,
+            buildMove(from, to, cap, PIECE_BN, 0)
+        );
     }
     while (captSEQuiet)
     {
-        int to64 = __builtin_ctzll(captSEQuiet);
+        int to = __builtin_ctzll(captSEQuiet);
         captSEQuiet &= captSEQuiet - 1;
-        int to = sq64To120[to64];
-        addCaptureMove(buildMove(sq64To120[to64 + 7], to, board->pieces[to], 0, 0));
+
+        addCaptureMove(
+            moveList,
+            buildMove(to + 7, to, board->pieces[to], 0, 0)
+        );
     }
     while (captSEPromo)
     {
-        int to64 = __builtin_ctzll(captSEPromo);
+        int to = __builtin_ctzll(captSEPromo);
         captSEPromo &= captSEPromo - 1;
-        int from = sq64To120[to64 + 7];
-        int to = sq64To120[to64];
+        int from = to + 7;
+
         int cap = board->pieces[to];
-        addCaptureMove(buildMove(from, to, cap, PIECE_BQ, 0));
-        addCaptureMove(buildMove(from, to, cap, PIECE_BR, 0));
-        addCaptureMove(buildMove(from, to, cap, PIECE_BB, 0));
-        addCaptureMove(buildMove(from, to, cap, PIECE_BN, 0));
+        addCaptureMove(
+            moveList,
+            buildMove(from, to, cap, PIECE_BQ, 0)
+        );
+        addCaptureMove(
+            moveList,
+            buildMove(from, to, cap, PIECE_BR, 0)
+        );
+        addCaptureMove(
+            moveList,
+            buildMove(from, to, cap, PIECE_BB, 0)
+        );
+        addCaptureMove(
+            moveList,
+            buildMove(from, to, cap, PIECE_BN, 0)
+        );
     }
 
     if (board->enPassantSq != SQ_NONE)
@@ -320,11 +360,18 @@ void genBlackPawnMoves(U64 empty, U64 enemy, bool capturesOnly)
         {
             int sq64 = __builtin_ctzll(epPawns);
             epPawns &= epPawns - 1;
-            int sq = sq64To120[sq64];
-            if (sq - 9 == board->enPassantSq)
-                addEnPassantMove(buildMove(sq, sq - 9, 0, 0, EN_PASSANT_FLAG));
-            if (sq - 11 == board->enPassantSq)
-                addEnPassantMove(buildMove(sq, sq - 11, 0, 0, EN_PASSANT_FLAG));
+            int sq = sq64;
+
+            if (fileOf(sq) > FILE_A && sq - 9 == board->enPassantSq)
+                addEnPassantMove(
+                    moveList,
+                    buildMove(sq, sq - 9, 0, 0, EN_PASSANT_FLAG)
+                );
+            if (fileOf(sq) < FILE_H && sq - 7 == board->enPassantSq)
+                addEnPassantMove(
+                    moveList,
+                    buildMove(sq, sq - 7, 0, 0, EN_PASSANT_FLAG)
+                );
         }
     }
 }
@@ -333,10 +380,8 @@ void genBlackPawnMoves(U64 empty, U64 enemy, bool capturesOnly)
 // ================= knight/king/sliding move gen ============
 // ==========================================================
 // Enemy-piece test now happens directly on the 64-index bit ctzll
-// already gave us, instead of round-tripping it through sq64To120[]
-// and back through sq120To64[] (which always returns the same index).
 
-void genNonSlidingMoves(bool capturesOnly)
+void genNonSlidingMoves(MoveList &moveList, bool capturesOnly)
 {
     U64 friendlyPiecesBitboard = bitboard->getPieces(board->side);
     U64 enemyPiecesBitboard = bitboard->getPieces(board->side ^ 1);
@@ -355,24 +400,29 @@ void genNonSlidingMoves(bool capturesOnly)
 
             while (attacksPattern)
             {
-                int targetSq64 = __builtin_ctzll(attacksPattern);
+                int targetSq = __builtin_ctzll(attacksPattern);
                 attacksPattern &= attacksPattern - 1;
-                int targetSq = sq64To120[targetSq64];
 
-                if (enemyPiecesBitboard & (1ULL << targetSq64))
+                if (enemyPiecesBitboard & (1ULL << targetSq))
                 {
-                    addCaptureMove(buildMove(sq64To120[sq], targetSq, board->pieces[targetSq], 0, 0));
+                    addCaptureMove(
+                        moveList,
+                        buildMove(sq, targetSq, board->pieces[targetSq], 0, 0)
+                    );
                 }
                 else if (!capturesOnly)
                 {
-                    addQuiteMove(buildMove(sq64To120[sq], targetSq, 0, 0, 0));
+                    addQuiteMove(
+                        moveList,
+                        buildMove(sq, targetSq, 0, 0, 0)
+                    );
                 }
             }
         }
     }
 }
 
-void genSlidingMoves(bool capturesOnly)
+void genSlidingMoves(MoveList &moveList, bool capturesOnly)
 {
     U64 friendlyPiecesBitboard = bitboard->getPieces(board->side);
     U64 enemyPiecesBitboard = bitboard->getPieces(board->side ^ 1);
@@ -404,24 +454,29 @@ void genSlidingMoves(bool capturesOnly)
 
             while (attacksPattern)
             {
-                int targetSq64 = __builtin_ctzll(attacksPattern);
+                int targetSq = __builtin_ctzll(attacksPattern);
                 attacksPattern &= attacksPattern - 1;
-                int targetSq = sq64To120[targetSq64];
 
-                if (enemyPiecesBitboard & (1ULL << targetSq64))
+                if (enemyPiecesBitboard & (1ULL << targetSq))
                 {
-                    addCaptureMove(buildMove(sq64To120[sq], targetSq, board->pieces[targetSq], 0, 0));
+                    addCaptureMove(
+                        moveList,
+                        buildMove(sq, targetSq, board->pieces[targetSq], 0, 0)
+                    );
                 }
                 else if (!capturesOnly)
                 {
-                    addQuiteMove(buildMove(sq64To120[sq], targetSq, 0, 0, 0));
+                    addQuiteMove(
+                        moveList,
+                        buildMove(sq, targetSq, 0, 0, 0)
+                    );
                 }
             }
         }
     }
 }
 
-MoveList generateMoves()
+void generateMoves(MoveList &moveList)
 {
     moveList.count = 0;
     U64 friendly = bitboard->getPieces(board->side);
@@ -430,15 +485,18 @@ MoveList generateMoves()
 
     if (board->side == WHITE)
     {
-        genWhitePawnMoves(empty, enemy, false);
+        genWhitePawnMoves(moveList, empty, enemy, false);
 
         if (board->castlePermission & CASTLE_WK)
         {
             if (board->pieces[SQ_F1] == PIECE_EMPTY && board->pieces[SQ_G1] == PIECE_EMPTY)
             {
-                if (board->checkSq == SQ_NONE && !isUnderAttack(sq120To64[SQ_F1], BLACK))
+                if (board->checkSq == SQ_NONE && !isUnderAttack(SQ_F1, BLACK))
                 {
-                    addQuiteMove(buildMove(SQ_E1, SQ_G1, 0, 0, CASTLE_FLAG));
+                    addQuiteMove(
+                        moveList,
+                        buildMove(SQ_E1, SQ_G1, 0, 0, CASTLE_FLAG)
+                    );
                 }
             }
         }
@@ -446,24 +504,30 @@ MoveList generateMoves()
         {
             if (board->pieces[SQ_D1] == PIECE_EMPTY && board->pieces[SQ_C1] == PIECE_EMPTY && board->pieces[SQ_B1] == PIECE_EMPTY)
             {
-                if (board->checkSq == SQ_NONE && !isUnderAttack(sq120To64[SQ_D1], BLACK))
+                if (board->checkSq == SQ_NONE && !isUnderAttack(SQ_D1, BLACK))
                 {
-                    addQuiteMove(buildMove(SQ_E1, SQ_C1, 0, 0, CASTLE_FLAG));
+                    addQuiteMove(
+                        moveList,
+                        buildMove(SQ_E1, SQ_C1, 0, 0, CASTLE_FLAG)
+                    );
                 }
             }
         }
     }
     else
     {
-        genBlackPawnMoves(empty, enemy, false);
+        genBlackPawnMoves(moveList, empty, enemy, false);
 
         if (board->castlePermission & CASTLE_BK)
         {
             if (board->pieces[SQ_F8] == PIECE_EMPTY && board->pieces[SQ_G8] == PIECE_EMPTY)
             {
-                if (board->checkSq == SQ_NONE && !isUnderAttack(sq120To64[SQ_F8], WHITE))
+                if (board->checkSq == SQ_NONE && !isUnderAttack(SQ_F8, WHITE))
                 {
-                    addQuiteMove(buildMove(SQ_E8, SQ_G8, 0, 0, CASTLE_FLAG));
+                    addQuiteMove(
+                        moveList,
+                        buildMove(SQ_E8, SQ_G8, 0, 0, CASTLE_FLAG)
+                    );
                 }
             }
         }
@@ -471,19 +535,22 @@ MoveList generateMoves()
         {
             if (board->pieces[SQ_D8] == PIECE_EMPTY && board->pieces[SQ_C8] == PIECE_EMPTY && board->pieces[SQ_B8] == PIECE_EMPTY)
             {
-                if (board->checkSq == SQ_NONE && !isUnderAttack(sq120To64[SQ_D8], WHITE))
+                if (board->checkSq == SQ_NONE && !isUnderAttack(SQ_D8, WHITE))
                 {
-                    addQuiteMove(buildMove(SQ_E8, SQ_C8, 0, 0, CASTLE_FLAG));
+                    addQuiteMove(
+                        moveList,
+                        buildMove(SQ_E8, SQ_C8, 0, 0, CASTLE_FLAG)
+                    );
                 }
             }
         }
     }
-    genSlidingMoves(false);
-    genNonSlidingMoves(false);
-    return moveList;
+
+    genSlidingMoves(moveList, false);
+    genNonSlidingMoves(moveList, false);
 }
 
-MoveList generateCaptureMoves()
+void generateCaptureMoves(MoveList &moveList)
 {
     moveList.count = 0;
     U64 friendly = bitboard->getPieces(board->side);
@@ -491,11 +558,10 @@ MoveList generateCaptureMoves()
     U64 empty = ~(friendly | enemy);
 
     if (board->side == WHITE)
-        genWhitePawnMoves(empty, enemy, true);
+        genWhitePawnMoves(moveList, empty, enemy, true);
     else
-        genBlackPawnMoves(empty, enemy, true);
+        genBlackPawnMoves(moveList, empty, enemy, true);
 
-    genSlidingMoves(true);
-    genNonSlidingMoves(true);
-    return moveList;
+    genSlidingMoves(moveList, true);
+    genNonSlidingMoves(moveList, true);
 }

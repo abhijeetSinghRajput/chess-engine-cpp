@@ -174,7 +174,8 @@ int parseMove(std::string &move_str)
         }
     }
 
-    MoveList moves = generateMoves();
+    MoveList moves;
+    generateMoves(moves);
     for (int i = 0; i < moves.count; ++i)
     {
         move = moves.moves[i].move;
@@ -199,7 +200,8 @@ int bigPieceCount(int side)
 
 bool isGameOver()
 {
-    MoveList moves = generateMoves();
+    MoveList moves;
+    generateMoves(moves);
     // No move left to play
     if (moves.count == 0) return true;
 

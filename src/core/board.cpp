@@ -8,7 +8,7 @@
 #include <iomanip>
 
 Board *board = new Board;
-int Board::pieces[120];
+int Board::pieces[64];
 
 Board::Board()
 {
@@ -43,7 +43,7 @@ MoveInfo *Board::popMoveFromHistory()
 U64 Board::generatePositionKey()
 {
     U64 hashKey = 0;
-    for (auto sq : sq64To120)
+    for (int sq = SQ_A1; sq <= SQ_H8; sq++)
     {
         int piece = pieces[sq];
         if (piece != PIECE_EMPTY)
@@ -65,7 +65,7 @@ U64 Board::generatePositionKey()
 
 void Board::updateMaterial()
 {
-    for (int sq : sq64To120)
+    for (int sq = SQ_A1; sq <= SQ_H8; sq++)
     {
         int piece = pieces[sq];
         if (piece != PIECE_EMPTY)
@@ -89,14 +89,12 @@ void Board::reset()
         history[i].checkSq = SQ_NONE;
         history[i].move = 0;
     }
-    for (int i = 0; i < 120; ++i)
-    {
-        pieces[i] = offBoard;
-    }
-    for (auto sq : sq64To120)
+
+    for (int sq = SQ_A1; sq <= SQ_H8; sq++)
     {
         pieces[sq] = PIECE_EMPTY;
     }
+
     for (int i = 0; i < 13; ++i)
     {
         pieceCount[i] = 0;
@@ -241,7 +239,7 @@ void Board::parseFen(std::string &fen)
 
     // is in check
     int kingOnSq = __builtin_ctzll(bitboard->pieces[Kings[side]]);
-    board->checkSq = isUnderAttack(kingOnSq, board->side ^ 1) ? sq64To120[kingOnSq] : SQ_NONE;
+    board->checkSq = isUnderAttack(kingOnSq, board->side ^ 1) ? kingOnSq : SQ_NONE;
 
     // generate a uniqe position key
     positionKey = generatePositionKey();

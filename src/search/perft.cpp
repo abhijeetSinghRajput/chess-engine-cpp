@@ -20,7 +20,8 @@ U64 perft(int depth)
 {
     if (depth <= 0) return 1;
 
-    MoveList moves = generateMoves();
+    MoveList moves;
+    generateMoves(moves);
     U64 count = 0;
     for (int i = 0; i < moves.count; ++i)
     {
@@ -42,7 +43,8 @@ void perftTest(int depth)
 
     int moveCount = 0;
     U64 totalNodeSeared = 0;
-    MoveList moves = generateMoves();
+    MoveList moves;
+    generateMoves(moves);
     long long startTime = getCurrTime();
     for (int i = 0; i < moves.count; ++i)
     {

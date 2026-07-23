@@ -22,7 +22,7 @@ public:
 	bool useBook;
     int ply;
     int killers[64][2];   // killer[ply][0/1];
-    int history[13][120]; // history[piece][toSq]
+    int history[13][64]; // history[piece][toSq]
 	SearchController();
     void clear();
 };

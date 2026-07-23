@@ -68,7 +68,7 @@ U64 getPolyKey()
 
     for (int sq = 0; sq < 64; ++sq)
     {
-        piece = board->pieces[sq64To120[sq]];
+        piece = board->pieces[sq];
         if (piece != PIECE_EMPTY)
         {
             polyKey ^= piecePolyKeys[polyPieces[piece]][sq];

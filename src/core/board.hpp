@@ -10,7 +10,7 @@ class Board
     void updateMaterial();
 
 public:
-    static int pieces[120];
+    static int pieces[64];
     int side = WHITE;
     int castlePermission = 0;
     int fiftyMove = 0;

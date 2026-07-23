@@ -29,7 +29,7 @@ void SearchController::clear()
     }
     for (int i = 0; i < 13; ++i)
     {
-        for (int j = 0; j < 120; ++j)
+        for (int j = 0; j < 64; ++j)
         {
             history[i][j] = 0;
         }
@@ -180,7 +180,8 @@ int alphaBeta(int alpha, int beta, int depth, bool doNull)
         }
     }
 
-    MoveList moveList = generateMoves();
+    MoveList moveList;
+    generateMoves(moveList);
     int legalMoves = 0;
     int prevAlpha = alpha;
     int bestMove = 0;
@@ -329,8 +330,8 @@ int quiescence(int alpha, int beta, int checkPly)
     }
 
     int legalMove = 0;
-    MoveList moveList =
-        expandFull ? generateMoves() : generateCaptureMoves();
+    MoveList moveList;
+    expandFull ? generateMoves(moveList) : generateCaptureMoves(moveList);
 
     for (auto i = 0u; i < moveList.count; ++i)
     {

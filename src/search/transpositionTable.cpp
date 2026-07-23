@@ -153,7 +153,8 @@ std::vector<int> TranspositionTable::getLine(int depth)
     {
         bool legal = false;
 
-        MoveList generatedMoves = generateMoves();
+        MoveList generatedMoves;
+        generateMoves(generatedMoves);
 
         for (int i = 0; i < generatedMoves.count; ++i)
         {

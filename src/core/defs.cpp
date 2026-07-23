@@ -5,8 +5,6 @@
 
 // Initialize global variables
 std::string START_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-int sq120To64[120];
-int sq64To120[64];
 
 const char* PIECE_ICON[] = {
     ".",
@@ -67,18 +65,14 @@ const int AB_BOUND = 30000;
 const int MATE = (AB_BOUND - MAX_DEPTH);
 
 const int CASTLE_PERMISSION[] = {
-    15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
-    15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
-    15, 11, 15, 15, 15, 3, 15, 15, 7, 15,//white 1011 0011 0111
-    15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
-    15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
-    15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
-    15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
-    15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
-    15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
-    15, 14, 15, 15, 15, 12, 15, 15, 13, 15,//black 1101 1100 1110
-    15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
-    15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
+    11, 15, 15, 15,  3, 15, 15,  7, //white 1011 0011 0111
+    15, 15, 15, 15, 15, 15, 15, 15,
+    15, 15, 15, 15, 15, 15, 15, 15,
+    15, 15, 15, 15, 15, 15, 15, 15,
+    15, 15, 15, 15, 15, 15, 15, 15,
+    15, 15, 15, 15, 15, 15, 15, 15,
+    15, 15, 15, 15, 15, 15, 15, 15,
+    14, 15, 15, 15, 12, 15, 15, 13, //black 1101 1100 1110
 };
 
 const int MIRROR_64[] = {
@@ -93,11 +87,21 @@ const int MIRROR_64[] = {
 };
 
 
-const int ROOK_DIRECTIONS  [] = {-10, 1, 10, -1};
-const int KNIGHT_DIRECTIONS[] = {19, 21, 12, 8, -19, -21, -12, -8};
-const int BISHOP_DIRECTIONS[] = {-9, -11, 9, 11};
-const int KING_DIRECTIONS  [] = {-10, 1, 10, -1, -9, -11, 9, 11};
-const int QUEEN_DIRECTIONS [] = {-10, 1, 10, -1, -9, -11, 9, 11};
+const int ROOK_DIRECTIONS  [] = {-8, 1, 8, -1};
+const int KNIGHT_DIRECTIONS[] = {15, 17, 10, 6, -15, -17, -10, -6};
+const int BISHOP_DIRECTIONS[] = {-7, -9, 7, 9};
+const int KING_DIRECTIONS  [] = {-8, 1, 8, -1, -7, -9, 7, 9};
+const int QUEEN_DIRECTIONS [] = {-8, 1, 8, -1, -7, -9, 7, 9};
+
+// defs.cpp — definitions
+const int ROOK_DF  []  =  { 0,  1,  0, -1};
+const int ROOK_DR  []  =  {-1,  0,  1,  0};
+const int BISHOP_DF[]  =  {-1,  1, -1,  1};
+const int BISHOP_DR[]  =  {-1, -1,  1,  1};
+const int KNIGHT_DF[]  =  { 1,  2,  2,  1, -1, -2, -2, -1};
+const int KNIGHT_DR[]  =  { 2,  1, -1, -2, -2, -1,  1,  2};
+const int KING_DF  []  =  {-1, -1, -1,  0,  0,  1,  1,  1};
+const int KING_DR  []  =  {-1,  0,  1, -1,  1, -1,  0,  1};
 
 const int slidingPieces[2][3] = {
     PIECE_WR, PIECE_WB, PIECE_WQ,
@@ -108,20 +112,6 @@ const int nonSlidingPieces[2][2] = {
     PIECE_BN, PIECE_BK,
 };
 
-void initSquareMappings() {
-    for (int rank = RANK_1; rank <= RANK_8; ++rank) {
-        for (int file = FILE_A; file <= FILE_H; ++file) {
-            int sq120 = fileRank2Sq(file, rank);
-            int sq64 = rank * 8 + file;
-            sq120To64[sq120] = sq64;
-            sq64To120[sq64] = sq120;
-        }
-    }
-}
-
-void initialize() {
-    initSquareMappings();
-}
 
 std::string moveStr(int move)
 {

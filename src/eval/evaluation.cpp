@@ -118,7 +118,7 @@ int kingSafety(int kingSq, int color)
 
     U64 pawnShieldMask = 0ULL, missingPawn, pawnStorm;
 
-    switch (sq64To120[kingSq])
+    switch (kingSq)
     {
         case SQ_B1:
             pawnShieldMask = (7ULL << 8);
@@ -367,7 +367,7 @@ int evalPosition()
         score += MobilityBonus[isEndgame][MOB_ROOK][mobility];
 
         // Taretary penetration
-        if (rankOf(sq64To120[sq]) == RANK_7) {
+        if (rankOf(sq) == RANK_7) {
             // bonus if white rook attacks black pawns on 7th rank
             U64 attackedPawns = rookAttack & bitboard->pieces[PIECE_BP] & bitboard->rankMasks[RANK_7];
             if (attackedPawns) {
@@ -375,8 +375,8 @@ int evalPosition()
             }
             // bonus if white rook is on same file/rank as black king
             int blackKingSq = __builtin_ctzll(bitboard->pieces[PIECE_BK]);
-            int rookFile = fileOf(sq64To120[sq]);
-            int kingFile = fileOf(sq64To120[blackKingSq]);
+            int rookFile = fileOf(sq);
+            int kingFile = fileOf(blackKingSq);
             if (abs(rookFile - kingFile) <= 1) {
                 score += 40;  // Rook near king = dangerous!
             }
@@ -419,7 +419,7 @@ int evalPosition()
         score -= MobilityBonus[isEndgame][MOB_ROOK][mobility];
 
         // Taretary penetration
-        if (rankOf(sq64To120[sq]) == RANK_2) {
+        if (rankOf(sq) == RANK_2) {
             // bonus if black rook attacks white pawns on 2nd rank
             U64 attackedPawns = rookAttack & bitboard->pieces[PIECE_WP] & bitboard->rankMasks[RANK_2];
             if (attackedPawns) {
@@ -427,8 +427,8 @@ int evalPosition()
             }
             // bonus if black rook is on same file/rank as white king
             int whiteKingSq = __builtin_ctzll(bitboard->pieces[PIECE_WK]);
-            int rookFile = fileOf(sq64To120[sq]);
-            int kingFile = fileOf(sq64To120[whiteKingSq]);
+            int rookFile = fileOf(sq);
+            int kingFile = fileOf(whiteKingSq);
             if (abs(rookFile - kingFile) <= 1) {
                 score -= 40;  // Rook near king = dangerous!
             }

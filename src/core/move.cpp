@@ -4,27 +4,12 @@
 
 int buildMove(int from, int to, int capturedPiece, int promotedPiece, int flag)
 {
-    return from | (to << 7) | (capturedPiece << 14) | (promotedPiece << 18) | flag;
+    return from | (to << 6) | (capturedPiece << 12) | (promotedPiece << 16) | flag;
 }
-
-int moveFrom(int move)
-{
-    return (move & 0x7f);
-}
-
-int moveTo(int move)
-{
-    return (move >> 7) & 0x7f;
-}
-
-int moveCapturePiece(int move)
-{
-    return (move >> 14) & 0xf;
-}
-int movePromotionPiece(int move)
-{
-    return (move >> 18) & 0xf;
-}
+int moveFrom(int move) { return move & 0x3f; }
+int moveTo(int move) { return (move >> 6) & 0x3f; }
+int moveCapturePiece(int move) { return (move >> 12) & 0xf; }
+int movePromotionPiece(int move) { return (move >> 16) & 0xf; }
 
 void moveDetail(int move)
 {
@@ -36,12 +21,9 @@ void moveDetail(int move)
     printf("capture : %c\n", PIECE_CHAR[moveCapturePiece(move)]);
     printf("promotion : %c\n", PIECE_CHAR[movePromotionPiece(move)]);
 
-    if (move & EN_PASSANT_FLAG)
-        printf("flag : enPassant\n");
-    if (move & PAWN_START_FLAG)
-        printf("flag : pawn start\n");
-    if (move & CASTLE_FLAG)
-        printf("flag : castle\n");
+    if (move & EN_PASSANT_FLAG) printf("flag : enPassant\n");
+    if (move & PAWN_START_FLAG) printf("flag : pawn start\n");
+    if (move & CASTLE_FLAG)     printf("flag : castle\n");
     printf("\n");
 }
 
@@ -55,7 +37,7 @@ void movePiece(int from, int to)
     hashPiece(to, piece);
     board->pieces[to] = piece;
 
-    bitboard->movePiece(piece, sq120To64[from], sq120To64[to]);
+    bitboard->movePiece(piece, from, to);   
 }
 
 void addPiece(int sq, int piece)
@@ -69,7 +51,7 @@ void addPiece(int sq, int piece)
     board->material[PIECE_COLOR[piece]] += pieceValue[piece];
     board->pieceCount[piece]++;
 
-    bitboard->setBit(piece, sq120To64[sq]);
+    bitboard->setBit(piece, sq);
 }
 
 void removePiece(int sq)
@@ -80,7 +62,7 @@ void removePiece(int sq)
     board->material[PIECE_COLOR[piece]] -= pieceValue[piece];
     board->pieceCount[piece]--;
 
-    bitboard->clearBit(piece, sq120To64[sq]);
+    bitboard->clearBit(piece, sq);
 }
 
 
@@ -113,10 +95,10 @@ int takeMove() {
 
     if (move & EN_PASSANT_FLAG) {
         if (board->side == WHITE) {
-            addPiece(to - 10, PIECE_BP);
+            addPiece(to - 8, PIECE_BP);
         }
         else {
-            addPiece(to + 10, PIECE_WP);
+            addPiece(to + 8, PIECE_WP);
         }
     }
     else if (move & CASTLE_FLAG) {
@@ -164,11 +146,11 @@ bool makeMove(int move)
     {
         if (side == WHITE)
         {
-            removePiece(to - 10);
+            removePiece(to - 8);
         }
         else
         {
-            removePiece(to + 10);
+            removePiece(to + 8);
         }
     }
     else if (move & CASTLE_FLAG)
@@ -207,11 +189,11 @@ bool makeMove(int move)
         {
             if (side == WHITE)
             {
-                board->enPassantSq = from + 10;
+                board->enPassantSq = from + 8;
             }
             else
             {
-                board->enPassantSq = from - 10;
+                board->enPassantSq = from - 8;
             }
             hashEnPassant();
         }
@@ -244,7 +226,7 @@ bool makeMove(int move)
     int enemyKingOnSq = __builtin_ctzll(bitboard->pieces[Kings[board->side]]);
     if (isUnderAttack(enemyKingOnSq, side))
     {
-        board->checkSq = sq64To120[enemyKingOnSq];
+        board->checkSq = enemyKingOnSq;
     }
     else
     {

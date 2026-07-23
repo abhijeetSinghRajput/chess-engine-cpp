@@ -44,8 +44,6 @@ Bitboard::Bitboard()
     }
     occupied[0] = 0ULL;
     occupied[1] = 0ULL;
-    // init defs
-    initialize();
 
     initMasks();
     init_attackMasks();
@@ -244,7 +242,7 @@ void Bitboard::init_isolatedPawnMask()
 {
     for (int sq = 0; sq < 64; sq++)
     {
-        int file = fileOf(sq64To120[sq]);
+        int file = fileOf(sq);
         if (file > FILE_A)
         {
             isolatedPawnMask[sq] |= fileMasks[file - 1];
@@ -263,8 +261,8 @@ void Bitboard::init_passedPawnMask()
 
         for (int sq = 0; sq < 64; sq++)
         {
-            int file = fileOf(sq64To120[sq]);
-            int rank = rankOf(sq64To120[sq]);
+            int file = fileOf(sq);
+            int rank = rankOf(sq);
 
             passedPawnMask[i][sq] |= fileMasks[file];
             if (file > FILE_A)
@@ -345,11 +343,7 @@ void Bitboard::initBoard(Board *board)
 
 void Bitboard::init_attackMasks()
 {
-    for (int sq = 0; sq < 120; ++sq)
-    {
-        Board::pieces[sq] = offBoard;
-    }
-    for (auto sq : sq64To120)
+    for (int sq = SQ_A1; sq <= SQ_H8; sq++)
     {
         Board::pieces[sq] = PIECE_EMPTY;
     }
@@ -378,7 +372,7 @@ void Bitboard::init_pieces()
             int piece = board->pieces[sq];
             if (piece)
             {
-                setBit(piece, sq120To64[sq]);
+                setBit(piece, sq);
             }
         }
     }
@@ -415,19 +409,21 @@ void Bitboard::init_bishopLookupTable()
 U64 Bitboard::legalMoveBitboardFromBlockers(int sq, U64 blockerBitboard, bool ortho)
 {
     U64 bitboard = 0ULL;
-    const int *directions = ortho ? ROOK_DIRECTIONS : BISHOP_DIRECTIONS;
+    const int *df = ortho ? ROOK_DF : BISHOP_DF;
+    const int *dr = ortho ? ROOK_DR : BISHOP_DR;
+    int f0 = fileOf(sq), r0 = rankOf(sq);
 
     for (int i = 0; i < 4; ++i)
     {
-        int targetSq = sq64To120[sq] + directions[i];
-        while (board->pieces[targetSq] != offBoard)
+        int f = f0 + df[i], r = r0 + dr[i];
+        while (f >= 0 && f < 8 && r >= 0 && r < 8)
         {
-            setBit(bitboard, sq120To64[targetSq]);
-            if (blockerBitboard & (1ULL << sq120To64[targetSq]))
-            {
+            int targetSq = fileRank2Sq(f, r);
+            setBit(bitboard, targetSq);
+            if (blockerBitboard & (1ULL << targetSq))
                 break;
-            }
-            targetSq += directions[i];
+            f += df[i];
+            r += dr[i];
         }
     }
     return bitboard;
@@ -437,85 +433,53 @@ U64 Bitboard::legalMoveBitboardFromBlockers(int sq, U64 blockerBitboard, bool or
 
 void Bitboard::init_pawnAttacks()
 {
-    for (int rank = RANK_1; rank <= RANK_8; ++rank)
+    for (int sq = 0; sq < 64; ++sq)
     {
-        for (int file = FILE_A; file <= FILE_H; ++file)
-        {
-            U64 bitBoard = 0ULL;
-            int sq = fileRank2Sq(file, rank);
-            if (Board::pieces[sq + 11] != offBoard)
-            {
-                setBit(bitBoard, sq120To64[sq + 11]);
-            }
-            if (Board::pieces[sq + 9] != offBoard)
-            {
-                setBit(bitBoard, sq120To64[sq + 9]);
-            }
-            pawnAttacks[WHITE][sq120To64[sq]] = bitBoard;
-        }
-    }
-    for (int rank = RANK_8; rank >= RANK_1; --rank)
-    {
-        for (int file = FILE_A; file <= FILE_H; ++file)
-        {
-            U64 bitBoard = 0ULL;
-            int sq = fileRank2Sq(file, rank);
-            if (Board::pieces[sq - 11] != offBoard)
-            {
-                setBit(bitBoard, sq120To64[sq - 11]);
-            }
-            if (Board::pieces[sq - 9] != offBoard)
-            {
-                setBit(bitBoard, sq120To64[sq - 9]);
-            }
-            pawnAttacks[BLACK][sq120To64[sq]] = bitBoard;
-        }
+        int f = fileOf(sq), r = rankOf(sq);
+        U64 bb = 0ULL;
+        if (f > FILE_A && r < RANK_8) setBit(bb, fileRank2Sq(f - 1, r + 1));
+        if (f < FILE_H && r < RANK_8) setBit(bb, fileRank2Sq(f + 1, r + 1));
+        pawnAttacks[WHITE][sq] = bb;
+
+        bb = 0ULL;
+        if (f > FILE_A && r > RANK_1) setBit(bb, fileRank2Sq(f - 1, r - 1));
+        if (f < FILE_H && r > RANK_1) setBit(bb, fileRank2Sq(f + 1, r - 1));
+        pawnAttacks[BLACK][sq] = bb;
     }
 }
+
 void Bitboard::init_kingAttacks()
 {
-    for (int rank = RANK_1; rank <= RANK_8; ++rank)
+    for (int sq = 0; sq < 64; ++sq)
     {
-        for (int file = FILE_A; file <= FILE_H; ++file)
+        int f = fileOf(sq), r = rankOf(sq);
+        U64 bb = 0ULL;
+        for (int i = 0; i < 8; ++i)
         {
-            int sq = fileRank2Sq(file, rank);
-            U64 bitBoard = 0ULL;
-
-            for (int i = 0; i < 8; ++i)
-            {
-                int direction = KING_DIRECTIONS[i];
-                if (Board::pieces[sq + direction] != offBoard)
-                {
-                    setBit(bitBoard, sq120To64[sq + direction]);
-                }
-            }
-
-            kingAttacks[sq120To64[sq]] = bitBoard;
+            int nf = f + KING_DF[i], nr = r + KING_DR[i];
+            if (nf >= 0 && nf < 8 && nr >= 0 && nr < 8)
+                setBit(bb, fileRank2Sq(nf, nr));
         }
+        kingAttacks[sq] = bb;
     }
 }
+
 void Bitboard::init_knighAttack()
 {
-    for (int rank = RANK_1; rank <= RANK_8; ++rank)
+    for (int sq = 0; sq < 64; ++sq)
     {
-        for (int file = FILE_A; file <= FILE_H; ++file)
+        int f = fileOf(sq), r = rankOf(sq);
+        U64 bb = 0ULL;
+        for (int i = 0; i < 8; ++i)
         {
-            int sq = fileRank2Sq(file, rank);
-            U64 bitBoard = 0ULL;
-
-            for (int i = 0; i < 8; ++i)
-            {
-                int direction = KNIGHT_DIRECTIONS[i];
-                if (Board::pieces[sq + direction] != offBoard)
-                {
-                    setBit(bitBoard, sq120To64[sq + direction]);
-                }
-            }
-
-            knightAttacks[sq120To64[sq]] = bitBoard;
+            int nf = f + KNIGHT_DF[i], nr = r + KNIGHT_DR[i];
+            if (nf >= 0 && nf < 8 && nr >= 0 && nr < 8)
+                setBit(bb, fileRank2Sq(nf, nr));
         }
+        knightAttacks[sq] = bb;
     }
 }
+
 void Bitboard::init_rookAttacks()
 {
     for (int rank = RANK_1; rank <= RANK_8; ++rank)
@@ -527,28 +491,23 @@ void Bitboard::init_rookAttacks()
 
             for (int i = 0; i < 4; ++i)
             {
-                int direction = ROOK_DIRECTIONS[i];
-                int targetSq = sq + direction;
-                while (Board::pieces[targetSq] != offBoard)
+                int f = file + ROOK_DF[i], r = rank + ROOK_DR[i];
+                while (f >= 0 && f < 8 && r >= 0 && r < 8)
                 {
-                    setBit(bitBoard, sq120To64[targetSq]);
-                    // erase the edge bits
-                    if (rank != RANK_8)
-                        bitBoard &= ~rankMasks[RANK_8];
-                    if (rank != RANK_1)
-                        bitBoard &= ~rankMasks[RANK_1];
-                    if (file != FILE_A)
-                        bitBoard &= ~fileMasks[FILE_A];
-                    if (file != FILE_H)
-                        bitBoard &= ~fileMasks[FILE_H];
-                    targetSq += direction;
+                    setBit(bitBoard, fileRank2Sq(f, r));
+                    if (rank != RANK_8) bitBoard &= ~rankMasks[RANK_8];
+                    if (rank != RANK_1) bitBoard &= ~rankMasks[RANK_1];
+                    if (file != FILE_A) bitBoard &= ~fileMasks[FILE_A];
+                    if (file != FILE_H) bitBoard &= ~fileMasks[FILE_H];
+                    f += ROOK_DF[i];
+                    r += ROOK_DR[i];
                 }
             }
-
-            rookAttacks[sq120To64[sq]] = bitBoard;
+            rookAttacks[sq] = bitBoard;
         }
     }
 }
+
 void Bitboard::init_bishopAttacks()
 {
     for (int rank = RANK_1; rank <= RANK_8; ++rank)
@@ -560,24 +519,19 @@ void Bitboard::init_bishopAttacks()
 
             for (int i = 0; i < 4; ++i)
             {
-                int direction = BISHOP_DIRECTIONS[i];
-                int targetSq = sq + direction;
-                while (Board::pieces[targetSq] != offBoard)
+                int f = file + BISHOP_DF[i], r = rank + BISHOP_DR[i];
+                while (f >= 0 && f < 8 && r >= 0 && r < 8)
                 {
-                    setBit(bitBoard, sq120To64[targetSq]);
-                    if (rank != RANK_8)
-                        bitBoard &= ~rankMasks[RANK_8];
-                    if (rank != RANK_1)
-                        bitBoard &= ~rankMasks[RANK_1];
-                    if (file != FILE_A)
-                        bitBoard &= ~fileMasks[FILE_A];
-                    if (file != FILE_H)
-                        bitBoard &= ~fileMasks[FILE_H];
-                    targetSq += direction;
+                    setBit(bitBoard, fileRank2Sq(f, r));
+                    if (rank != RANK_8) bitBoard &= ~rankMasks[RANK_8];
+                    if (rank != RANK_1) bitBoard &= ~rankMasks[RANK_1];
+                    if (file != FILE_A) bitBoard &= ~fileMasks[FILE_A];
+                    if (file != FILE_H) bitBoard &= ~fileMasks[FILE_H];
+                    f += BISHOP_DF[i];
+                    r += BISHOP_DR[i];
                 }
             }
-
-            bishopAttacks[sq120To64[sq]] = bitBoard;
+            bishopAttacks[sq] = bitBoard;
         }
     }
 }

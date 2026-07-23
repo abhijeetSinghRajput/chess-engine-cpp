@@ -1,16 +1,12 @@
 // movegen.hpp
 #pragma once
 
-void addCaptureMove(int move);
-void addQuiteMove(int move);
-void addEnPassantMove(int move);
-void addWhitePawnQuietMove(int from,int to);
-void addBlackPawnQuietMove(int from, int to);
-void addWhiteCaptureMove(int from,int to,int capture);
-void addBlackCaptureMove(int from,int to,int capture);
+inline void addCaptureMove(MoveList &list, int move);
+inline void addQuiteMove(MoveList &list, int move);
+inline void addEnPassantMove(MoveList &list, int move);
 
-void genNonSlidingMoves(bool capturesOnly = false);
-void genSlidingMoves(bool capturesOnly = false);
+void generateMoves(MoveList &list);
+void generateCaptureMoves(MoveList &list);
 
-MoveList generateMoves();
-MoveList generateCaptureMoves();
+void generateMoves(MoveList &list);
+void generateCaptureMoves(MoveList &list);
