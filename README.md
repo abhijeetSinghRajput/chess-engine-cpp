@@ -2,7 +2,7 @@
 
 <img src="/assets/chanakya_logo.png" alt="Chanakya logo" width="96" height="96" />
 
-<h3>Chanakya (~2350 ELO)</h3>
+<h3>Chanakya (~2450 ELO)</h3>
 
 <p>
   A Open Source lightweight <strong>chess engine</strong> written in C++
@@ -27,7 +27,7 @@
 <p align="center">
   <img alt="license" src="https://img.shields.io/badge/LICENSE-GPL--3.0-38d430?style=for-the-badge" />
   <img alt="language" src="https://img.shields.io/badge/LANGUAGE-C%2B%2B-0078d4?style=for-the-badge&logo=cplusplus&logoColor=white" />
-  <img alt="elo" src="https://img.shields.io/badge/ELO-2350±16-00a2ff?style=for-the-badge" />
+  <img alt="elo" src="https://img.shields.io/badge/ELO-2450±20-00a2ff?style=for-the-badge" />
   <img alt="uci" src="https://img.shields.io/badge/UCI-COMPATIBLE-38d430?style=for-the-badge" />
 </p>
 
@@ -165,7 +165,7 @@ Chanakya has been benchmarked at approximately:
 
 <div align="center">
 
-## ⭐ 2350 Elo ± 16
+## ⭐ 2450 Elo ± 20
 
 **827 games · 60+0.6 time control**
 
@@ -176,9 +176,9 @@ using `cutechess-cli` and Ordo's Bayesian anchored rating calculation against
 
 | Metric | Value |
 | ------- | ------- |
-| Rating | **2350 Elo** |
-| Error margin (95% CI) | **± 16.1** |
-| Games played | **827** |
+| Rating | **2450 Elo** |
+| Error margin (95% CI) | **± 20.4** |
+| Games played | **1,000** |
 | Opponents | **Stockfish 18 @ 2400 Elo** |
 | Time control | **60+0.6** |
 | Rating method | **Ordo Bayesian estimation** |

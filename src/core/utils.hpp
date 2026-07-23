@@ -15,3 +15,4 @@ void newGame();
 int parseMove(std::string &move_str);
 int bigPieceCount(int side);
 bool isGameOver();
+void printHelp();

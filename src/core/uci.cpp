@@ -282,9 +282,8 @@ void UCI()
                     << evalPosition()
                     << std::endl;
         }
-        else if(command == "cls" || command == "clear"){
-            system("cls");
-            printf("> ");
+        if(command == "help" || command == "--help" || command == "-help" || command == "?"){
+            printHelp();
         }
     }
 }

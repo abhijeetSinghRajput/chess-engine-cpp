@@ -2,6 +2,7 @@
 #include "core/zobristKeys.hpp"
 #include "core/movegen.hpp"
 #include "core/move.hpp"
+#include <iostream>
 
 void hashPiece(int sq, int piece)
 {
@@ -214,4 +215,45 @@ bool isGameOver()
     }
 
     return true;
+}
+
+void printHelp()
+{
+    std::cout
+        << "\n"
+        << "Chanakya Chess Engine - Command Reference\n"
+        << "=========================================\n"
+        << "\n"
+        << "UCI Protocol Commands:\n"
+        << "  uci                       Identify engine, list options, print 'uciok'\n"
+        << "  isready                   Sync command, engine replies 'readyok'\n"
+        << "  setoption name <n> value <v>\n"
+        << "                            Set an engine option, e.g.:\n"
+        << "                              setoption name usebook value true\n"
+        << "                              setoption name Hash value 128\n"
+        << "\n"
+        << "  ucinewgame                Reset engine state for a new game\n"
+        << "  position startpos [moves <m1> <m2> ...]\n"
+        << "                            Set position to the standard start, optionally\n"
+        << "                            followed by moves in long algebraic form\n"
+        << "\n"
+        << "  position fen <fen> [moves <m1> <m2> ...]\n"
+        << "                            Set position from a FEN string\n"
+        << "\n"
+        << "  go [depth <d>] [movetime <ms>] [wtime <ms>] [btime <ms>]\n"
+        << "     [winc <ms>] [binc <ms>] [movestogo <n>] [perft <d>]\n"
+        << "                            Start a search with the given time/depth controls\n"
+        << "                            'go perft <d>' runs a perft test instead of a search\n"
+        << "\n"
+        << "  stop                      Stop the current search early\n"
+        << "  quit                      Exit the engine\n"
+        << "\n\n"
+        << "Debug / Manual Testing Commands (non-UCI, not sent by GUIs):\n"
+        << "  d                         Print the current board position\n"
+        << "  move <move>               Make a move (e.g. move e2e4)\n"
+        << "  undo                      Undo the last move made\n"
+        << "  book                      Show opening book moves for the current position\n"
+        << "  eval                      Print the static evaluation of the current position\n"
+        << "  help                      Show this message\n"
+        << std::endl;
 }

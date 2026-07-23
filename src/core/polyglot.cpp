@@ -95,10 +95,7 @@ std::unordered_map<U64, std::vector<polyEntry>> openingBook;
 
 void loadPolyBook(const std::string &path)
 {
-    // open the .bin file
     std::ifstream file(path, std::ios::binary | std::ios::ate);
-
-    // check if it succefully opened
     if (!file)
     {
         std::cerr << "\033[30mgetting error while reading\033[0m" << std::endl;
@@ -116,15 +113,25 @@ void loadPolyBook(const std::string &path)
 
     size_t entriesSize = fileSize / 16;
     std::cout << entriesSize << " entries found in file" << std::endl;
-    
-    char buffer[16];
-    U64 key;
-    polyEntry entry;
 
-    while (file.read(buffer, sizeof(buffer))) {
-        std::memcpy(&key, buffer, sizeof(key));
-        std::memcpy(&entry, buffer + sizeof(key), sizeof(polyEntry));
-        openingBook[endian_swap_u64(key)].push_back(entry);
+    unsigned char buffer[16];
+    while (file.read(reinterpret_cast<char*>(buffer), sizeof(buffer)))
+    {
+        // Manually decode each big-endian field by byte position —
+        // no dependency on struct layout, padding, or host endianness.
+        U64 key = 0;
+        for (int i = 0; i < 8; ++i)
+            key = (key << 8) | buffer[i];
+
+        polyEntry entry{};
+        entry.move   = (static_cast<uint16_t>(buffer[8])  << 8)  | buffer[9];
+        entry.weight = (static_cast<uint16_t>(buffer[10]) << 8)  | buffer[11];
+        entry.learn  = (static_cast<uint32_t>(buffer[12]) << 24) |
+                       (static_cast<uint32_t>(buffer[13]) << 16) |
+                       (static_cast<uint32_t>(buffer[14]) << 8)  |
+                        static_cast<uint32_t>(buffer[15]);
+
+        openingBook[key].push_back(entry);
     }
 
     std::cout << openingBook.size() << " position loaded in Opening Book" << std::endl;
