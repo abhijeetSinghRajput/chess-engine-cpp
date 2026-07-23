@@ -1,5 +1,6 @@
 CXX = g++
-CXXFLAGS = -std=c++17 -Wall -Wextra -O3 -march=native -flto -DNDEBUG -Isrc -pthread
+# you can use -march=native if supported
+CXXFLAGS = -std=c++17 -Wall -Wextra -O3 -march=x86-64-v2 -flto -DNDEBUG -Isrc -pthread
 EXEC = chanakya
 
 BUILD_DIR = build
