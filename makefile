@@ -1,11 +1,11 @@
 CXX = g++
 
-# Only apply the x86-64-v2 baseline on x86 targets; ARM (Apple Silicon, etc.)
-# doesn't use -march=x86-64-v2 and doesn't need it — Clang/GCC already
+# Only apply the x86-64-v3 baseline on x86 targets; ARM (Apple Silicon, etc.)
+# doesn't use -march=x86-64-v3 and doesn't need it — Clang/GCC already
 # target the correct native ISA on ARM without this flag.
 ARCH := $(shell uname -m)
 ifeq ($(filter $(ARCH),x86_64 amd64),$(ARCH))
-    MARCH_FLAG = -march=x86-64-v2
+    MARCH_FLAG = -march=x86-64-v3
 else
     MARCH_FLAG =
 endif
