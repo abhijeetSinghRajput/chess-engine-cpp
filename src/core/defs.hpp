@@ -22,6 +22,11 @@ extern const int pieceValue[];
 extern const int CASTLE_PERMISSION[];
 extern const int MIRROR_64[];
 
+constexpr int MAX_DEPTH = 64;
+constexpr int INFINITE = 32000;
+constexpr int AB_BOUND = 30000;
+constexpr int MATE = (AB_BOUND - MAX_DEPTH);  
+
 extern const int ROOK_DIRECTIONS[];
 extern const int KNIGHT_DIRECTIONS[];
 extern const int BISHOP_DIRECTIONS[];

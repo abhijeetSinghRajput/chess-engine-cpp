@@ -21,7 +21,7 @@ public:
 	float fhf;
 	bool useBook;
     int ply;
-    int killers[64][2];   // killer[ply][0/1];
+    int killers[MAX_DEPTH][2];   // killer[ply][0/1];
     int history[13][64]; // history[piece][toSq]
 	SearchController();
     void clear();

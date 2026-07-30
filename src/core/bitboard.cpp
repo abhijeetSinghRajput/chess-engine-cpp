@@ -42,8 +42,8 @@ Bitboard::Bitboard()
     {
         pieces[i] = 0ULL;
     }
-    occupied[0] = 0ULL;
-    occupied[1] = 0ULL;
+    occupied[WHITE] = 0ULL;
+    occupied[BLACK] = 0ULL;
 
     initMasks();
     init_attackMasks();
@@ -361,8 +361,8 @@ void Bitboard::init_pieces()
     {
         pieces[i] = 0ULL;
     }
-    occupied[0] = 0ULL;
-    occupied[1] = 0ULL;
+    occupied[WHITE] = 0ULL;
+    occupied[BLACK] = 0ULL;
 
     for (int rank = RANK_1; rank <= RANK_8; ++rank)
     {

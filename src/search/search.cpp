@@ -138,6 +138,15 @@ int alphaBeta(int alpha, int beta, int depth, bool doNull)
     {
         ++depth;
     }
+    // Reverse futility pruning
+    if (!inCheck && depth <= 6 && abs(beta) < MATE)
+    {
+        int staticEval = evalPosition();
+        int margin = 85 * depth;
+        if (staticEval - margin >= beta)
+            return staticEval - margin;
+    }
+
     int score = -AB_BOUND;
     int bestScore = -AB_BOUND;
     TableData *ttEntry = transpositionTable->get(board->positionKey);
@@ -162,10 +171,10 @@ int alphaBeta(int alpha, int beta, int depth, bool doNull)
 
     // NULL Move Pruning
     if (
-        doNull && 
-        !inCheck && 
-        searchController->ply && 
-        depth >= 4 && 
+        doNull &&
+        !inCheck &&
+        searchController->ply &&
+        depth >= 4 &&
         bigPieceCount(board->side) > 1
     )
     {
@@ -210,8 +219,8 @@ int alphaBeta(int alpha, int beta, int depth, bool doNull)
         // ===== LMR =====
         int reduction = 0;
         if (
-            depth >= 3 && i >= 4 && 
-            !(move & CAPTURE_FLAG) && 
+            depth >= 3 && i >= 4 &&
+            !(move & CAPTURE_FLAG) &&
             !inCheck && !(move & PROMOTION_FLAG)
         )
         {
