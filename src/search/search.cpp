@@ -211,9 +211,9 @@ int alphaBeta(int alpha, int beta, int depth, bool doNull)
     {
         swapWithBest(i, moveList);
         int move = moveList.moves[i].move;
-        if (makeMove(move) == false)
-            continue;
+        if (makeMove(move) == false) continue;
         legalMoves++;
+        int nodePly = searchController->ply;   // capture ply BEFORE recursing
         searchController->ply++;
 
         // ===== LMR =====
@@ -230,8 +230,8 @@ int alphaBeta(int alpha, int beta, int depth, bool doNull)
             if (i >= 16)
                 reduction = 3;
             // Don't reduce killer moves
-            if (move == searchController->killers[searchController->ply][0] ||
-                move == searchController->killers[searchController->ply][1])
+            if (move == searchController->killers[nodePly][0] ||
+                move == searchController->killers[nodePly][1])
             {
                 reduction = 0;
             }
