@@ -382,10 +382,12 @@ int evalPosition()
             }
         }
 
+        // Check if there are no pawns (both white and black) on this file.
         if (((bitboard->pieces[PIECE_WP] | bitboard->pieces[PIECE_BP]) & bitboard->fileMasks[sq % 8]) == 0)
         {
             score += RookOpenFile;
         }
+        // Otherwise, if only the opponent's pawns remain on this file,
         else if ((bitboard->pieces[PIECE_WP] & bitboard->fileMasks[sq % 8]) == 0)
         {
             score += RookSemiOpenFile;
@@ -434,11 +436,12 @@ int evalPosition()
             }
         }
 
-        // Open file bonus
+        // Check if there are no pawns (both white and black) on this file.
         if (((bitboard->pieces[PIECE_WP] | bitboard->pieces[PIECE_BP]) & bitboard->fileMasks[sq % 8]) == 0)
         {
             score -= RookOpenFile;
         }
+        // Otherwise, if only the opponent's pawns remain on this file,
         else if ((bitboard->pieces[PIECE_BP] & bitboard->fileMasks[sq % 8]) == 0)
         {
             score -= RookSemiOpenFile;

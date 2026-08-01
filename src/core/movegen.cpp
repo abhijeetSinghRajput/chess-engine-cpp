@@ -8,6 +8,12 @@
 #include "core/movegen.hpp"
 #include <vector>
 
+// move ordering score priority
+// SCORE_TT_MOVE 
+// SCORE_CAPTURE 
+// SCORE_KILLER_1
+// SCORE_KILLER_2
+// SCORE_COUNTER
 
 // MvvLva = [victim][attacker]
 int MvvLva[13][13] = {
@@ -30,31 +36,47 @@ inline void addCaptureMove(MoveList &moveList, int move)
 {
     int victim = moveCapturePiece(move);
     int attacker = board->pieces[moveFrom(move)];
-    int score = MvvLva[victim][attacker] + 1000000;
+    int score = MvvLva[victim][attacker] + SCORE_CAPTURE;
     moveList.moves[moveList.count++] = {move, score};
 }
 
-inline void addQuiteMove(MoveList &moveList, int move)
+inline void addQuietMove(MoveList &moveList, int move)
 {
     int score = 0;
     if (searchController->killers[searchController->ply][0] == move)
-        score = 900000;
+        score = SCORE_KILLER_1;
     else if (searchController->killers[searchController->ply][1] == move)
-        score = 800000;
+        score = SCORE_KILLER_2;
     else
     {
-        int piece = board->pieces[moveFrom(move)];
-        int toSq = moveTo(move);
-        score = searchController->history[piece][toSq];
-        if (score == 0)
-            score = 1 + (moveFrom(move) % 1000);
+        // check countermove
+        int prevMove = 0;
+        prevMove = board->history[board->ply - 1].move;
+        
+        if (prevMove) {
+            int prevFrom = moveFrom(prevMove);  // ← FIXED: prevMove, not prevFrom!
+            int prevTo = moveTo(prevMove);
+            // check if this move is a countermove to previous move
+            if (searchController->counterMoves[prevFrom][prevTo] == move) {
+                score = SCORE_COUNTER;
+            }
+        }
+        
+        // If not a countermove, use history
+        if (score == 0) {
+            int piece = board->pieces[moveFrom(move)];
+            int toSq = moveTo(move);
+            score = searchController->history[piece][toSq];
+            if (score == 0)
+                score = 1 + (moveFrom(move) % 1000);
+        }
     }
     moveList.moves[moveList.count++] = {move, score};
 }
 
 inline void addEnPassantMove(MoveList &moveList, int move)
 {
-    int score = MvvLva[PIECE_WP][PIECE_BP] + 1000000;
+    int score = MvvLva[PIECE_WP][PIECE_BP] + SCORE_CAPTURE;
     moveList.moves[moveList.count++] = {move, score};
 }
 
@@ -80,7 +102,7 @@ void genWhitePawnMoves(MoveList &moveList, U64 empty, U64 enemy, bool capturesOn
         {
             int to = __builtin_ctzll(pushQuiet);
             pushQuiet &= pushQuiet - 1;
-            addQuiteMove(
+            addQuietMove(
                 moveList,
                 buildMove(to - 8, to, 0, 0, 0)
             );
@@ -89,7 +111,7 @@ void genWhitePawnMoves(MoveList &moveList, U64 empty, U64 enemy, bool capturesOn
         {
             int to = __builtin_ctzll(doublePush);
             doublePush &= doublePush - 1;
-            addQuiteMove(
+            addQuietMove(
                 moveList,
                 buildMove(to - 16, to, 0, 0, PAWN_START_FLAG)
             );
@@ -100,19 +122,19 @@ void genWhitePawnMoves(MoveList &moveList, U64 empty, U64 enemy, bool capturesOn
             pushPromo &= pushPromo - 1;
             int from = to - 8;
 
-            addQuiteMove(
+            addQuietMove(
                 moveList,
                 buildMove(from, to, 0, PIECE_WQ, 0)
             );
-            addQuiteMove(
+            addQuietMove(
                 moveList,
                 buildMove(from, to, 0, PIECE_WR, 0)
             );
-            addQuiteMove(
+            addQuietMove(
                 moveList,
                 buildMove(from, to, 0, PIECE_WB, 0)
             );
-            addQuiteMove(
+            addQuietMove(
                 moveList,
                 buildMove(from, to, 0, PIECE_WN, 0)
             );
@@ -237,7 +259,7 @@ void genBlackPawnMoves(MoveList &moveList, U64 empty, U64 enemy, bool capturesOn
         {
             int to = __builtin_ctzll(pushQuiet);
             pushQuiet &= pushQuiet - 1;
-            addQuiteMove(
+            addQuietMove(
                 moveList,
                 buildMove(to + 8, to, 0, 0, 0)
             );
@@ -246,7 +268,7 @@ void genBlackPawnMoves(MoveList &moveList, U64 empty, U64 enemy, bool capturesOn
         {
             int to = __builtin_ctzll(doublePush);
             doublePush &= doublePush - 1;
-            addQuiteMove(
+            addQuietMove(
                 moveList,
                 buildMove(to + 16, to, 0, 0, PAWN_START_FLAG)
             );
@@ -257,19 +279,19 @@ void genBlackPawnMoves(MoveList &moveList, U64 empty, U64 enemy, bool capturesOn
             pushPromo &= pushPromo - 1;
             int from = to + 8;
 
-            addQuiteMove(
+            addQuietMove(
                 moveList,
                 buildMove(from, to, 0, PIECE_BQ, 0)
             );
-            addQuiteMove(
+            addQuietMove(
                 moveList,
                 buildMove(from, to, 0, PIECE_BR, 0)
             );
-            addQuiteMove(
+            addQuietMove(
                 moveList,
                 buildMove(from, to, 0, PIECE_BB, 0)
             );
-            addQuiteMove(
+            addQuietMove(
                 moveList,
                 buildMove(from, to, 0, PIECE_BN, 0)
             );
@@ -412,7 +434,7 @@ void genNonSlidingMoves(MoveList &moveList, bool capturesOnly)
                 }
                 else if (!capturesOnly)
                 {
-                    addQuiteMove(
+                    addQuietMove(
                         moveList,
                         buildMove(sq, targetSq, 0, 0, 0)
                     );
@@ -466,7 +488,7 @@ void genSlidingMoves(MoveList &moveList, bool capturesOnly)
                 }
                 else if (!capturesOnly)
                 {
-                    addQuiteMove(
+                    addQuietMove(
                         moveList,
                         buildMove(sq, targetSq, 0, 0, 0)
                     );
@@ -493,7 +515,7 @@ void generateMoves(MoveList &moveList)
             {
                 if (board->checkSq == SQ_NONE && !isUnderAttack(SQ_F1, BLACK))
                 {
-                    addQuiteMove(
+                    addQuietMove(
                         moveList,
                         buildMove(SQ_E1, SQ_G1, 0, 0, CASTLE_FLAG)
                     );
@@ -506,7 +528,7 @@ void generateMoves(MoveList &moveList)
             {
                 if (board->checkSq == SQ_NONE && !isUnderAttack(SQ_D1, BLACK))
                 {
-                    addQuiteMove(
+                    addQuietMove(
                         moveList,
                         buildMove(SQ_E1, SQ_C1, 0, 0, CASTLE_FLAG)
                     );
@@ -524,7 +546,7 @@ void generateMoves(MoveList &moveList)
             {
                 if (board->checkSq == SQ_NONE && !isUnderAttack(SQ_F8, WHITE))
                 {
-                    addQuiteMove(
+                    addQuietMove(
                         moveList,
                         buildMove(SQ_E8, SQ_G8, 0, 0, CASTLE_FLAG)
                     );
@@ -537,7 +559,7 @@ void generateMoves(MoveList &moveList)
             {
                 if (board->checkSq == SQ_NONE && !isUnderAttack(SQ_D8, WHITE))
                 {
-                    addQuiteMove(
+                    addQuietMove(
                         moveList,
                         buildMove(SQ_E8, SQ_C8, 0, 0, CASTLE_FLAG)
                     );

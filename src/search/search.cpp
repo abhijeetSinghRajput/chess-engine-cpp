@@ -20,6 +20,7 @@ SearchController::SearchController()
 
 void SearchController::clear()
 {
+    // clear killers
     for (int i = 0; i < MAX_DEPTH; ++i)
     {
         for (int j = 0; j < 2; ++j)
@@ -27,6 +28,7 @@ void SearchController::clear()
             killers[i][j] = 0;
         }
     }
+    // clear history
     for (int i = 0; i < 13; ++i)
     {
         for (int j = 0; j < 64; ++j)
@@ -34,6 +36,15 @@ void SearchController::clear()
             history[i][j] = 0;
         }
     }
+    // clear history
+    for (int i = 0; i < 64; ++i)
+    {
+        for (int j = 0; j < 64; ++j)
+        {
+            counterMoves[i][j] = 0;
+        }
+    }
+    
     ply = 0;
     nodes = 0;
     fh = 0;
@@ -107,6 +118,7 @@ int searchPosition()
             << " pv " << lineStr
             << std::endl;
     }
+    searchController->ageHistory();
     std::cout << "bestmove " << moveStr(bestMove) << std::endl;
     return bestMove;
 }
@@ -263,10 +275,21 @@ int alphaBeta(int alpha, int beta, int depth, bool doNull)
                 if (legalMoves == 1)
                     searchController->fhf++;
                 searchController->fh++;
+
+                // check killer moves
                 if (!(move & CAPTURE_FLAG))
                 {
                     searchController->killers[searchController->ply][1] = searchController->killers[searchController->ply][0];
                     searchController->killers[searchController->ply][0] = move;
+
+                    // ===== STORE COUNTERMOVE =====
+                    // If there was a previous move, store this move as a countermove to it
+                    int prevMove = board->history[board->ply - 1].move;
+                    if (prevMove) {
+                        int prevFrom = moveFrom(prevMove);
+                        int prevTo = moveTo(prevMove);
+                        searchController->counterMoves[prevFrom][prevTo] = move;
+                    }
                 }
 
                 transpositionTable->add(board->positionKey, move, beta, BetaFlag, depth);

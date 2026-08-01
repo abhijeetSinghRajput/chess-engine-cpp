@@ -143,7 +143,7 @@ separate "is this move legal" pre-check beyond that). Two entry points:
 - `generateCaptureMoves()` — captures only (used by quiescence search).
 
 Both return `std::vector<std::pair<int,int>>` — **(move, score)** pairs. The
-score is assigned at generation time by `addCaptureMove`/`addQuiteMove`/
+score is assigned at generation time by `addCaptureMove`/`addQuietMove`/
 `addEnPassantMove` (see §6 — move ordering is computed *during* generation,
 not as a separate pass).
 
