@@ -17,7 +17,7 @@ assistant can reason about the engine without needing the full source pasted in.
 ```
 main.cpp        → newGame(), loadPolyBook(), UCI()
 core/uci        → UCI loop, position/go/setoption handling, time management
-core/board      → mailbox board (120-sq), game state, FEN, Zobrist key trigger
+core/board      → board state, FEN, Zobrist key trigger
 core/bitboard   → 64-bit bitboards, magic-bitboard attack tables, masks
 core/move       → move encode/decode, makeMove/takeMove, null move
 core/movegen    → pseudo-legal move generation (all moves / captures only)
@@ -29,32 +29,33 @@ search/search   → iterative deepening, alpha-beta, quiescence
 search/transpositionTable → TT storage, packing, replacement policy
 ```
 
-Two coordinate systems are used simultaneously:
-- **120-square mailbox** (`Board::pieces[120]`), 10 files × 12 ranks with an
-  off-board border (`offBoard` sentinel) so sliding-piece edge detection during
-  *attack-mask generation* doesn't need bounds checks. Squares here are called
-  "sq120".
-- **64-square bitboard index** (0–63, `PIECE_TYPE`/rank-major), used for all
-  `U64` bitboards. Squares here are called "sq64".
+**Single coordinate system.** The engine used to run two parallel square
+numbering schemes — a 120-square mailbox with an off-board border, and a
+64-square bitboard index — bridged by `sq120To64`/`sq64To120` conversion
+tables. That's gone. Every square is now a flat 0–63 index (`SQ_A1..SQ_H8`
+enumerated 0–63, rank-major), and `fileRank2Sq`/`fileOf`/`rankOf` are plain
+bit ops (`rank*8+file`, `sq&7`, `sq>>3`) instead of the old mailbox-offset
+arithmetic. Sliding/knight/king attack generation now walks file/rank deltas
+with explicit `0 <= f < 8 && 0 <= r < 8` boundary checks instead of relying on
+an `offBoard` sentinel.
 
-Conversion tables `sq120To64[120]` and `sq64To120[64]` translate between them,
-built once in `initSquareMappings()`.
-
-> Two parallel piece representations are kept in sync at all times:
-> `Board::pieces[120]` (mailbox, source of truth for "what piece is on this
-> square") and `Bitboard::pieces[13]` (one U64 per piece type, source of truth
-> for "which squares does this piece occupy"). Every mutation
-> (`addPiece`/`removePiece`/`movePiece` in `move.cpp`) updates **both**. If you
-> change move-making logic, both must stay consistent or bitboard-based
-> attack/mobility code will silently desync from the mailbox.
+> Two piece representations are still kept in sync — `Board::pieces[64]`
+> (source of truth for "what piece is on this square") and
+> `Bitboard::pieces[13]` (one `U64` per piece type, source of truth for
+> "which squares does this piece occupy") — but they now share the **same**
+> 0–63 indexing, so no conversion happens at the sync points. Every mutation
+> (`addPiece`/`removePiece`/`movePiece` in `move.cpp`) still updates **both**.
+> If you change move-making logic, both must stay consistent or bitboard-based
+> attack/mobility code will silently desync from the piece array.
 
 ## 2. Board State (`Board` class)
 
-Holds: `pieces[120]` mailbox, `side`, `castlePermission` (4-bit flags:
-CASTLE_WK=8, CASTLE_WQ=4, CASTLE_BK=2, CASTLE_BQ=1), `fiftyMove`, `enPassantSq`,
-`checkSq` (square of the king in check, or `SQ_NONE`), `ply`, `pieceCount[13]`,
-`material[2]` (incremental material sums), `positionKey` (Zobrist hash), and a
-`history[1024]` ring of `MoveInfo` for unmake.
+Holds: `pieces[64]` (piece-on-square array), `side`, `castlePermission`
+(4-bit flags: CASTLE_WK=8, CASTLE_WQ=4, CASTLE_BK=2, CASTLE_BQ=1),
+`fiftyMove`, `enPassantSq`, `checkSq` (square of the king in check, or
+`SQ_NONE`), `ply`, `pieceCount[13]`, `material[2]` (incremental material
+sums), `positionKey` (Zobrist hash), and a `history[1024]` ring of `MoveInfo`
+for unmake.
 
 FEN parsing (`parseFen`) rebuilds bitboards via `bitboard->initBoard(this)`,
 determines `checkSq` for the side to move, and computes the initial Zobrist key
@@ -99,20 +100,21 @@ incremental (XOR in/out) — see §9 below.
 
 ## 4. Move Encoding (`move.hpp` / `move.cpp`)
 
-A move is a single packed `int`:
+A move is a single packed `int`. Since squares are now 0–63 (6 bits) instead
+of the old 120-square (7-bit) range, the packing is tighter than before:
 
 ```
-bits 0-6    from square (sq120, 7 bits)
-bits 7-13   to square (sq120, 7 bits)
-bits 14-17  captured piece (4 bits)
-bits 18-21  promoted piece (4 bits)
-bit 22      en-passant flag   (0x400000)
-bit 23      castle flag       (0x800000)
-bit 24      pawn-start flag   (0x1000000)
+bits 0-5    from square (0-63, 6 bits)
+bits 6-11   to square (0-63, 6 bits)
+bits 12-15  captured piece (4 bits)
+bits 16-19  promoted piece (4 bits)
+bit 20      en-passant flag   (0x100000)
+bit 21      castle flag       (0x200000)
+bit 22      pawn-start flag   (0x400000)
 ```
 
 `buildMove/moveFrom/moveTo/moveCapturePiece/movePromotionPiece` pack/unpack
-these. `CAPTURE_FLAG` (0x3c000) and `PROMOTION_FLAG` (0x3c0000) are bitmasks
+these. `CAPTURE_FLAG` (0xf000) and `PROMOTION_FLAG` (0xf0000) are bitmasks
 used to test "is this a capture / promotion" without decoding the piece.
 
 `makeMove(move)`:
@@ -120,7 +122,7 @@ used to test "is this a capture / promotion" without decoding the piece.
 2. Handles en-passant capture / castling rook relocation specially.
 3. Updates Zobrist hash incrementally for castle rights / en-passant / side.
 4. Updates `fiftyMove` counter, sets new en-passant square on double pawn push.
-5. Applies the move to both the mailbox and the bitboards (`movePiece`,
+5. Applies the move to both the piece array and the bitboards (`movePiece`,
    `addPiece`, `removePiece` — all keep both representations in sync, see §1).
 6. Handles promotion (remove pawn, add promoted piece).
 7. Flips side to move, then **checks if the moving side's own king is now
@@ -138,19 +140,28 @@ in search, see §7).
 **Pseudo-legal generation, filtered for legality at `makeMove()` time** (no
 separate "is this move legal" pre-check beyond that). Two entry points:
 
-- `generateMoves()` — all pseudo-legal moves (quiet + captures + castling +
-  en passant + promotions).
-- `generateCaptureMoves()` — captures only (used by quiescence search).
+- `generateMoves(MoveList &list)` — all pseudo-legal moves (quiet + captures
+  + castling + en passant + promotions).
+- `generateCaptureMoves(MoveList &list)` — captures only (used by quiescence
+  search).
 
-Both return `std::vector<std::pair<int,int>>` — **(move, score)** pairs. The
+> Both now take a `MoveList&` **out-parameter** instead of returning a
+> `MoveList` by value from a single global instance. Previously every
+> `alphaBeta`/`quiescence` node paid for a mandatory ~2KB copy on every call;
+> callers now declare their own `MoveList moves;` on the stack and pass it in.
+
+Both fill `moveList.moves[i] = {move, score}` — **(move, score)** pairs. The
 score is assigned at generation time by `addCaptureMove`/`addQuietMove`/
 `addEnPassantMove` (see §6 — move ordering is computed *during* generation,
 not as a separate pass).
 
-- Pawns: handled with explicit per-side loops (white shifts +10/+9/+11 in
-  sq120 space, black −10/−9/−11), promotion unrolled into 4 moves
+- Pawns (`genWhitePawnMoves`/`genBlackPawnMoves`): the whole pawn bitboard is
+  shifted at once (single-push, double-push, and both capture directions each
+  handled as one bulk shift+mask, then iterated bit-by-bit with `ctzll`)
+  rather than walking each pawn individually. Promotion unrolled into 4 moves
   (Q/R/B/N) per promoting push/capture, en passant checked against
-  `board->enPassantSq`.
+  `board->enPassantSq` with an explicit file-boundary guard (`fileOf(sq) <
+  FILE_H` / `> FILE_A`) instead of an off-board sentinel.
 - Knights/King (`genNonSlidingMoves`): iterate set bits of the piece bitboard,
   AND the precomputed attack table with `~friendlyPieces`, split into
   capture/quiet based on enemy-occupancy test.
@@ -179,21 +190,28 @@ remaining move each iteration — *not* a full `std::sort` up front, and *not*
 a lazily-sorted list; it's O(n²) worst case per node but avoids sorting moves
 that get pruned early).
 
-Priority (highest score wins):
+Priority (highest score wins — named constants live in `movegen.hpp`):
 1. **TT / PV move** — if the transposition-table move for this position is in
-   the move list, its score is overwritten to `2,000,000` (see `alphaBeta`,
-   not in movegen itself).
-2. **Captures** — MVV-LVA: `MvvLva[victim][attacker] + 1,000,000`
-   (`MvvLva` table in `movegen.cpp`, victim-major).
-3. **En passant** — scored via `MvvLva[PAWN][PAWN] + 1,000,000` (same tier as
-   equal-value captures).
+   the move list, its score is overwritten to `SCORE_TT_MOVE = 2,000,000`
+   (see `alphaBeta`, not in movegen itself).
+2. **Captures** — MVV-LVA: `MvvLva[victim][attacker] + SCORE_CAPTURE
+   (1,000,000)` (`MvvLva` table in `movegen.cpp`, victim-major).
+3. **En passant** — scored via `MvvLva[PAWN][PAWN] + SCORE_CAPTURE` (same
+   tier as equal-value captures).
 4. **Killer moves** — 2 killer slots per ply (`searchController->killers[ply][0/1]`),
-   scored `900,000` / `800,000`.
-5. **History heuristic** — `history[piece][toSquare]`, incremented by
-   `depth * depth` whenever a quiet move raises alpha (see §7). If a quiet
-   move has no history yet, it gets a small deterministic tiebreak
-   (`1 + (fromSquare % 1000)`) instead of a flat 0, so early move-ordering
-   isn't a total coin-flip.
+   scored `SCORE_KILLER_1 = 900,000` / `SCORE_KILLER_2 = 800,000`.
+5. **Countermove** — `SCORE_COUNTER = 700,000`. If the previous move made
+   (`board->history[board->ply - 1].move`) has a stored reply in
+   `searchController->counterMoves[prevFrom][prevTo]` matching the current
+   move, it gets this score instead of falling through to history.
+6. **History heuristic** — `history[piece][toSquare]`, incremented by
+   `depth * depth` whenever a quiet move raises alpha (see §7). The whole
+   table is **aged 20% per search** (`SearchController::ageHistory()`,
+   called once at the end of `searchPosition()`) so stale scores from earlier
+   searches don't dominate move ordering indefinitely. If a quiet move has no
+   history yet, it gets a small deterministic tiebreak (`1 +
+   (fromSquare % 1000)`) instead of a flat 0, so early move-ordering isn't a
+   total coin-flip.
 
 There is **no separate SEE (static exchange evaluation)** — capture ordering
 is MVV-LVA only, and quiescence delta pruning (§7) uses a flat material
@@ -202,11 +220,12 @@ margin instead of SEE.
 ## 7. Search (`search/search.cpp`)
 
 **Algorithm shape:** iterative deepening → fail-hard alpha-beta with:
-null-move pruning, check extension, late move reduction (LMR), quiescence
-search at the leaves, and a transposition table. This is **plain alpha-beta,
-not PVS** (no null-window search on non-first moves aside from the LMR
-re-search path below) and there are **no aspiration windows** (each iterative
-deepening depth searches the full `[-AB_BOUND, AB_BOUND]` window).
+null-move pruning, reverse futility pruning, check extension, late move
+reduction (LMR), quiescence search at the leaves, and a transposition table.
+This is **plain alpha-beta, not PVS** (no null-window search on non-first
+moves aside from the LMR re-search path below) and there are **no aspiration
+windows** (each iterative deepening depth searches the full
+`[-AB_BOUND, AB_BOUND]` window).
 
 **`searchPosition()`** — entry point:
 - If `useBook` is on, tries `getRandBookMove()` (Polyglot book) first and
@@ -219,6 +238,8 @@ deepening depth searches the full `[-AB_BOUND, AB_BOUND]` window).
   array).
 - Mate scores are reported as `mate N` when `bestScore` crosses
   `AB_BOUND - MAX_DEPTH` (see mate-scoring note below).
+- Calls `searchController->ageHistory()` once at the very end, decaying the
+  whole history table 20% before the next `go` command.
 
 **`alphaBeta(alpha, beta, depth, doNull)`:**
 - `depth <= 0` → drops into `quiescence()`.
@@ -228,6 +249,11 @@ deepening depth searches the full `[-AB_BOUND, AB_BOUND]` window).
   `ply == 0`).
 - Depth cutoff at `MAX_DEPTH` (64) → static eval fallback.
 - **Check extension:** `depth++` if `inCheck`.
+- **Reverse futility pruning (a.k.a. static null-move pruning):** if
+  `!inCheck && depth <= 6 && abs(beta) < MATE`, compute `staticEval` and a
+  margin of `85 * depth`; if `staticEval - margin >= beta`, return
+  `staticEval - margin` immediately without generating moves. Applied
+  *before* the TT probe and before move generation.
 - **TT probe:** if stored depth ≥ current depth, use the stored bound
   (alpha/beta/exact flag) to cut off or return immediately; TT move is
   extracted for move ordering regardless of depth sufficiency.
@@ -237,17 +263,22 @@ deepening depth searches the full `[-AB_BOUND, AB_BOUND]` window).
   Verification: none (no re-search at reduced depth to confirm a null-move
   beta cutoff).
 - **Main move loop:** move-ordering score bump for the TT move, then
-  `swapWithBest` per iteration (see §6).
+  `swapWithBest` per iteration (see §6). The ply used for killer-move lookups
+  is captured **before** `searchController->ply` is incremented for the
+  recursive call (`int nodePly = searchController->ply;`) — an earlier bug
+  read `ply` *after* the increment, which compared the current move against
+  the wrong ply's killer slots; this has been fixed.
   - **LMR:** applies when `depth >= 3 && i >= 4` (move index) and the move is
-    quiet, not in check, not a promotion, and not a killer at this ply.
+    quiet, not in check, not a promotion, and not a killer at `nodePly`.
     Reduction: 1 (moves 4-7), 2 (moves 8-15), 3 (moves 16+). If the reduced
     search beats alpha, **re-searches at full depth** (standard LMR
     re-search).
   - On a quiet move that raises alpha, history table is bumped by
     `depth * depth`.
-  - Beta cutoff: stores killer move (if quiet), updates fail-high stats
-    (`fh`/`fhf`, used only for the `ordering` % printed in `info`), stores TT
-    entry with `BetaFlag`, returns beta immediately (fail-hard).
+  - Beta cutoff: stores killer move and countermove (if quiet — see §6),
+    updates fail-high stats (`fh`/`fhf`, used only for the `ordering` %
+    printed in `info`), stores TT entry with `BetaFlag`, returns beta
+    immediately (fail-hard).
   - No legal moves found: checkmate (`-AB_BOUND + ply`) if in check, else
     stalemate (0).
   - TT store at the end with `ExactFlag` (alpha improved) or `AlphaFlag`
@@ -278,13 +309,14 @@ shifted by `ply` on store/retrieve so mate distances stay correct regardless
 of which node stored them (standard mate-in-TT handling).
 
 > Not implemented: aspiration windows, PVS/null-window search on non-PV
-> moves, futility pruning, static-null-move (reverse futility) pruning, SEE,
-> multi-threaded (Lazy SMP) search, counter-move heuristic, singular
-> extensions. If a task asks to "improve search," these are the likely
-> next-step candidates — but confirm current behavior against the actual
-> function before assuming an addition is safe (e.g. null-move R=4 with no
-> verification search is fairly aggressive; changing it interacts with the
-> zugzwang guard `bigPieceCount > 1`).
+> moves, (forward) futility pruning, SEE, multi-threaded (Lazy SMP) search,
+> singular extensions, mate distance pruning. If a task asks to "improve
+> search," these are the likely next-step candidates — but confirm current
+> behavior against the actual function before assuming an addition is safe
+> (e.g. null-move R=4 with no verification search is fairly aggressive;
+> changing it interacts with the zugzwang guard `bigPieceCount > 1`; reverse
+> futility pruning's 85-per-depth margin was accepted via SPRT at the current
+> value — don't retune it without re-testing).
 
 ## 8. Evaluation (`eval/evaluation.cpp`)
 
@@ -360,9 +392,12 @@ material (see constant definition in `evaluation.cpp`).
 
 ## 9. Zobrist Hashing (`core/zobristKeys.hpp`, `core/utils.cpp`)
 
-Precomputed random constant tables: `pieceKeys[13][120]`, `castleKeys[16]`
-(indexed by the 4-bit castle-rights value), `sideKey`. `Board::positionKey` is
-built from scratch once (`generatePositionKey`, on FEN parse) and then
+Precomputed random constant tables: `pieceKeys[13][64]`, `castleKeys[16]`
+(indexed by the 4-bit castle-rights value), `sideKey`. `pieceKeys` used to be
+sized `[13][120]` for legacy mailbox indexing even though it was only ever
+indexed 0–63; it's now `[13][64]`, tightening cache locality on the hot
+`hashPiece()` path (called on every move made/unmade). `Board::positionKey`
+is built from scratch once (`generatePositionKey`, on FEN parse) and then
 maintained **incrementally**: `hashPiece`, `hashEnPassant`, `hashCastle`,
 `hashSide` XOR the relevant key in/out on every state change inside
 `makeMove`/`takeMove`/`addPiece`/`removePiece`/`movePiece`.
@@ -370,7 +405,9 @@ maintained **incrementally**: `hashPiece`, `hashEnPassant`, `hashCastle`,
 This is a **separate hash system** from the Polyglot book key (`getPolyKey()`
 in `polyglot.cpp`, using its own `piecePolyKeys`/`castlePolyKeys`/
 `enPassantPolyKeys`/`sidePolyKey` tables) — the two keys are not
-interchangeable, don't mix them up.
+interchangeable, don't mix them up. `getPolyKey()` is called once per real
+engine move for book lookup only, **not** on the search hot path, so it
+wasn't a target for the `[13][64]` cache-locality fix.
 
 ## 10. Opening Book (`core/polyglot.cpp`)
 
@@ -448,12 +485,14 @@ src/
 
 ## 14. Known Gaps (don't assume these exist)
 
-- No SEE, no aspiration windows, no PVS, no futility/reverse-futility pruning,
-  no singular extensions, no counter-move table, no tapered/phase-interpolated
+- No SEE, no aspiration windows, no PVS, no (forward) futility pruning, no
+  singular extensions, no mate distance pruning, no tapered/phase-interpolated
   eval, no multi-threaded search.
 - Bishop-pair bonus doesn't check opposite-color bishops.
 - King safety terms only fire for kings on the 6 hardcoded "castled" squares.
 - Null-move pruning has no verification search.
+- Reverse futility pruning and the countermove heuristic **are** now
+  implemented (see §7/§6) — don't tell a contributor these are missing.
 
 ---
 
