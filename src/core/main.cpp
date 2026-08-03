@@ -24,7 +24,7 @@ int main(int argc, char* argv[])
     cout << "=============================================="  << endl;
     cout << "Type 'help' for commands, 'uci' for UCI mode.\n" << endl;
 
-    string path = "books/performance.bin";
+    string path = "./performance.bin";
     newGame();
     loadPolyBook(path);
     UCI();

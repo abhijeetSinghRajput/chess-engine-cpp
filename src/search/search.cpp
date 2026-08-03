@@ -1,15 +1,16 @@
 // search.cpp
+#include <iostream>
+#include <iomanip>
 #include "search/search.hpp"
 #include "core/board.hpp"
 #include "core/defs.hpp"
 #include "core/move.hpp"
 #include "core/movegen.hpp"
+#include "core/utils.hpp"
+#include "core/polyglot.hpp"
 #include "eval/evaluation.hpp"
 #include "search/transpositionTable.hpp"
-#include "core/utils.hpp"
-#include <iostream>
-#include <iomanip>
-#include "core/polyglot.hpp"
+#include "search/see.hpp"
 
 SearchController *searchController = new SearchController;
 
@@ -369,6 +370,13 @@ int quiescence(int alpha, int beta, int checkPly)
     {
         swapWithBest(i, moveList);
         const int move = moveList.moves[i].move;
+
+        // Bad captures score below SCORE_CAPTURE (see addCaptureMove).
+        // Skip them here except when evading check, where every legal
+        // move counts.
+        if (!expandFull && (move & CAPTURE_FLAG) &&
+            moveList.moves[i].score < SCORE_CAPTURE)
+            continue;
 
         if (makeMove(move) == false)
             continue;

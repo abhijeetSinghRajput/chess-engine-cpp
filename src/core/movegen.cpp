@@ -5,6 +5,7 @@
 #include "core/utils.hpp"
 #include "core/move.hpp"
 #include "search/search.hpp"
+#include "search/see.hpp" 
 #include "core/movegen.hpp"
 #include <vector>
 
@@ -17,7 +18,7 @@
 
 // MvvLva = [victim][attacker]
 int MvvLva[13][13] = {
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0},
     {0, 105, 102, 104, 103, 101, 100, 105, 102, 104, 103, 101, 100},
     {0, 405, 402, 404, 403, 401, 400, 405, 402, 404, 403, 401, 400},
     {0, 205, 202, 204, 203, 201, 200, 205, 202, 204, 203, 201, 200},
@@ -34,9 +35,19 @@ int MvvLva[13][13] = {
 
 inline void addCaptureMove(MoveList &moveList, int move)
 {
-    int victim = moveCapturePiece(move);
-    int attacker = board->pieces[moveFrom(move)];
-    int score = MvvLva[victim][attacker] + SCORE_CAPTURE;
+    // replace MVV LVA with SEE
+    // int victim = moveCapturePiece(move);
+    // int attacker = board->pieces[moveFrom(move)];
+    // int score = MvvLva[victim][attacker] + SCORE_CAPTURE;
+
+    int seeScore = see(move);
+    // Winning/equal captures stay above all quiet-move scores (SCORE_CAPTURE
+    // floor, same as before). Losing captures sink below killers/counters so
+    // a good quiet move gets tried first — but they keep their *relative*
+    // SEE ordering among themselves, and stay above plain history moves.
+    int score = (seeScore >= 0)
+        ? SCORE_CAPTURE + seeScore
+        : SCORE_KILLER_2 - 1 + seeScore;
     moveList.moves[moveList.count++] = {move, score};
 }
 

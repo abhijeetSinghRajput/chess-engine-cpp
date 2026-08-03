@@ -232,6 +232,7 @@ to discuss a major change before writing code.
 - Countermove heuristic
 - History heuristic with aging (20% decay per search)
 - Repetition detection and the fifty-move rule
+- SEE (Static Exchange Evaluation)
 
 **Evaluation**
 - Piece-square tables for all pieces
@@ -254,7 +255,6 @@ code to work around, just a clean slot to fill.
 |---|---|
 | Principal Variation Search (PVS) | 15–20% speedup |
 | Aspiration Windows | 10–15% speedup |
-| SEE (Static Exchange Evaluation) | Better move ordering |
 | Internal Iterative Deepening (IID) | Better move ordering at depth |
 | Razor Pruning | 5–10% speedup |
 | Futility Pruning (forward) | 5–10% speedup |

@@ -228,6 +228,10 @@ void UCI()
         {
             board->print();
         }
+        else if (command == "flip"){
+            board->side ^= 1;
+            board->print();
+        }
         else if (command == "move")
         {
             std::string token;
