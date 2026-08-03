@@ -16,11 +16,10 @@
   <p align="center">
     <img alt="license" src="https://img.shields.io/badge/LICENSE-GPL--3.0-38d430?style=for-the-badge" />
     <img alt="language" src="https://img.shields.io/badge/LANGUAGE-C%2B%2B-0078d4?style=for-the-badge&logo=cplusplus&logoColor=white" />
-    <img alt="elo" src="https://img.shields.io/badge/ELO-2450±20-00a2ff?style=for-the-badge" />
+    <img alt="elo" src="https://img.shields.io/badge/ELO-2500±20-00a2ff?style=for-the-badge" />
     <img alt="uci" src="https://img.shields.io/badge/UCI-COMPATIBLE-38d430?style=for-the-badge" />
   </p>
 
-  <br>
   <br>
   <br>
 
@@ -36,9 +35,8 @@
   </p>
 
   <p align="center">
-    Install the 
-    <a href="https://marketplace.visualstudio.com/items?itemName=mrcodium.chess-engine">VS Code extension</a>
-    and run it against the engines.
+    Test the engine on
+    <a href="https://marketplace.visualstudio.com/items?itemName=mrcodium.chess-engine">GUI</a>
   </p>
 
   <img src="assets/chess-vscode-demo.gif" alt="GitHub Contributions Calendar logo" width="600"  />
@@ -46,90 +44,62 @@
 
 ## Table of Contents
 
-- [About](#about)
 - [Features](#features)
 - [Installation](#installation)
 - [Engine Strength](#engine-strength)
 - [Supported Commands](#supported-commands)
-- [Development](#development)
-- [Contributing](#contributing)
-  - [What's Already Implemented](#whats-already-implemented-confirmed)
-  - [What You Can Contribute](#-what-you-can-contribute)
-  - [PR Merge Policy](#pr-merge-policy)
+- [What You Can Contribute](#what-you-can-contribute)
+- [PR Merge Policy](#pr-merge-policy)
+- [Thanks and Acknowledgements](#thanks-and-acknowledgements)
 - [License](#license)
-
-## About
-
-Chanakya is a lightweight chess engine written in modern C++ that fully
-implements the UCI protocol. It supports custom FEN positions, Polyglot
-opening books, configurable search depth and time controls, and ships with a
-dedicated Visual Studio Code extension for playing and analyzing games
-directly inside your editor.
-
-The engine is designed to be simple, fast, and easy to integrate into chess
-GUIs and tooling — and to be a friendly, well-documented codebase for anyone
-who wants to learn how a real alpha-beta engine is put together, or to
-contribute a search/eval improvement of their own. See
-[`ARCHITECTURE.md`](ARCHITECTURE.md) for a full technical map of the engine.
 
 ## Features
 
-- Full UCI protocol support
-- Supports `startpos` and arbitrary FEN positions
-- Adjustable search depth and time controls
-- Polyglot opening book support
-- Undo support (`undo`)
-- Board visualization (`d`)
-- Manual move testing (`move`)
-- Dedicated VS Code GUI
-- Lightweight, modern C++ implementation
+**Core**
+- Bitboar + Bit magic
+- Zobrist hashing
+- Transposition Table
+- UCI Protocol
+
+**Search**
+- Alpha-beta
+- Reverse futility
+- Null move prunning
+- Late move reduction (LMR)
+- Killer moves (2 per ply)
+- Countermove heuristic
+- History Heuristic + aging
+
+**Evaluation**
+- Piece square table
+- Mobility
+- Pawn Structure (isolated, passed, doubled, support)
+- Rook-bonus (open file, 7th rank)
+- Bishop pair
+- King Safety (pawn shield, storm, zone attacks)
 
 ## Installation 
 
-Chanakya can be used in two ways:
+**Option 1: VS Code Extension**
 
-1. Through the VS Code extension (recommended)
-2. Directly from the command line
+<a href="https://marketplace.visualstudio.com/items?itemName=mrcodium.chess-engine">
+  <img
+    src="https://github.com/abhijeetSinghRajput/github-contributions-calendar/blob/main/media/screenshots/install-from-marketplace.png?raw=true"
+    alt="Install from VS Code Marketplace"
+    height="20"
+    style="vertical-align: middle;"
+  />
+</a>
 
-### Option 1: VS Code Extension
+<br>
+<br>
 
-Install the official VS Code extension to play and analyze games directly
-inside your editor.
-
-[Install from VS Code Marketplace](#)
-
-**Steps**
-1. Open VS Code.
-2. Open the Extensions panel (`Ctrl+Shift+X`).
-3. Search for **Chanakya Chess Engine**.
-4. Click **Install**.
-5. Open the extension and start playing.
-
-### Option 2: Build from Source (CLI)
+**Option 2: Build from Source (CLI)**
 
 ```bash
 git clone https://github.com/abhijeetSinghRajput/chess-engine-cpp.git
 cd chess-engine-cpp
 make
-```
-
-Run the engine:
-
-```bash
-# Linux / macOS
-./chanakya
-
-# Windows
-chanakya.exe
-```
-
-Test the engine:
-
-```
-uci
-isready
-position startpos
-go depth 10
 ```
 
 ## Engine Strength
@@ -140,73 +110,43 @@ Chanakya has been benchmarked at approximately:
 cutechess-cli and Ordo's Bayesian anchored rating calculation against
 Stockfish 18 throttled to 2500 Elo.
 
-| Player   | Rating | Error | Points | Played | Score % |
-|----------|-------:|------:|-------:|-------:|--------:|
-| SF-2500  | 2500.0 |   —   |  501.5 |   1000 |   50%   |
-| Chanakya | 2498.9 |  20.6 |  498.5 |   1000 |   50%   |
+| Metric | Value |
+|--------|-------|
+| Rating | **2499 Elo** |
+| Error margin (95% CI) | ± 20.6 |
+| Games played | 1,000 |
+| Opponent | Stockfish 18 @ 2500 Elo |
+| Time control | 60+0.6 |
+| Rating method | Ordo Bayesian estimation |
 
 White advantage = 41.20 ± 10.68 &nbsp;·&nbsp; Draw rate (equal opponents) = 4.94% ± 0.70
 
-<details>
-<summary>Previous benchmark (for reference)</summary>
 
-| Metric                | Value                       |
-|------------------------|------------------------------|
-| Rating                 | 2450 Elo                    |
-| Error margin (95% CI)  | ± 20.4                      |
-| Games played           | 1,000                       |
-| Opponents               | Stockfish 18 @ 2400 Elo      |
-| Time control            | 60+0.6                      |
-| Rating method            | Ordo Bayesian estimation     |
 
-</details>
-
-**Methodology**
-- Ratings are relative to Stockfish's `UCI_LimitStrength`.
-- Chanakya's internal opening book was disabled.
-- Both engines used a shared randomized opening book.
-- Time-forfeit games from an earlier build were excluded.
-- This is not an official CCRL or CEGT rating.
 
 ## Supported Commands
 
-| Command              | Description               |
-|-----------------------|----------------------------|
-| `uci`                 | Initialize UCI mode       |
-| `isready`             | Check readiness           |
-| `position startpos`   | Load starting position    |
-| `position fen ...`    | Load custom FEN           |
-| `go depth N`          | Search to depth           |
-| `go movetime N`       | Search for milliseconds   |
-| `move e2e4`           | Make a move                |
-| `undo`                | Undo last move             |
-| `d`                   | Print board                |
+**Custom Commands**
 
-## Development
+| Command | Description |
+|---------|-------------|
+| `move e2e4` | Make a move on the current position. |
+| `undo` | Undo the last move. |
+| `d` | Print the current board. |
 
-```bash
-make
-./chanakya
-```
+**UCI Options**
 
-```
-uci
-isready
-position startpos
-go depth 10
-```
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `Hash` | Spin | `16` MB | Size of the transposition table. |
+| `UseBook` | Check | `false` | Enable or disable the Polyglot opening book. |
 
-For an in-depth technical map of the engine (board representation, move
-encoding, search, eval, TT) before you dive into a change, read
-[`ARCHITECTURE.md`](ARCHITECTURE.md) first — it also lists the specific
-things you should **not** assume about the codebase.
-
-## Contributing
+## What You Can Contribute
 
 Contributions are always welcome — from a one-line eval tweak to a full
-search feature. This section is a living map of what's done and what's
-genuinely useful to work on next. Please open an issue first if you'd like
-to discuss a major change before writing code.
+search feature. This section is a living map of what's genuinely useful to 
+work on next. Please open an issue first if you'd like to discuss a major 
+change before writing code.
 
 **Workflow:** fork → feature branch → commit → push → open a PR. See
 [PR Merge Policy](#pr-merge-policy) below for how changes get accepted.
@@ -313,7 +253,7 @@ code to work around, just a clean slot to fill.
 4. Lazy SMP (4 cores)
 5. TT improvements (prefetch, quiescence probing)
 
-### PR Merge Policy
+## PR Merge Policy
 
 **A PR is only merged if it's measurably better than the current version.**
 "Better" is decided by self-play testing on the same hardware and the same
@@ -383,32 +323,15 @@ isolated changes are much easier to validate — and much easier to merge —
 than a PR that bundles five ideas at once.
 
 ## Thanks and Acknowledgements
- 
-Chanakya wouldn't exist without the chess programming community's tradition
-of teaching in public. Particular thanks to:
- 
-- **[Sebastian Lague](https://www.youtube.com/watch?v=U4ogK0MIzqk)** — the video that started it all. This
-  is where the interest in building a chess engine actually began.
-- **[Harvard CS50's AI with Python](https://www.youtube.com/watch?v=5NgNicANyqM)** — the adversarial-search
-  (minimax) lecture was my first real introduction to minimax, via a
-  tic-tac-toe AI. Tic-tac-toe tops out at roughly 5,000 possible game states;
-  chess has something like 10^123 — learning that gap is what made chess
-  search genuinely interesting instead of just a class exercise, and led
-  straight back to Sebastian Lague's video above.
-- **[VICE](https://www.youtube.com/playlist?list=PLZ1QII7yudbc-Ky058TEaOstZHVbT-2hg)** (Bluefever Software) — Bluefever's video series on building a chess
-  engine from scratch is the reason a lot of this codebase's structure looks
-  the way it does; an essential starting point for understanding board
-  representation, move generation, and search in a real engine.
-- **[BBC](https://www.youtube.com/playlist?list=PLmN0neTso3Jxh8ZIylk74JpwfiWNI76Cs)** (Bit-Board Chess, by Code Monkey King) — the bitboard/magic-bitboard
-  tutorial series that shaped how Chanakya's attack generation and move
-  encoding work.
-- **[cutechess](https://github.com/cutechess/cutechess)** — the engine-vs-engine testing tool behind every
-  self-play match and SPRT run referenced in this repo's [PR merge policy](#pr-merge-policy).
-- **[Ordo](https://github.com/michiguel/Ordo)** — the Bayesian rating tool used to turn cutechess PGN
-  output into the Elo numbers you see in [Engine Strength](#engine-strength).
-If you're new to engine programming, working through VICE and BBC before
-your first Chanakya PR will save you a lot of time.
- 
+
+Chanakya wouldn't exist without the chess programming community's tradition of teaching in public. Special thanks to:
+
+- **[Sebastian Lague](https://www.youtube.com/watch?v=U4ogK0MIzqk)** — Inspired me to build my first chess engine.
+- **[Harvard CS50's AI with Python](https://www.youtube.com/watch?v=5NgNicANyqM)** — Introduced me to minimax and adversarial search through Tic-Tac-Toe.
+- **[VICE](https://www.youtube.com/playlist?list=PLZ1QII7yudbc-Ky058TEaOstZHVbT-2hg)** (Bluefever Software) — Taught the fundamentals of board representation, move generation, and search.
+- **[BBC](https://www.youtube.com/playlist?list=PLmN0neTso3Jxh8ZIylk74JpwfiWNI76Cs)** (Bit-Board Chess, by Code Monkey King) — Introduced bitboards, magic bitboards, and efficient attack generation.
+- **[cutechess](https://github.com/cutechess/cutechess)** — Used for engine testing, self-play, and benchmark matches.
+- **[Ordo](https://github.com/michiguel/Ordo)** — Used to estimate Elo ratings from match results using Bayesian methods.
 
 ## License
 
