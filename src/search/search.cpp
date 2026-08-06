@@ -78,12 +78,13 @@ int searchPosition()
         }
 
         std::cout 
+            << std::fixed << std::setprecision(2)
             << "info score "
-            << "cp "       << bestScore 
-            << "depth "    << depth
-            << "ordering " << ordering // %.2f 
-            << "nodes "    << searchController->nodes 
-            << "time "     << getCurrTime() - searchController->startTime
+            << " cp "       << bestScore 
+            << " depth "    << depth
+            << " ordering " << ordering
+            << " nodes "    << searchController->nodes 
+            << " time "     << getCurrTime() - searchController->startTime
             << " pv "      << lineStr
             << std::endl;
     }
@@ -127,6 +128,9 @@ int alphaBeta(int alpha, int beta, int depth, bool doNull)
         if (extract_depth(ttEntry->smp_data) >= depth)
         {
             score = extract_score(ttEntry->smp_data);
+            if (score > Mate)       score -= searchController->ply;
+            else if (score < -Mate) score += searchController->ply;
+
             if (score > Mate)
                 score -= searchController->ply;
             else if (score < -Mate)

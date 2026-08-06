@@ -1,3 +1,4 @@
+// utils.hpp
 #pragma once
 #include "core/defs.hpp"
 
@@ -12,3 +13,6 @@ U64 getBishopAttacks(int sq);
 int materialDraw();
 void newGame();
 int parseMove(std::string &move_str);
+int bigPieceCount(int side);
+bool isGameOver();
+void printHelp();

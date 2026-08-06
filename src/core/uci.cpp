@@ -1,32 +1,46 @@
-#include "core/uci.hpp"
-#include "core/utils.hpp"
-#include "core/board.hpp"
-#include "search/search.hpp"
-#include "core/move.hpp"
+// uci.cpp
 #include <iostream>
 #include <sstream>
 #include <vector>
 #include <thread>
+#include "search/perft.hpp"
+#include "core/uci.hpp"
+#include "core/utils.hpp"
+#include "core/board.hpp"
+#include "core/move.hpp"
 #include "core/polyglot.hpp"
 #include "eval/evaluation.hpp"
+#include "search/search.hpp"
+#include "search/transpositionTable.hpp"
 
 std::thread searchThread;
 
 void handlePosition(std::istringstream &iss)
 {
-    std::string positionType, fen, token;
+    std::string positionType, token;
+    std::string fen = "";
 
     iss >> positionType;
+    
     if (positionType == "startpos")
     {
         board->parseFen(startFen);
     }
     else if (positionType == "fen")
     {
-        getline(iss, fen);
+        // Read exactly 6 FEN fields
+        for (int i = 0; i < 6; i++) {
+            std::string field;
+            iss >> field;
+            fen += field;
+            if (i < 5) fen += " ";
+        }
+        
+        // std::cout << "fen : " << fen << std::endl; // todo 
         board->parseFen(fen);
     }
 
+    // Now read remaining tokens (should be "moves" if present)
     while (iss >> token)
     {
         if (token == "moves")
@@ -34,10 +48,10 @@ void handlePosition(std::istringstream &iss)
             while (iss >> token)
             {
                 int move = parseMove(token);
-                if (!move)
-                    break;
+                if (!move) break;
                 makeMove(move);
             }
+            break;  // No need to process more after "moves"
         }
     }
 }
@@ -51,6 +65,11 @@ void handleSearch(std::istringstream &iss)
     {
         if (token == "depth")
             iss >> depth;
+        else if (token == "perft"){
+            iss >> depth;
+            perftTest(depth);
+            return;
+        }
         else if (token == "movetime")
             iss >> movetime;
         else if (token == "movestogo")
@@ -82,7 +101,19 @@ void handleSearch(std::istringstream &iss)
         {
             movestogo = 1; // Avoid division by zero
         }
-        time /= movestogo;
+        int perMove = time / movestogo;
+
+        // Safety cap: never allocate more than 70% of the RAW remaining clock
+        // to a single move, no matter how small movestogo is (e.g. movestogo=1).
+        int maxAllowed = static_cast<int>(time * 0.7);
+        perMove = std::min(perMove, maxAllowed);
+
+        constexpr int MOVE_OVERHEAD = 50;
+        perMove -= MOVE_OVERHEAD;
+        if (perMove < 1)
+            perMove = 1;
+
+        time = perMove;
     }
 
     // std::cout<<"time: " <<time <<std::endl;
@@ -123,11 +154,15 @@ void handleOptions(std::istringstream &iss)
         searchController->useBook = (optionValue == "true") ? true : false;
         if (searchController->useBook)
         {
-            std::cout << "book move on" << std::endl;
+            printf("book move on\n");
         }
         else{
-            std::cout << "book move off" << std::endl;
+            printf("book move off\n");
         }
+    }
+    else if ( optionName == "Hash"){
+        int mb = std::stoi(optionValue);
+        transpositionTable->resize(mb);
     }
 }
 
@@ -145,6 +180,11 @@ void UCI()
         {
             std::cout << "id name " << name << std::endl;
             std::cout << "id author " << author << std::endl;
+            std::cout << "option name Hash type spin default 16 min 1 max 4096\n";
+            std::cout << "option name usebook type check default " 
+                      << (searchController->useBook ? "true" : "false") 
+                      << std::endl;
+
             std::cout << "uciok" << std::endl;
         }
         else if (command == "isready")
@@ -188,6 +228,10 @@ void UCI()
         {
             board->print();
         }
+        else if (command == "flip"){
+            board->side ^= 1;
+            board->print();
+        }
         else if (command == "move")
         {
             std::string token;
@@ -195,14 +239,23 @@ void UCI()
             int move = parseMove(token);
             if (!move)
             {
-                std::cout << "enter a valid move" << std::endl;
+                printf("enter a valid move\n");
                 continue;
-                ;
             }
             makeMove(move);
             board->print();
 
             // engine move
+            if(isGameOver()){
+                if(board->checkSq != noSq){
+                    printf("Game over by Checkmate\n");
+                }
+                else{
+                    printf("Draw\n");
+                }
+                continue;
+            }
+
             searchController->depth = maxDepth;
             searchController->startTime = getCurrTime();
             searchController->stopTime = searchController->startTime + 2000;
@@ -216,7 +269,7 @@ void UCI()
             }
             else
             {
-                std::cout << "engine is unable to think" << std::endl;
+                printf("engine is unable to think\n");
             }
         }
         else if (command == "undo")
@@ -227,8 +280,14 @@ void UCI()
         {
             readBook();
         }
-        else if(command == "eval"){
-            std::cout << "evalscore " << evalPosition() << std::endl;
+        else if (command == "eval")
+        {
+            std::cout << "evalscore "
+                    << evalPosition()
+                    << std::endl;
+        }
+        if(command == "help" || command == "--help" || command == "-help" || command == "?"){
+            printHelp();
         }
     }
 }

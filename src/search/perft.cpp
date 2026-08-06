@@ -41,8 +41,14 @@ void perftTest(int depth)
         takeMove();
 
         totalNodeSeared += count;
-        std::cout << std::setw(2) << ++moveCount << " " << moveStr(move) << " " << count <<" " << getCurrTime() - startTime <<" ms" << std::endl;
+        std::cout 
+            << std::setw(2) 
+            << ++moveCount   << " " 
+            << moveStr(move) << " " 
+            << count         << " " 
+            << getCurrTime() - startTime <<" ms" 
+            << std::endl;
     }
     std::cout << "Nodes searched: " << totalNodeSeared << std::endl;
-    std::cout << "Total time: " << getCurrTime() - startTime;
+    std::cout << "Total time: " << getCurrTime() - startTime << std::endl;
 }
