@@ -1,7 +1,7 @@
-#include "defs.hpp"
-#include "move.hpp"
-#include "movegen.hpp"
-#include "board.hpp"
+#include "core/defs.hpp"
+#include "core/move.hpp"
+#include "core/movegen.hpp"
+#include "core/board.hpp"
 #include <vector>
 #include <iomanip>
 #include <iostream>
@@ -28,7 +28,6 @@ void perftTest(int depth)
     int moveCount = 0;
     U64 totalNodeSeared = 0;
     std::vector<std::pair<int,int>> moves = generateMoves();
-    printf("go to perft %d\n", depth);
     long long startTime = getCurrTime();
     for (auto &pair : moves)
     {

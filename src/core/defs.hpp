@@ -36,12 +36,21 @@ extern const int Mate;
 extern const int slidingPieces[2][3];
 extern const int nonSlidingPieces[2][2];
 
+constexpr int VALUE_ZERO   = 0;
+constexpr int PAWN_VALUE   = 208;
+constexpr int KNIGHT_VALUE = 781;
+constexpr int BISHOP_VALUE = 825;
+constexpr int ROOK_VALUE   = 1276;
+constexpr int QUEEN_VALUE  = 2538;
+constexpr int KING_VALUE   = 50000;
+
 enum
 {
     empty,
     wp,wr,wn,wb,wq,wk,
     bp,br,bn,bb,bq,bk
 };
+
 enum
 {
     white,
@@ -50,6 +59,17 @@ enum
 };
 enum {fileA, fileB, fileC, fileD, fileE, fileF, fileG, fileH};
 enum {rank1, rank2, rank3, rank4, rank5, rank6, rank7, rank8};
+
+enum Piece 
+{
+    Empty,
+    Pawn,
+    Rook,
+    Knight,
+    Bishop,
+    Queen,
+    King
+};
 
 typedef unsigned long long U64;
 
@@ -105,5 +125,7 @@ void initialize();
 inline int fileRank2Sq(int file, int rank) { return (rank * 10 + file) + 21; }
 inline int fileOf(int sq) { return (sq % 10) - 1; }
 inline int rankOf(int sq) { return (sq - 21) / 10; }
+inline int fileOf64(int sq) { return sq & 7; }             // 0-based file, 64-sq board
+inline int rankOf64(int sq) { return sq >> 3; }             // 0-based rank, 64-sq board
 std::string moveStr(int move);
 long long getCurrTime();

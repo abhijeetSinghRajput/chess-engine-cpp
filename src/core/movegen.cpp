@@ -1,10 +1,10 @@
-#include "defs.hpp"
-#include "board.hpp"
-#include "bitboard.hpp"
-#include "utils.hpp"
-#include "move.hpp"
-#include "search.hpp"
-#include "movegen.hpp"
+#include "core/defs.hpp"
+#include "core/board.hpp"
+#include "core/bitboard.hpp"
+#include "core/utils.hpp"
+#include "core/move.hpp"
+#include "search/search.hpp"
+#include "core/movegen.hpp"
 #include <vector>
 
 std::vector<std::pair<int, int>> moves;
@@ -37,10 +37,6 @@ void addCaptureMove(int move)
 void addQuiteMove(int move)
 {
     int score = 0;
-    if (searchController->ply < 0 && searchController->ply >= 64)
-    {
-        printf("---- %d\n", searchController->ply);
-    }
     if (searchController->killers[searchController->ply][0] == move)
     {
         score = 900000;

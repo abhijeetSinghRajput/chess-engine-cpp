@@ -1,6 +1,6 @@
-#include "polyglot.hpp"
-#include "board.hpp"
-#include "utils.hpp"
+#include "core/polyglot.hpp"
+#include "core/board.hpp"
+#include "core/utils.hpp"
 #include <fstream>
 #include <iostream>
 #include <ctime>
@@ -82,7 +82,6 @@ U64 getPolyKey()
     if (board->side == white) polyKey ^= sidePolyKey;
     if (board->enPassantSq != noSq && hasPawnToCapture())
     {
-        printf(" 1 ");
         polyKey ^= enPassantPolyKeys[fileOf(board->enPassantSq)];
     }
 

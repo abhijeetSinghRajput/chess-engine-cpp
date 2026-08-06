@@ -1,5 +1,5 @@
-#include "defs.hpp"
-#include "bitboard.hpp"
+#include "core/defs.hpp"
+#include "core/bitboard.hpp"
 #include <iomanip>
 #include <random>
 #include <iostream>
@@ -257,6 +257,7 @@ void Bitboard::init_passedPawnMask()
             int file = fileOf(sq64To120[sq]);
             int rank = rankOf(sq64To120[sq]);
 
+            passedPawnMask[i][sq] |= fileMasks[file];
             if (file > fileA)
             {
                 passedPawnMask[i][sq] |= fileMasks[file - 1];

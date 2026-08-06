@@ -1,34 +1,35 @@
-# Compiler
 CXX = g++
 
-# Compiler flags
-CXXFLAGS = -std=c++11 -Wall -Wextra -Ofast
+# Only apply the x86-64-v3 baseline on x86 targets; ARM (Apple Silicon, etc.)
+# doesn't use -march=x86-64-v3 and doesn't need it — Clang/GCC already
+# target the correct native ISA on ARM without this flag.
+ARCH := $(shell uname -m)
+ifeq ($(filter $(ARCH),x86_64 amd64),$(ARCH))
+    MARCH_FLAG = -march=x86-64-v3
+else
+    MARCH_FLAG =
+endif
 
-# Executable name
-EXEC = chess
+CXXFLAGS = -std=c++17 -Wall -Wextra -O3 $(MARCH_FLAG) -flto=auto -DNDEBUG -Isrc -pthread
+EXEC = chanakya
+BUILD_DIR = build
 
-# Source files
-SRCS = defs.cpp main.cpp board.cpp bitboard.cpp utils.cpp evaluation.cpp move.cpp movegen.cpp transpositionTable.cpp search.cpp perft.cpp uci.cpp polyglot.cpp
+SRCS = $(shell find src -name '*.cpp')
+OBJS = $(patsubst src/%.cpp,$(BUILD_DIR)/%.o,$(SRCS))
+DEPS = $(OBJS:.o=.d)
 
-# Header files
-HEADERS = defs.hpp board.hpp bitboard.hpp utils.hpp evaluation.hpp move.hpp movegen.hpp transpositionTable.hpp search.hpp perft.hpp uci.hpp polyglot.hpp
-
-# Object files
-OBJS = $(SRCS:.cpp=.o)
-
-# Default target
 all: $(EXEC)
 
-# Link object files to create the executable
 $(EXEC): $(OBJS)
 	$(CXX) $(CXXFLAGS) -o $@ $^
 
-# Compile source files into object files
-%.o: %.cpp $(HEADERS)
-	$(CXX) $(CXXFLAGS) -c $< -o $@
+$(BUILD_DIR)/%.o: src/%.cpp
+	@mkdir -p $(dir $@)
+	$(CXX) $(CXXFLAGS) -MMD -MP -c $< -o $@
 
-# Clean up build files
+-include $(DEPS)
+
 clean:
-	rm -f $(OBJS) $(EXEC)
+	rm -rf $(BUILD_DIR) $(EXEC)
 
 .PHONY: all clean

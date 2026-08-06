@@ -1,14 +1,14 @@
-#include "uci.hpp"
-#include "utils.hpp"
-#include "board.hpp"
-#include "search.hpp"
-#include "move.hpp"
+#include "core/uci.hpp"
+#include "core/utils.hpp"
+#include "core/board.hpp"
+#include "search/search.hpp"
+#include "core/move.hpp"
 #include <iostream>
 #include <sstream>
 #include <vector>
 #include <thread>
-#include "polyglot.hpp"
-#include "evaluation.hpp"
+#include "core/polyglot.hpp"
+#include "eval/evaluation.hpp"
 
 std::thread searchThread;
 
@@ -24,7 +24,6 @@ void handlePosition(std::istringstream &iss)
     else if (positionType == "fen")
     {
         getline(iss, fen);
-        std::cout << "fen : " << fen << std::endl;
         board->parseFen(fen);
     }
 
@@ -124,10 +123,10 @@ void handleOptions(std::istringstream &iss)
         searchController->useBook = (optionValue == "true") ? true : false;
         if (searchController->useBook)
         {
-            printf("book move on\n");
+            std::cout << "book move on" << std::endl;
         }
         else{
-            printf("book move off\n");
+            std::cout << "book move off" << std::endl;
         }
     }
 }
@@ -196,7 +195,7 @@ void UCI()
             int move = parseMove(token);
             if (!move)
             {
-                printf("enter a valid move\n");
+                std::cout << "enter a valid move" << std::endl;
                 continue;
                 ;
             }
@@ -217,7 +216,7 @@ void UCI()
             }
             else
             {
-                printf("engine is unable to think\n");
+                std::cout << "engine is unable to think" << std::endl;
             }
         }
         else if (command == "undo")
@@ -229,7 +228,7 @@ void UCI()
             readBook();
         }
         else if(command == "eval"){
-            printf("Eval: %d\n", evalPosition());
+            std::cout << "evalscore " << evalPosition() << std::endl;
         }
     }
 }

@@ -1,2 +1,6 @@
 # Compiled Object files
 *.o
+*.test
+test
+build
+*.diff

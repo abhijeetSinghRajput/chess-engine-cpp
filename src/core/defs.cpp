@@ -36,22 +36,21 @@ const char *pieceName[] = {
 };
 
 const int pieceValue[13] = {
-    0,      // empty
-    100,    // wp
-    500,    // wr  (5 pawns)
-    320,    // wn  (approx 3.2 pawns)
-    330,    // wb  (approx 3.3 pawns)
-    900,    // wq  (9 pawns)
-    50000,  // wk  (king has no material value)
+    VALUE_ZERO,      // empty
+    PAWN_VALUE,      // wp
+    ROOK_VALUE,      // wr  (5 pawns)
+    KNIGHT_VALUE,    // wn  (approx 3.2 pawns)
+    BISHOP_VALUE,    // wb  (approx 3.3 pawns)
+    QUEEN_VALUE,     // wq  (9 pawns)
+    KING_VALUE,      // wk  (king has no material value)
     
-    100,    // bp
-    500,    // br
-    320,    // bn
-    330,    // bb
-    900,    // bq
-    50000   // bk
+    PAWN_VALUE,      // bp
+    ROOK_VALUE,      // br
+    KNIGHT_VALUE,    // bn
+    BISHOP_VALUE,    // bb
+    QUEEN_VALUE,     // bq
+    KING_VALUE       // bk
 };
-
 
 const int Kings[] = {wk, bk};
 
@@ -116,20 +115,30 @@ void initialize() {
     initSquareMappings();
 }
 
-std::string moveStr(int move) {
+std::string moveStr(int move)
+{
     if (!move) return "";
 
-    char moveStr[5];
+    char str[6];
+
     int from = moveFrom(move);
     int to = moveTo(move);
 
-    moveStr[0] = 'a' + fileOf(from);
-    moveStr[1] = '1' + rankOf(from);
-    moveStr[2] = 'a' + fileOf(to);
-    moveStr[3] = '1' + rankOf(to);
-    moveStr[4] = '\0';
+    str[0] = 'a' + fileOf(from);
+    str[1] = '1' + rankOf(from);
+    str[2] = 'a' + fileOf(to);
+    str[3] = '1' + rankOf(to);
 
-    return std::string(moveStr);
+    switch (movePromotionPiece(move))
+    {
+        case wq: case bq:   str[4] = 'q'; str[5] = '\0'; break;
+        case wr: case br:   str[4] = 'r'; str[5] = '\0'; break;
+        case wb: case bb:   str[4] = 'b'; str[5] = '\0'; break;
+        case wn: case bn:   str[4] = 'n'; str[5] = '\0'; break;
+        default:                          str[4] = '\0'; break;
+    }
+
+    return std::string(str);
 }
 
 long long getCurrTime() {

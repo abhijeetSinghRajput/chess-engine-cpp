@@ -1,6 +1,7 @@
-#include "move.hpp"
-#include "utils.hpp"
-#include "bitboard.hpp"
+#include "core/move.hpp"
+#include "core/utils.hpp"
+#include "core/bitboard.hpp"
+#include <iostream>
 
 int enPassantFlag = 0x400000;
 int castleFlag = 0x800000;
@@ -38,18 +39,18 @@ void moveDetail(int move)
     if (!move)
         return;
 
-    printf("from : %s\n", squareChar[moveFrom(move)]);
-    printf("to : %s\n", squareChar[moveTo(move)]);
-    printf("capture : %c\n", pieceChar[moveCapturePiece(move)]);
-    printf("promotion : %c\n", pieceChar[movePromotionPiece(move)]);
+    std::cout << "from : " << squareChar[moveFrom(move)] << std::endl;
+    std::cout << "to : " << squareChar[moveTo(move)] << std::endl;
+    std::cout << "capture : " << pieceChar[moveCapturePiece(move)] << std::endl;
+    std::cout << "promotion : " << pieceChar[movePromotionPiece(move)] << std::endl;
 
     if (move & enPassantFlag)
-        printf("flag : enPassant\n");
+        std::cout << "flag : enPassant" << std::endl;
     if (move & pawnStartFlag)
-        printf("flag : pawn start\n");
+        std::cout << "flag : pawn start" << std::endl;
     if (move & castleFlag)
-        printf("flag : castle\n");
-    printf("\n");
+        std::cout << "flag : castle" << std::endl;
+    std::cout << std::endl;
 }
 
 void movePiece(int from, int to)

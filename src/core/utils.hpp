@@ -1,5 +1,5 @@
 #pragma once
-#include "defs.hpp"
+#include "core/defs.hpp"
 
 void hashPiece(int sq, int piece);
 void hashEnPassant();

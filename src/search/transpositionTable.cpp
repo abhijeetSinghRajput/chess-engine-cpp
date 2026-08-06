@@ -1,9 +1,9 @@
-#include "transpositionTable.hpp"
-#include "board.hpp"
-#include "search.hpp"
-#include "move.hpp"
-#include "defs.hpp"
-#include "movegen.hpp"
+#include "search/transpositionTable.hpp"
+#include "core/board.hpp"
+#include "search/search.hpp"
+#include "core/move.hpp"
+#include "core/defs.hpp"
+#include "core/movegen.hpp"
 
 const int AlphaFlag = 0;
 const int BetaFlag = 1;

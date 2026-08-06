@@ -1,14 +1,14 @@
-#include "search.hpp"
-#include "board.hpp"
-#include "defs.hpp"
-#include "move.hpp"
-#include "movegen.hpp"
-#include "evaluation.hpp"
-#include "transpositionTable.hpp"
-#include "utils.hpp"
+#include "search/search.hpp"
+#include "core/board.hpp"
+#include "core/defs.hpp"
+#include "core/move.hpp"
+#include "core/movegen.hpp"
+#include "eval/evaluation.hpp"
+#include "search/transpositionTable.hpp"
+#include "core/utils.hpp"
 #include <iostream>
 #include <iomanip>
-#include "polyglot.hpp"
+#include "core/polyglot.hpp"
 
 SearchController *searchController = new SearchController;
 
@@ -77,9 +77,15 @@ int searchPosition()
             lineStr += moveStr(move) + ' ';
         }
 
-        printf("info score cp %d depth %d ordering %.2f nodes %lld time %lld ",
-               bestScore, depth, ordering, searchController->nodes, getCurrTime() - searchController->startTime);
-        std::cout << "pv " << lineStr << std::endl;
+        std::cout 
+            << "info score "
+            << "cp "       << bestScore 
+            << "depth "    << depth
+            << "ordering " << ordering // %.2f 
+            << "nodes "    << searchController->nodes 
+            << "time "     << getCurrTime() - searchController->startTime
+            << " pv "      << lineStr
+            << std::endl;
     }
     std::cout << "bestmove " << moveStr(bestMove) << std::endl;
     return bestMove;

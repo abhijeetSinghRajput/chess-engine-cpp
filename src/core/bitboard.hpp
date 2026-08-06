@@ -1,7 +1,7 @@
 #pragma once
 
-#include "defs.hpp"
-#include "board.hpp"
+#include "core/defs.hpp"
+#include "core/board.hpp"
 #include <vector>
 
 extern U64 bishopMagics[64];

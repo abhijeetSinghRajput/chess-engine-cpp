@@ -1,13 +1,13 @@
 #include <iostream>
 #include <string>
 
-#include "uci.hpp"
-#include "utils.hpp"
-#include "polyglot.hpp"
+#include "core/uci.hpp"
+#include "core/utils.hpp"
+#include "core/polyglot.hpp"
 
 using namespace std;
 
-#include "board.hpp"
+#include "core/board.hpp"
 
 // uint64_t key = 0x463b96181691fc9c;
 
@@ -23,6 +23,7 @@ int main()
     string path = "./performance.bin";
     newGame();
     loadPolyBook(path);
+    
     UCI();
     return 0;
 }

@@ -1,7 +1,7 @@
-#include "bitboard.hpp"
-#include "zobristKeys.hpp"
-#include "movegen.hpp"
-#include "move.hpp"
+#include "core/bitboard.hpp"
+#include "core/zobristKeys.hpp"
+#include "core/movegen.hpp"
+#include "core/move.hpp"
 
 void hashPiece(int sq, int piece)
 {
