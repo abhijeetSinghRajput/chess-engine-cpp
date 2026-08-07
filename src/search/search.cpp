@@ -99,7 +99,8 @@ int alphaBeta(int alpha, int beta, int depth, bool doNull)
         return quiescence(alpha, beta);
     }
 
-    if ((searchController->nodes % 2048) == 0)
+    // check every 2048th node
+    if ((searchController->nodes & 2047) == 0)
     {
         checkTimeUp();
     }
@@ -158,27 +159,29 @@ int alphaBeta(int alpha, int beta, int depth, bool doNull)
         }
     }
 
-    std::vector<std::pair<int, int>> moves = generateMoves();
+    MoveList list;
+    generateMoves(list);
     int legalMoves = 0;
     int prevAlpha = alpha;
     int bestMove = 0;
 
+    // MOVE ORDERING : Give the pv move highest priority
     if (pvMove)
     {
-        for (auto &pair : moves)
+        for (int i = 0; i < list.count; ++i)
         {
-            if (pair.first == pvMove)
+            if (list.moves[i].move == pvMove)
             {
-                pair.second = 2000000;
+                list.moves[i].score = 2000000;
                 break;
             }
         }
     }
 
-    for (auto i = 0u; i < moves.size(); ++i)
+    for (int i = 0; i < list.count; ++i)
     {
-        swapWithBest(i, moves);
-        int move = moves[i].first;
+        swapWithBest(i, list);
+        int move = list.moves[i].move;
         if (makeMove(move) == false)
             continue;
         legalMoves++;
@@ -246,7 +249,8 @@ int alphaBeta(int alpha, int beta, int depth, bool doNull)
 int quiescence(int alpha, int beta)
 {
 
-    if ((searchController->nodes % 2048) == 0)
+    // check every 2048th node
+    if ((searchController->nodes & 2047) == 0)
     {
         checkTimeUp();
     }
@@ -271,12 +275,13 @@ int quiescence(int alpha, int beta)
         alpha = score;
 
     int legalMove = 0;
-    std::vector<std::pair<int, int>> moves = generateCaptureMoves();
+    MoveList list;
+    generateCaptureMoves(list);
 
-    for (auto i = 0u; i < moves.size(); ++i)
+    for (int i = 0; i < list.count; ++i)
     {
-        swapWithBest(i, moves);
-        const int move = moves[i].first;
+        swapWithBest(i, list);
+        const int move = list.moves[i].move;
 
         if (makeMove(move) == false)
             continue;
@@ -317,19 +322,19 @@ void checkTimeUp()
     }
 }
 
-void swapWithBest(int i, std::vector<std::pair<int, int>> &moves)
+void swapWithBest(int i, MoveList &list)
 {
     int bestIndex = i;
-    for (auto j = unsigned(i + 1); j < moves.size(); ++j)
+    for (int j = i + 1; j < list.count; ++j)
     {
-        if (moves[j].second > moves[bestIndex].second)
+        if (list.moves[j].score > list.moves[bestIndex].score)
         {
             bestIndex = j;
         }
     }
     if (bestIndex != i)
     {
-        std::swap(moves[i], moves[bestIndex]);
+        std::swap(list.moves[i], list.moves[bestIndex]);
     }
 }
 

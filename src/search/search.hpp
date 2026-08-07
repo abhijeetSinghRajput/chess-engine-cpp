@@ -1,5 +1,6 @@
 #pragma once
 #include "core/defs.hpp"
+#include "core/movegen.hpp"
 #include <atomic>
 
 class SearchController
@@ -29,7 +30,7 @@ public:
 int searchPosition();
 int alphaBeta(int alpha, int beta, int depth, bool doNull);
 int quiescence(int alpha, int beta);
-void swapWithBest(int i, std::vector<std::pair<int, int>> &moves);
+void swapWithBest(int i, MoveList &list);
 void checkTimeUp();
 bool isRepetition();
 

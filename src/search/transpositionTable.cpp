@@ -86,12 +86,14 @@ int TranspositionTable::getMove()
 
 bool isMoveExists(int arg)
 {
-    std::vector<std::pair<int, int>> moves = generateMoves();
-    for (auto &pair : moves)
+    MoveList list;
+    generateMoves(list);
+    for(int i = 0; i<list.count; ++i)
     {
-        if (pair.first == arg)
+        int move = list.moves[i].move;
+        if (move == arg)
         {
-            if (makeMove(pair.first) == false)
+            if (makeMove(move) == false)
                 continue;
             takeMove();
             return true;

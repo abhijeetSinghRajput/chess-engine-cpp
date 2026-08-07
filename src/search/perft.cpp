@@ -21,9 +21,12 @@ U64 perft(int depth)
     if (depth <= 0) return 1;
 
     U64 count = 0;
-    std::vector<std::pair<int,int>> moves = generateMoves();
-    for (const auto& [move, score] : moves)
+    MoveList list;
+    generateMoves(list);
+
+    for (int i = 0; i < list.count; ++i)
     {
+        int move = list.moves[i].move;
         if (makeMove(move) == false)
             continue;
 
@@ -35,20 +38,21 @@ U64 perft(int depth)
 
 void perftTest(int depth)
 {
-    // Imbue cout once with the comma locale for this function's output
     static std::locale commaLocale(std::locale(), new comma_numpunct());
     std::cout.imbue(commaLocale);
 
     int moveCount = 0;
     U64 totalNodeSeared = 0;
     long long startTime = getCurrTime();
-    std::vector<std::pair<int,int>> moves = generateMoves();
-    for (const auto& [move, score] : moves)
+
+    MoveList list;
+    generateMoves(list);
+
+    for (int i = 0; i < list.count; ++i)
     {
+        int move = list.moves[i].move;
         if (makeMove(move) == false)
-        {
             continue;
-        }
 
         U64 count = perft(depth - 1);
         takeMove();

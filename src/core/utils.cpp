@@ -1,3 +1,4 @@
+#include "core/utils.hpp"
 #include "core/bitboard.hpp"
 #include "core/zobristKeys.hpp"
 #include "core/movegen.hpp"
@@ -173,12 +174,15 @@ int parseMove(std::string &move_str)
         }
     }
 
-    std::vector<std::pair<int, int>> moves = generateMoves();
-    for (const auto& [move, score] : moves)
+    MoveList list;
+    generateMoves(list);
+    for (int i = 0; i < list.count; ++i)
     {
+        int move = list.moves[i].move;
         if (moveFrom(move) == from &&
             moveTo(move) == to &&
-            movePromotionPiece(move) == promotionPiece)
+            movePromotionPiece(move) == promotionPiece
+        )
         {
             return move;
         }
@@ -196,13 +200,15 @@ int bigPieceCount(int side)
 
 bool isGameOver()
 {
-    std::vector<std::pair<int, int>> moves = generateMoves();
+    MoveList list;
+    generateMoves(list);
     // No move left to play
-    if (moves.size() == 0) return true;
+    if (list.count == 0) return true;
 
     // Check Legal move
-    for (const auto& [move, score] : moves)
+    for (int i = 0; i < list.count; ++i)
     {
+        int move = list.moves[i].move;
         if (makeMove(move))
         {
             takeMove();
