@@ -50,8 +50,8 @@ void TranspositionTable::clear()
 
 void TranspositionTable::add(U64 positionKey, int move, int score, int flag, int depth)
 {
-    if (score > Mate)  score += searchController->ply;
-    if (score < -Mate) score -= searchController->ply;
+    if (score > MATE)  score += searchController->ply;
+    if (score < -MATE) score -= searchController->ply;
 
     size_t index = positionKey & sizeMask;
 

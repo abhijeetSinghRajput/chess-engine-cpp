@@ -43,16 +43,16 @@ uint64_t endian_swap_u64(uint64_t value)
 bool hasPawnToCapture()
 {
     int ep = board->enPassantSq;
-    if (board->side == white)
+    if (board->side == WHITE)
     {
-        if (board->pieces[ep - 9] == wp || board->pieces[ep - 11] == wp)
+        if (board->pieces[ep - 9] == PIECE_WP || board->pieces[ep - 11] == PIECE_WP)
         {
             return true;
         }
     }
     else
     {
-        if (board->pieces[ep + 9] == bp || board->pieces[ep + 11] == bp)
+        if (board->pieces[ep + 9] == PIECE_BP || board->pieces[ep + 11] == PIECE_BP)
         {
             return true;
         }
@@ -67,8 +67,8 @@ U64 getPolyKey()
 
     for (int sq = 0; sq < 64; ++sq)
     {
-        piece = board->pieces[sq64To120[sq]];
-        if (piece != empty)
+        piece = board->pieces[sq];
+        if (piece != PIECE_EMPTY)
         {
             polyKey ^= piecePolyKeys[polyPieces[piece]][sq];
         }
@@ -79,8 +79,8 @@ U64 getPolyKey()
     if (board->castlePermission & castle_k) polyKey ^= castlePolyKeys[2];
     if (board->castlePermission & castle_q) polyKey ^= castlePolyKeys[3];
 
-    if (board->side == white) polyKey ^= sidePolyKey;
-    if (board->enPassantSq != noSq && hasPawnToCapture())
+    if (board->side == WHITE) polyKey ^= sidePolyKey;
+    if (board->enPassantSq != SQ_NONE && hasPawnToCapture())
     {
         polyKey ^= enPassantPolyKeys[fileOf(board->enPassantSq)];
     }

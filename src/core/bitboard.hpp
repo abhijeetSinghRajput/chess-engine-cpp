@@ -45,6 +45,7 @@ public:
 
     //non static variables
     U64 pieces[13];
+    U64 occupied[2] = {0ULL, 0ULL};
     U64 pawnAttacks[2][64] = {0ULL};
     U64 kingAttacks[64] = {0ULL};
     U64 knightAttacks[64] = {0ULL};

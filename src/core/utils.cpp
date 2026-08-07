@@ -10,7 +10,7 @@ void hashPiece(int sq, int piece)
 }
 void hashEnPassant()
 {
-    board->positionKey ^= pieceKeys[empty][board->enPassantSq];
+    board->positionKey ^= pieceKeys[PIECE_EMPTY][board->enPassantSq];
 }
 void hashCastle()
 {
@@ -27,7 +27,7 @@ U64 getRookAttacks(int sq)
     // bitboard.hpp/cpp) instead of OR-ing 12 piece bitboards together
     // on every call - this function runs on every sliding move
     // generated and every isUnderAttack() check.
-    U64 allPieces = bitboard->getPieces(both);
+    U64 allPieces = bitboard->getPieces(BOTH);
     U64 blocker = allPieces & bitboard->rookAttacks[sq];
 
     int index = (blocker * rookMagics[sq]) >> (64 - 12);
@@ -36,7 +36,7 @@ U64 getRookAttacks(int sq)
 
 U64 getBishopAttacks(int sq)
 {
-    U64 allPieces = bitboard->getPieces(both);
+    U64 allPieces = bitboard->getPieces(BOTH);
     U64 blocker = allPieces & bitboard->bishopAttacks[sq];
 
     int index = (blocker * bishopMagics[sq]) >> (64 - 12);
@@ -45,43 +45,43 @@ U64 getBishopAttacks(int sq)
 
 bool isUnderAttack(int sq, int attackingSide)
 {
-    if (attackingSide == black)
+    if (attackingSide == BLACK)
     {
         // Pawn, knight, and king attacks - cheap array lookups, checked first
-        if (bitboard->pieces[bp] & bitboard->pawnAttacks[white][sq])
+        if (bitboard->pieces[PIECE_BP] & bitboard->pawnAttacks[WHITE][sq])
             return true;
-        if (bitboard->pieces[bn] & bitboard->knightAttacks[sq])
+        if (bitboard->pieces[PIECE_BN] & bitboard->knightAttacks[sq])
             return true;
-        if (bitboard->pieces[bk] & bitboard->kingAttacks[sq])
+        if (bitboard->pieces[PIECE_BK] & bitboard->kingAttacks[sq])
             return true;
 
         // Rook + queen share the rook attack pattern. Skip the magic
         // lookup entirely (multiply, shift, 32KB table probe) when
         // black has neither piece left on the board - common in
         // endgames and free when it doesn't apply.
-        U64 rookLike = bitboard->pieces[br] | bitboard->pieces[bq];
+        U64 rookLike = bitboard->pieces[PIECE_BR] | bitboard->pieces[PIECE_BQ];
         if (rookLike && (rookLike & getRookAttacks(sq)))
             return true;
 
         // Bishop + queen share the bishop attack pattern - same skip.
-        U64 bishopLike = bitboard->pieces[bb] | bitboard->pieces[bq];
+        U64 bishopLike = bitboard->pieces[PIECE_BB] | bitboard->pieces[PIECE_BQ];
         if (bishopLike && (bishopLike & getBishopAttacks(sq)))
             return true;
     }
     else
     {
-        if (bitboard->pieces[wp] & bitboard->pawnAttacks[black][sq])
+        if (bitboard->pieces[PIECE_WP] & bitboard->pawnAttacks[BLACK][sq])
             return true;
-        if (bitboard->pieces[wn] & bitboard->knightAttacks[sq])
+        if (bitboard->pieces[PIECE_WN] & bitboard->knightAttacks[sq])
             return true;
-        if (bitboard->pieces[wk] & bitboard->kingAttacks[sq])
+        if (bitboard->pieces[PIECE_WK] & bitboard->kingAttacks[sq])
             return true;
 
-        U64 rookLike = bitboard->pieces[wr] | bitboard->pieces[wq];
+        U64 rookLike = bitboard->pieces[PIECE_WR] | bitboard->pieces[PIECE_WQ];
         if (rookLike && (rookLike & getRookAttacks(sq)))
             return true;
 
-        U64 bishopLike = bitboard->pieces[wb] | bitboard->pieces[wq];
+        U64 bishopLike = bitboard->pieces[PIECE_WB] | bitboard->pieces[PIECE_WQ];
         if (bishopLike && (bishopLike & getBishopAttacks(sq)))
             return true;
     }
@@ -91,49 +91,49 @@ bool isUnderAttack(int sq, int attackingSide)
 int materialDraw()
 {
 
-    if (!board->pieceCount[wr] && !board->pieceCount[br] && !board->pieceCount[wq] && !board->pieceCount[bq])
+    if (!board->pieceCount[PIECE_WR] && !board->pieceCount[PIECE_BR] && !board->pieceCount[PIECE_WQ] && !board->pieceCount[PIECE_BQ])
     {
-        if (!board->pieceCount[bb] && !board->pieceCount[wb])
+        if (!board->pieceCount[PIECE_BB] && !board->pieceCount[PIECE_WB])
         {
-            if (board->pieceCount[wn] < 3 && board->pieceCount[bn] < 3)
+            if (board->pieceCount[PIECE_WN] < 3 && board->pieceCount[PIECE_BN] < 3)
             {
                 return true;
             }
         }
-        else if (!board->pieceCount[wn] && !board->pieceCount[bn])
+        else if (!board->pieceCount[PIECE_WN] && !board->pieceCount[PIECE_BN])
         {
-            if (abs(board->pieceCount[wb] - board->pieceCount[bb]) < 2)
+            if (abs(board->pieceCount[PIECE_WB] - board->pieceCount[PIECE_BB]) < 2)
             {
                 return true;
             }
         }
-        else if ((board->pieceCount[wn] < 3 && !board->pieceCount[wb]) || (board->pieceCount[wb] == 1 && !board->pieceCount[wn]))
+        else if ((board->pieceCount[PIECE_WN] < 3 && !board->pieceCount[PIECE_WB]) || (board->pieceCount[PIECE_WB] == 1 && !board->pieceCount[PIECE_WN]))
         {
-            if ((board->pieceCount[bn] < 3 && !board->pieceCount[bb]) || (board->pieceCount[bb] == 1 && !board->pieceCount[bn]))
+            if ((board->pieceCount[PIECE_BN] < 3 && !board->pieceCount[PIECE_BB]) || (board->pieceCount[PIECE_BB] == 1 && !board->pieceCount[PIECE_BN]))
             {
                 return true;
             }
         }
     }
-    else if (!board->pieceCount[wq] && !board->pieceCount[bq])
+    else if (!board->pieceCount[PIECE_WQ] && !board->pieceCount[PIECE_BQ])
     {
-        if (board->pieceCount[wr] == 1 && board->pieceCount[br] == 1)
+        if (board->pieceCount[PIECE_WR] == 1 && board->pieceCount[PIECE_BR] == 1)
         {
-            if ((board->pieceCount[wn] + board->pieceCount[wb]) < 2 && (board->pieceCount[bn] + board->pieceCount[bb]) < 2)
+            if ((board->pieceCount[PIECE_WN] + board->pieceCount[PIECE_WB]) < 2 && (board->pieceCount[PIECE_BN] + board->pieceCount[PIECE_BB]) < 2)
             {
                 return true;
             }
         }
-        else if (board->pieceCount[wr] == 1 && !board->pieceCount[br])
+        else if (board->pieceCount[PIECE_WR] == 1 && !board->pieceCount[PIECE_BR])
         {
-            if ((board->pieceCount[wn] + board->pieceCount[wb] == 0) && (((board->pieceCount[bn] + board->pieceCount[bb]) == 1) || ((board->pieceCount[bn] + board->pieceCount[bb]) == 2)))
+            if ((board->pieceCount[PIECE_WN] + board->pieceCount[PIECE_WB] == 0) && (((board->pieceCount[PIECE_BN] + board->pieceCount[PIECE_BB]) == 1) || ((board->pieceCount[PIECE_BN] + board->pieceCount[PIECE_BB]) == 2)))
             {
                 return true;
             }
         }
-        else if (board->pieceCount[br] == 1 && !board->pieceCount[wr])
+        else if (board->pieceCount[PIECE_BR] == 1 && !board->pieceCount[PIECE_WR])
         {
-            if ((board->pieceCount[bn] + board->pieceCount[bb] == 0) && (((board->pieceCount[wn] + board->pieceCount[wb]) == 1) || ((board->pieceCount[wn] + board->pieceCount[wb]) == 2)))
+            if ((board->pieceCount[PIECE_BN] + board->pieceCount[PIECE_BB] == 0) && (((board->pieceCount[PIECE_WN] + board->pieceCount[PIECE_WB]) == 1) || ((board->pieceCount[PIECE_WN] + board->pieceCount[PIECE_WB]) == 2)))
             {
                 return true;
             }
@@ -158,16 +158,16 @@ int parseMove(std::string &move_str)
 
     int from = fileRank2Sq(move_str[0] - 'a', move_str[1] - '1');
     int to = fileRank2Sq(move_str[2] - 'a', move_str[3] - '1');
-    int promotionPiece = empty;
+    int promotionPiece = PIECE_EMPTY;
 
     if (move_str.length() == 5)
     {
         switch (move_str[4])
         {
-            case 'q': promotionPiece = (move_str[3] == '8')? wq : bq; break;
-            case 'r': promotionPiece = (move_str[3] == '8')? wr : br; break;
-            case 'b': promotionPiece = (move_str[3] == '8')? wb : bb; break;
-            case 'n': promotionPiece = (move_str[3] == '8')? wn : bn; break;
+            case 'q': promotionPiece = (move_str[3] == '8')? PIECE_WQ : PIECE_BQ; break;
+            case 'r': promotionPiece = (move_str[3] == '8')? PIECE_WR : PIECE_BR; break;
+            case 'b': promotionPiece = (move_str[3] == '8')? PIECE_WB : PIECE_BB; break;
+            case 'n': promotionPiece = (move_str[3] == '8')? PIECE_WN : PIECE_BN; break;
 
             default: break;
         }
@@ -188,10 +188,10 @@ int parseMove(std::string &move_str)
 
 int bigPieceCount(int side)
 {
-    if (side == white)
-        return board->pieceCount[wn] + board->pieceCount[wb] + board->pieceCount[wr] + board->pieceCount[wq];
+    if (side == WHITE)
+        return board->pieceCount[PIECE_WN] + board->pieceCount[PIECE_WB] + board->pieceCount[PIECE_WR] + board->pieceCount[PIECE_WQ];
     else
-        return board->pieceCount[bn] + board->pieceCount[bb] + board->pieceCount[br] + board->pieceCount[bq];
+        return board->pieceCount[PIECE_BN] + board->pieceCount[PIECE_BB] + board->pieceCount[PIECE_BR] + board->pieceCount[PIECE_BQ];
 }
 
 bool isGameOver()

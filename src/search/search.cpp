@@ -19,7 +19,7 @@ SearchController::SearchController()
 
 void SearchController::clear()
 {
-    for (int i = 0; i < maxDepth; ++i)
+    for (int i = 0; i < MAX_DEPTH; ++i)
     {
         for (int j = 0; j < 2; ++j)
         {
@@ -28,7 +28,7 @@ void SearchController::clear()
     }
     for (int i = 0; i < 13; ++i)
     {
-        for (int j = 0; j < 120; ++j)
+        for (int j = 0; j < 64; ++j)
         {
             history[i][j] = 0;
         }
@@ -44,7 +44,7 @@ void SearchController::clear()
 int searchPosition()
 {
     int bestMove = 0;
-    int bestScore = -Infinite;
+    int bestScore = -INFINITE;
     int depth = 1;
     float ordering = 0;
 
@@ -61,7 +61,7 @@ int searchPosition()
     searchController->clear();
     for (depth = 1; depth <= searchController->depth; ++depth)
     {
-        bestScore = alphaBeta(-Infinite, Infinite, depth, true);
+        bestScore = alphaBeta(-INFINITE, INFINITE, depth, true);
         if (searchController->stopped)
             break;
 
@@ -109,17 +109,17 @@ int alphaBeta(int alpha, int beta, int depth, bool doNull)
         return 0;
     }
 
-    if (searchController->ply >= maxDepth)
+    if (searchController->ply >= MAX_DEPTH)
     {
         return evalPosition();
     }
 
-    bool inCheck = board->checkSq != noSq;
+    bool inCheck = board->checkSq != SQ_NONE;
     if (inCheck)
     {
         ++depth;
     }
-    int score = -Infinite;
+    int score = -INFINITE;
     TableData *ttEntry = transpositionTable->get(board->positionKey);
     int pvMove = 0;
     if (ttEntry)
@@ -128,12 +128,12 @@ int alphaBeta(int alpha, int beta, int depth, bool doNull)
         if (extract_depth(ttEntry->smp_data) >= depth)
         {
             score = extract_score(ttEntry->smp_data);
-            if (score > Mate)       score -= searchController->ply;
-            else if (score < -Mate) score += searchController->ply;
+            if (score > MATE)       score -= searchController->ply;
+            else if (score < -MATE) score += searchController->ply;
 
-            if (score > Mate)
+            if (score > MATE)
                 score -= searchController->ply;
-            else if (score < -Mate)
+            else if (score < -MATE)
                 score += searchController->ply;
             if (extract_flag(ttEntry->smp_data) == AlphaFlag && score <= alpha)
                 return alpha;
@@ -200,7 +200,7 @@ int alphaBeta(int alpha, int beta, int depth, bool doNull)
                 if (legalMoves == 1)
                     searchController->fhf++;
                 searchController->fh++;
-                if (!(move & captureFlag))
+                if (!(move & CAPTURE_FLAG))
                 {
                     searchController->killers[searchController->ply][1] = searchController->killers[searchController->ply][0];
                     searchController->killers[searchController->ply][0] = move;
@@ -210,7 +210,7 @@ int alphaBeta(int alpha, int beta, int depth, bool doNull)
                 return beta;
             }
             alpha = score;
-            if (!(move & captureFlag))
+            if (!(move & CAPTURE_FLAG))
             {
                 int piece = board->pieces[moveFrom(move)];
                 int toSq = moveTo(move);
@@ -223,7 +223,7 @@ int alphaBeta(int alpha, int beta, int depth, bool doNull)
     {
         if (inCheck)
         {
-            return -Infinite + searchController->ply;
+            return -INFINITE + searchController->ply;
         }
         else
         {
@@ -258,7 +258,7 @@ int quiescence(int alpha, int beta)
         return 0;
     }
 
-    if (searchController->ply >= maxDepth)
+    if (searchController->ply >= MAX_DEPTH)
     {
         return evalPosition();
     }

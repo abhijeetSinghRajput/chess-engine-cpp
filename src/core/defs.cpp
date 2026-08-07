@@ -4,38 +4,33 @@
 
 // Initialize global variables
 std::string startFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-int sq120To64[120];
-int sq64To120[64];
 
-const char pieceChar[] = ".PRNBQKprnbqk";
-const char pieceType[] = ".prnbqkprnbqk";
-const char fileChar[] = "abcdefgh";
-const int pieceColor[] = {
+const char PIECE_CHAR[] = ".PRNBQKprnbqk";
+const char PIECE_TYPE[] = ".prnbqkprnbqk";
+const char FILE_CHAR[] = "abcdefgh";
+const int PIECE_COLOR[] = {
     2,
     0, 0, 0, 0, 0, 0,
     1, 1, 1, 1, 1, 1,
 };
-const char *squareChar[] = {
-    ".", ".", ".", ".", ".", ".", ".", ".", ".", ".",
-    ".", ".", ".", ".", ".", ".", ".", ".", ".", ".",
-    ".", "a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1", ".",
-    ".", "a2", "b2", "c2", "d2", "e2", "f2", "g2", "h2", ".",
-    ".", "a3", "b3", "c3", "d3", "e3", "f3", "g3", "h3", ".",
-    ".", "a4", "b4", "c4", "d4", "e4", "f4", "g4", "h4", ".",
-    ".", "a5", "b5", "c5", "d5", "e5", "f5", "g5", "h5", ".",
-    ".", "a6", "b6", "c6", "d6", "e6", "f6", "g6", "h6", ".",
-    ".", "a7", "b7", "c7", "d7", "e7", "f7", "g7", "h7", ".",
-    ".", "a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8", ".",
-    ".", ".", ".", ".", ".", ".", ".", ".", ".", ".",
-    ".", ".", ".", ".", ".", ".", ".", ".", ".", ".",
+const char *SQUARE_CHAR[] = {
+    "a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1", 
+    "a2", "b2", "c2", "d2", "e2", "f2", "g2", "h2", 
+    "a3", "b3", "c3", "d3", "e3", "f3", "g3", "h3", 
+    "a4", "b4", "c4", "d4", "e4", "f4", "g4", "h4", 
+    "a5", "b5", "c5", "d5", "e5", "f5", "g5", "h5", 
+    "a6", "b6", "c6", "d6", "e6", "f6", "g6", "h6", 
+    "a7", "b7", "c7", "d7", "e7", "f7", "g7", "h7", 
+    "a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8", 
 };
-const char *pieceName[] = {
+
+const char *PIECE_NAME[] = {
     ".",
     "wp", "wr", "wn", "wb", "wq", "wk",
     "bp", "br", "bn", "bb", "bq", "bk"
 };
 
-const int pieceValue[13] = {
+const int PIECE_VALUE[13] = {
     VALUE_ZERO,      // empty
     PAWN_VALUE,      // wp
     ROOK_VALUE,      // wr  (5 pawns)
@@ -52,13 +47,13 @@ const int pieceValue[13] = {
     KING_VALUE       // bk
 };
 
-const int Kings[] = {wk, bk};
+const int Kings[] = {PIECE_WK, PIECE_BK};
 
-const int maxDepth = 64;
-const int Infinite = 30000;
-const int Mate = Infinite - maxDepth;
+const int MAX_DEPTH = 64;
+const int INFINITE = 30000;
+const int MATE = INFINITE - MAX_DEPTH;
 
-const int CastlePermission[] = {
+const int CASTLE_PERMISSION[] = {
     15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
     15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
     15, 11, 15, 15, 15, 3, 15, 15, 7, 15,//white 1011 0011 0111
@@ -73,7 +68,7 @@ const int CastlePermission[] = {
     15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
 };
 
-const int Mirror64[] = {
+const int MIRROR_64[] = {
     56	,	57	,	58	,	59	,	60	,	61	,	62	,	63	,
     48	,	49	,	50	,	51	,	52	,	53	,	54	,	55	,
     40	,	41	,	42	,	43	,	44	,	45	,	46	,	47	,
@@ -91,29 +86,23 @@ const int bishopDirections[] = {-9, -11, 9, 11};
 const int kingDirections[] = {-10, 1, 10, -1, -9, -11, 9, 11};
 const int queenDirections[] = {-10, 1, 10, -1, -9, -11, 9, 11};
 
+const int ROOK_DF  []  =  { 0,  1,  0, -1};
+const int ROOK_DR  []  =  {-1,  0,  1,  0};
+const int BISHOP_DF[]  =  {-1,  1, -1,  1};
+const int BISHOP_DR[]  =  {-1, -1,  1,  1};
+const int KNIGHT_DF[]  =  { 1,  2,  2,  1, -1, -2, -2, -1};
+const int KNIGHT_DR[]  =  { 2,  1, -1, -2, -2, -1,  1,  2};
+const int KING_DF  []  =  {-1, -1, -1,  0,  0,  1,  1,  1};
+const int KING_DR  []  =  {-1,  0,  1, -1,  1, -1,  0,  1};
+
 const int slidingPieces[2][3] = {
-    wr, wb, wq,
-    br, bb, bq,
+    PIECE_WR, PIECE_WB, PIECE_WQ,
+    PIECE_BR, PIECE_BB, PIECE_BQ,
 };
 const int nonSlidingPieces[2][2] = {
-    wn, wk,
-    bn, bk,
+    PIECE_WN, PIECE_WK,
+    PIECE_BN, PIECE_BK,
 };
-
-void initSquareMappings() {
-    for (int rank = rank1; rank <= rank8; ++rank) {
-        for (int file = fileA; file <= fileH; ++file) {
-            int sq120 = fileRank2Sq(file, rank);
-            int sq64 = rank * 8 + file;
-            sq120To64[sq120] = sq64;
-            sq64To120[sq64] = sq120;
-        }
-    }
-}
-
-void initialize() {
-    initSquareMappings();
-}
 
 std::string moveStr(int move)
 {
@@ -131,10 +120,10 @@ std::string moveStr(int move)
 
     switch (movePromotionPiece(move))
     {
-        case wq: case bq:   str[4] = 'q'; str[5] = '\0'; break;
-        case wr: case br:   str[4] = 'r'; str[5] = '\0'; break;
-        case wb: case bb:   str[4] = 'b'; str[5] = '\0'; break;
-        case wn: case bn:   str[4] = 'n'; str[5] = '\0'; break;
+        case PIECE_WQ: case PIECE_BQ:   str[4] = 'q'; str[5] = '\0'; break;
+        case PIECE_WR: case PIECE_BR:   str[4] = 'r'; str[5] = '\0'; break;
+        case PIECE_WB: case PIECE_BB:   str[4] = 'b'; str[5] = '\0'; break;
+        case PIECE_WN: case PIECE_BN:   str[4] = 'n'; str[5] = '\0'; break;
         default:                          str[4] = '\0'; break;
     }
 
