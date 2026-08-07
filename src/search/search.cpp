@@ -53,7 +53,7 @@ int searchPosition()
         bestMove = getRandBookMove();
         if (bestMove)
         {
-            std::cout << "bestmove (book)" << moveStr(bestMove) << std::endl;
+            std::cout << "bestmove " << moveStr(bestMove) << std::endl;
             return bestMove;
         }
     }

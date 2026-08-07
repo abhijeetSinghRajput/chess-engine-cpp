@@ -82,10 +82,10 @@ typedef unsigned long long U64;
 
 enum
 {
-    castle_K = 8,
-    castle_Q = 4,
-    castle_k = 2,
-    castle_q = 1
+    castle_K = 0b0001,  // white kingside
+    castle_Q = 0b0010,  // white queenside
+    castle_k = 0b0100,  // black kingside
+    castle_q = 0b1000   // black queenside
 };
 
 enum
