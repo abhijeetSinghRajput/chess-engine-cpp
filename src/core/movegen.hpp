@@ -31,7 +31,6 @@ void genNonSlidingMoves(MoveList &list, bool capturesOnly = false);
 void genSlidingMoves(MoveList &list, bool capturesOnly = false);
 
 void generateMoves(MoveList &list);
-void generateCaptureMoves(MoveList &list);
 
 // Legal-move-generation helpers (used by generateMoves only).
 // King moves get their own function: they're never restricted by pins or

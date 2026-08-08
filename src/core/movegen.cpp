@@ -197,40 +197,62 @@ void generateMoves(MoveList &list)
 
     if (board->side == WHITE)
     {
-        U64 wpBitboard = bitboard->pieces[PIECE_WP];
-        while (wpBitboard)
+        U64 empty       = ~(bitboard->occupied[WHITE] | bitboard->occupied[BLACK]);
+        U64 enemyPieces = bitboard->occupied[BLACK];
+        U64 wpBitboard  = bitboard->pieces[PIECE_WP];
+
+        U64 push1 = (wpBitboard << 8) & empty;
+        U64 push2 = ((push1 & bitboard->rankMasks[RANK_3]) << 8) & empty;
+
+        U64 captLeft  = (wpBitboard << 7) & enemyPieces & ~bitboard->fileMasks[FILE_H];
+        U64 captRight = (wpBitboard << 9) & enemyPieces & ~bitboard->fileMasks[FILE_A];
+
+        U64 epLeft = 0, epRight = 0;
+        if (board->enPassantSq != SQ_NONE)
         {
-            int sq = __builtin_ctzll(wpBitboard);
-            wpBitboard &= wpBitboard - 1;
-
-            if (board->pieces[sq + 8] == PIECE_EMPTY)
-            {
-                addWhitePawnQuietMove(list, sq, sq + 8);
-                if (board->pieces[sq + 16] == PIECE_EMPTY && rankOf(sq) == RANK_2)
-                {
-                    addQuiteMove(list, buildMove(sq, sq + 16, 0, 0, PAWN_START_FLAG));
-                }
-            }
-
-            if (fileOf(sq) > FILE_A && PIECE_COLOR[board->pieces[sq + 7]] == BLACK)
-            {
-                addWhiteCaptureMove(list, sq, sq + 7, board->pieces[sq + 7]);
-            }
-            if (fileOf(sq) < FILE_H && PIECE_COLOR[board->pieces[sq + 9]] == BLACK)
-            {
-                addWhiteCaptureMove(list, sq, sq + 9, board->pieces[sq + 9]);
-            }
-
-            if (fileOf(sq) > FILE_A && sq + 7 == board->enPassantSq)
-            {
-                addEnPassantMove(list, buildMove(sq, sq + 7, 0, 0, EN_PASSANT_FLAG));
-            }
-            if (fileOf(sq) < FILE_H && sq + 9 == board->enPassantSq)
-            {
-                addEnPassantMove(list, buildMove(sq, sq + 9, 0, 0, EN_PASSANT_FLAG));
-            }
+            U64 epBB = 1ULL << board->enPassantSq;
+            epLeft  = (wpBitboard << 7) & epBB & ~bitboard->fileMasks[FILE_H];
+            epRight = (wpBitboard << 9) & epBB & ~bitboard->fileMasks[FILE_A];
         }
 
+        while (push1)
+        {
+            int to = __builtin_ctzll(push1);
+            push1 &= push1 - 1;
+            addWhitePawnQuietMove(list, to - 8, to);
+        }
+        while (push2)
+        {
+            int to = __builtin_ctzll(push2);
+            push2 &= push2 - 1;
+            addQuiteMove(list, buildMove(to - 16, to, 0, 0, PAWN_START_FLAG));
+        }
+        while (captLeft)
+        {
+            int to = __builtin_ctzll(captLeft);
+            captLeft &= captLeft - 1;
+            addWhiteCaptureMove(list, to - 7, to, board->pieces[to]);
+        }
+        while (captRight)
+        {
+            int to = __builtin_ctzll(captRight);
+            captRight &= captRight - 1;
+            addWhiteCaptureMove(list, to - 9, to, board->pieces[to]);
+        }
+        while (epLeft)
+        {
+            int to = __builtin_ctzll(epLeft);
+            epLeft &= epLeft - 1;
+            addEnPassantMove(list, buildMove(to - 7, to, 0, 0, EN_PASSANT_FLAG));
+        }
+        while (epRight)
+        {
+            int to = __builtin_ctzll(epRight);
+            epRight &= epRight - 1;
+            addEnPassantMove(list, buildMove(to - 9, to, 0, 0, EN_PASSANT_FLAG));
+        }
+
+        // ===============
         if (board->castlePermission & castle_K)
         {
             if (board->pieces[SQ_F1] == PIECE_EMPTY && board->pieces[SQ_G1] == PIECE_EMPTY)
@@ -253,40 +275,62 @@ void generateMoves(MoveList &list)
         }
     }
     else
-    {
-        U64 bpBitboard = bitboard->pieces[PIECE_BP];
-        while (bpBitboard)
+    {    
+        U64 empty       = ~(bitboard->occupied[WHITE] | bitboard->occupied[BLACK]); // fixed
+        U64 enemyPieces = bitboard->occupied[WHITE];
+        U64 bpBitboard  = bitboard->pieces[PIECE_BP];
+
+        U64 push1 = (bpBitboard >> 8) & empty;
+        U64 push2 = ((push1 & bitboard->rankMasks[RANK_6]) >> 8) & empty; // fixed: RANK_6
+
+        U64 captLeft  = (bpBitboard >> 7) & enemyPieces & ~bitboard->fileMasks[FILE_A];
+        U64 captRight = (bpBitboard >> 9) & enemyPieces & ~bitboard->fileMasks[FILE_H];
+
+        U64 epLeft = 0, epRight = 0;
+        if (board->enPassantSq != SQ_NONE)
         {
-            int sq = __builtin_ctzll(bpBitboard);
-            bpBitboard &= bpBitboard - 1;
-
-            if (board->pieces[sq - 8] == PIECE_EMPTY)
-            {
-                addBlackPawnQuietMove(list, sq, sq - 8);
-                if (board->pieces[sq - 16] == PIECE_EMPTY && rankOf(sq) == RANK_7)
-                {
-                    addQuiteMove(list, buildMove(sq, sq - 16, 0, 0, PAWN_START_FLAG));
-                }
-            }
-
-            if (fileOf(sq) < FILE_H && PIECE_COLOR[board->pieces[sq - 7]] == WHITE)
-            {
-                addBlackCaptureMove(list, sq, sq - 7, board->pieces[sq - 7]);
-            }
-            if (fileOf(sq) > FILE_A && PIECE_COLOR[board->pieces[sq - 9]] == WHITE)
-            {
-                addBlackCaptureMove(list, sq, sq - 9, board->pieces[sq - 9]);
-            }
-
-            if (fileOf(sq) > FILE_A && sq - 9 == board->enPassantSq)
-            {
-                addEnPassantMove(list, buildMove(sq, sq - 9, 0, 0, EN_PASSANT_FLAG));
-            }
-            if (fileOf(sq) < FILE_H && sq - 7 == board->enPassantSq)
-            {
-                addEnPassantMove(list, buildMove(sq, sq - 7, 0, 0, EN_PASSANT_FLAG));
-            }
+            U64 epBB = 1ULL << board->enPassantSq;
+            epLeft  = (bpBitboard >> 7) & epBB & ~bitboard->fileMasks[FILE_A];
+            epRight = (bpBitboard >> 9) & epBB & ~bitboard->fileMasks[FILE_H];
         }
+
+        while (push1)
+        {
+            int to = __builtin_ctzll(push1);
+            push1 &= push1 - 1;
+            addBlackPawnQuietMove(list, to + 8, to);
+        }
+        while (push2)
+        {
+            int to = __builtin_ctzll(push2);
+            push2 &= push2 - 1;
+            addQuiteMove(list, buildMove(to + 16, to, 0, 0, PAWN_START_FLAG));
+        }
+        while (captLeft)
+        {
+            int to = __builtin_ctzll(captLeft);
+            captLeft &= captLeft - 1;
+            addBlackCaptureMove(list, to + 7, to, board->pieces[to]);
+        }
+        while (captRight)
+        {
+            int to = __builtin_ctzll(captRight);
+            captRight &= captRight - 1;
+            addBlackCaptureMove(list, to + 9, to, board->pieces[to]);
+        }
+        while (epLeft)
+        {
+            int to = __builtin_ctzll(epLeft);
+            epLeft &= epLeft - 1;
+            addEnPassantMove(list, buildMove(to + 7, to, 0, 0, EN_PASSANT_FLAG));
+        }
+        while (epRight)
+        {
+            int to = __builtin_ctzll(epRight);
+            epRight &= epRight - 1;
+            addEnPassantMove(list, buildMove(to + 9, to, 0, 0, EN_PASSANT_FLAG));
+        }
+        
 
         if (board->castlePermission & castle_k)
         {
@@ -314,47 +358,3 @@ void generateMoves(MoveList &list)
     genNonSlidingMoves(list);
 }
 
-void generateCaptureMoves(MoveList &list)
-{
-    list.count = 0;
-
-    if (board->side == WHITE)
-    {
-        U64 wpBitboard = bitboard->pieces[PIECE_WP];
-        while (wpBitboard)
-        {
-            int sq = __builtin_ctzll(wpBitboard);
-            wpBitboard &= wpBitboard - 1;
-
-            if (fileOf(sq) > FILE_A && PIECE_COLOR[board->pieces[sq + 7]] == BLACK)
-            {
-                addWhiteCaptureMove(list, sq, sq + 7, board->pieces[sq + 7]);
-            }
-            if (fileOf(sq) < FILE_H && PIECE_COLOR[board->pieces[sq + 9]] == BLACK)
-            {
-                addWhiteCaptureMove(list, sq, sq + 9, board->pieces[sq + 9]);
-            }
-        }
-    }
-    else
-    {
-        U64 bpBitboard = bitboard->pieces[PIECE_BP];
-        while (bpBitboard)
-        {
-            int sq = __builtin_ctzll(bpBitboard);
-            bpBitboard &= bpBitboard - 1;
-
-            if (fileOf(sq) > FILE_A && PIECE_COLOR[board->pieces[sq - 9]] == WHITE)
-            {
-                addBlackCaptureMove(list, sq, sq - 9, board->pieces[sq - 9]);
-            }
-            if (fileOf(sq) < FILE_H && PIECE_COLOR[board->pieces[sq - 7]] == WHITE)
-            {
-                addBlackCaptureMove(list, sq, sq - 7, board->pieces[sq - 7]);
-            }
-        }
-    }
-
-    genSlidingMoves(list, true);
-    genNonSlidingMoves(list, true);
-}

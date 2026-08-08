@@ -276,12 +276,17 @@ int quiescence(int alpha, int beta)
 
     int legalMove = 0;
     MoveList list;
-    generateCaptureMoves(list);
+    generateMoves(list);
 
     for (int i = 0; i < list.count; ++i)
     {
         swapWithBest(i, list);
         const int move = list.moves[i].move;
+
+        // quiescence: only search noisy moves
+        bool isNoisy = (move & CAPTURE_FLAG) || (move & EN_PASSANT_FLAG) || (move & PROMOTION_FLAG);
+        if (!isNoisy) continue;
+
 
         if (makeMove(move) == false)
             continue;
